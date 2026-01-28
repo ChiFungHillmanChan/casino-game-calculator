@@ -72,6 +72,8 @@ function initializeBankroll(amount) {
 function updateBankroll(change) {
     gameState.bankroll.current += change;
     gameState.bankroll.sessionProfit = gameState.bankroll.current - gameState.bankroll.initial;
+    // Save to localStorage
+    saveGameStateToStorage();
 }
 
 /**
@@ -81,6 +83,7 @@ function updateBankroll(change) {
 function setSelectedChip(value) {
     if (CHIP_DENOMINATIONS.includes(value)) {
         gameState.selectedChip = value;
+        saveGameStateToStorage();
     }
 }
 
@@ -98,6 +101,7 @@ function getSelectedChip() {
  */
 function storeLastBets(bets) {
     gameState.lastBets = JSON.parse(JSON.stringify(bets));
+    saveGameStateToStorage();
 }
 
 /**
