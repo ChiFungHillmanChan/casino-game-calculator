@@ -1,0 +1,837 @@
+/* =====================================================
+   ROULETTE MOBILE - Premium Mobile Responsive Design
+   Luxury casino experience optimized for touch devices
+   ===================================================== */
+
+/* ========== Safe Area Support ========== */
+@supports (padding: max(0px)) {
+    .container {
+        padding-left: max(var(--spacing-sm), env(safe-area-inset-left));
+        padding-right: max(var(--spacing-sm), env(safe-area-inset-right));
+        padding-bottom: max(var(--spacing-md), env(safe-area-inset-bottom));
+    }
+}
+
+/* ========== Mobile Base (max-width: 767px) ========== */
+@media (max-width: 767px) {
+    /* Root adjustments for mobile */
+    :root {
+        --spacing-xs: 4px;
+        --spacing-sm: 6px;
+        --spacing-md: 10px;
+        --spacing-lg: 14px;
+        --spacing-xl: 20px;
+    }
+
+    /* Smoother scrolling on iOS */
+    html {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+    }
+
+    body {
+        overflow-x: hidden;
+        position: relative;
+    }
+
+    /* Container - full width mobile */
+    .container {
+        padding: var(--spacing-sm);
+        padding-bottom: 100px; /* Space for fixed action bar */
+    }
+
+    /* Header - compact on mobile */
+    header {
+        padding: var(--spacing-md) 0;
+        margin-bottom: var(--spacing-md);
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-primary) 80%, transparent 100%);
+    }
+
+    header h1 {
+        font-size: 1.4rem;
+        letter-spacing: 3px;
+    }
+
+    header .subtitle {
+        font-size: 0.75rem;
+        margin-top: var(--spacing-xs);
+    }
+
+    /* Back link - smaller on mobile */
+    .back-link {
+        font-size: 0.8rem;
+        padding: var(--spacing-xs) 0;
+    }
+
+    /* App layout - vertical stack */
+    .app-layout {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+
+    /* Game area - full width */
+    .game-area {
+        order: 1;
+    }
+
+    /* ========== Stats Panel - Collapsible on Mobile ========== */
+    .stats-panel {
+        order: 2;
+        margin-top: var(--spacing-md);
+    }
+
+    .stats-panel .panel-header {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .stats-panel .panel-title {
+        font-size: 0.85rem;
+    }
+
+    /* Make stats sections more compact */
+    .stats-section {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .stats-section-title {
+        font-size: 0.7rem;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    /* History numbers - smaller on mobile */
+    .history-number {
+        width: 24px;
+        height: 24px;
+        font-size: 0.65rem;
+    }
+
+    .number-badge {
+        width: 28px;
+        height: 28px;
+        font-size: 0.75rem;
+    }
+
+    /* ========== Bankroll Display - Compact ========== */
+    .bankroll-display {
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+    }
+
+    .bankroll-label {
+        font-size: 0.65rem;
+        margin-bottom: 0;
+    }
+
+    .bankroll-amount {
+        font-size: 1.5rem;
+    }
+
+    .bankroll-profit {
+        font-size: 0.8rem;
+        width: 100%;
+        text-align: center;
+    }
+
+    /* ========== Wheel Container - Hero Element ========== */
+    .wheel-container {
+        padding: var(--spacing-md);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 260px;
+    }
+
+    .wheel-wrapper {
+        width: min(280px, 85vw);
+        height: min(280px, 85vw);
+    }
+
+    /* Wheel pocket adjustments */
+    .wheel-pocket-inner {
+        font-size: 8px;
+        width: 18px;
+        height: 40px;
+        padding-top: 4px;
+    }
+
+    .wheel-pocket::after {
+        height: 42px;
+        width: 1.5px;
+    }
+
+    /* Wheel center - smaller */
+    .wheel-center {
+        width: 65px;
+        height: 65px;
+    }
+
+    .wheel-center::before {
+        width: 42px;
+        height: 42px;
+    }
+
+    .wheel-center::after {
+        width: 14px;
+        height: 14px;
+    }
+
+    .result-indicator {
+        font-size: 1.2rem;
+    }
+
+    /* Ball - slightly smaller */
+    .ball {
+        width: 10px;
+        height: 10px;
+    }
+
+    /* ========== Betting Table - Horizontal Scroll ========== */
+    .betting-table-container {
+        width: calc(100% + var(--spacing-md) * 2);
+        margin-left: calc(var(--spacing-md) * -1);
+        padding: var(--spacing-md);
+        overflow-x: auto;
+        overflow-y: visible;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        /* Scroll hint gradient */
+        mask-image: linear-gradient(
+            to right,
+            transparent 0%,
+            black 3%,
+            black 97%,
+            transparent 100%
+        );
+        -webkit-mask-image: linear-gradient(
+            to right,
+            transparent 0%,
+            black 3%,
+            black 97%,
+            transparent 100%
+        );
+    }
+
+    /* Show scroll indicator on first load */
+    .betting-table-container::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 30px;
+        height: 60px;
+        background: linear-gradient(to right, transparent, rgba(212, 175, 55, 0.2));
+        pointer-events: none;
+        opacity: 0;
+        animation: scrollHint 2s ease-in-out 1s 2;
+    }
+
+    @keyframes scrollHint {
+        0%, 100% { opacity: 0; }
+        50% { opacity: 1; }
+    }
+
+    .betting-table {
+        min-width: 480px;
+        padding: var(--spacing-sm);
+        border-width: 3px;
+        scroll-snap-align: center;
+    }
+
+    /* Zero section */
+    .zero-section {
+        width: 40px;
+    }
+
+    .zero-cell {
+        font-size: 1.2rem;
+        min-height: 100px;
+    }
+
+    .zero-cell.american {
+        min-height: 50px;
+    }
+
+    /* Number cells - touch optimized */
+    .number-cell {
+        font-size: 0.85rem;
+        min-height: 33px;
+        /* Larger touch target */
+        position: relative;
+    }
+
+    /* Invisible touch area expansion */
+    .number-cell::before {
+        content: '';
+        position: absolute;
+        top: -4px;
+        left: -4px;
+        right: -4px;
+        bottom: -4px;
+        z-index: 1;
+    }
+
+    /* Column bets */
+    .column-section {
+        width: 35px;
+    }
+
+    .column-bet {
+        font-size: 0.65rem;
+        padding: var(--spacing-xs);
+    }
+
+    /* Outside bets */
+    .outside-bets,
+    .dozen-bets {
+        margin-left: 40px;
+        margin-top: var(--spacing-xs);
+    }
+
+    .dozen-bet,
+    .even-money-bet {
+        font-size: 0.7rem;
+        min-height: 36px;
+        padding: var(--spacing-xs);
+    }
+
+    /* Inside bet areas - larger for touch */
+    .split-bet.vertical,
+    .split-bet.horizontal {
+        min-width: 24px;
+        min-height: 24px;
+    }
+
+    .corner-bet,
+    .line-bet {
+        width: 28px;
+        height: 28px;
+    }
+
+    /* ========== Chip Selector - Touch Optimized ========== */
+    .chip-selector {
+        padding: var(--spacing-sm);
+        margin-top: var(--spacing-md);
+    }
+
+    .chip-selector-label {
+        font-size: 0.65rem;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .chip-rack {
+        gap: var(--spacing-xs);
+        justify-content: center;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: var(--spacing-xs) 0;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .chip {
+        width: 44px;
+        height: 44px;
+        font-size: 0.7rem;
+        flex-shrink: 0;
+        border-width: 2px;
+    }
+
+    .chip::before {
+        top: 3px;
+        left: 3px;
+        right: 3px;
+        bottom: 3px;
+        border-width: 1.5px;
+    }
+
+    .chip.selected {
+        transform: translateY(-3px) scale(1.08);
+    }
+
+    /* Placed chips - smaller on mobile */
+    .chip-sm {
+        width: 26px;
+        height: 26px;
+        font-size: 0.55rem;
+    }
+
+    .chip-stack-container {
+        width: 26px;
+        height: 26px;
+    }
+
+    .chip-amount-label {
+        font-size: 0.55rem;
+        padding: 1px 3px;
+    }
+
+    /* ========== Action Bar - Fixed Bottom ========== */
+    .action-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: 0;
+        padding: var(--spacing-sm) var(--spacing-md);
+        padding-bottom: max(var(--spacing-sm), env(safe-area-inset-bottom));
+        background: linear-gradient(180deg, transparent 0%, var(--bg-card) 15%, var(--bg-card) 100%);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        border: 1px solid var(--border-subtle);
+        border-bottom: none;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+        z-index: 45;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+        gap: var(--spacing-sm);
+        align-items: center;
+    }
+
+    .total-bet-display {
+        grid-column: 1;
+        grid-row: 1;
+        text-align: left;
+        font-size: 0.9rem;
+    }
+
+    .action-buttons {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        display: flex;
+        gap: var(--spacing-xs);
+        margin-top: 0;
+    }
+
+    .action-buttons .btn {
+        flex: 1;
+        padding: var(--spacing-sm) var(--spacing-xs);
+        font-size: 0.65rem;
+        min-height: 36px;
+    }
+
+    .btn-spin {
+        grid-column: 2;
+        grid-row: 1;
+        width: auto;
+        min-width: 100px;
+        padding: var(--spacing-sm) var(--spacing-lg);
+        font-size: 1rem;
+    }
+
+    /* ========== Result Overlay - Mobile Optimized ========== */
+    .overlay-content {
+        width: 95%;
+        max-width: 340px;
+        padding: var(--spacing-lg);
+        margin: var(--spacing-md);
+    }
+
+    .result-display {
+        padding: var(--spacing-lg);
+    }
+
+    .result-number {
+        width: 70px;
+        height: 70px;
+        font-size: 2rem;
+    }
+
+    .result-text {
+        font-size: 1rem;
+    }
+
+    .result-amount {
+        font-size: 1.3rem;
+    }
+
+    .btn-group {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .btn-group .btn {
+        width: 100%;
+    }
+
+    /* ========== Menu Button ========== */
+    .menu-btn {
+        position: fixed;
+        top: var(--spacing-sm);
+        right: var(--spacing-sm);
+        z-index: 50;
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.75rem;
+    }
+
+    /* ========== Game Screen Adjustments ========== */
+    .game-screen {
+        padding-bottom: 120px; /* Extra space for fixed action bar */
+    }
+
+    /* ========== Collapsible Sections - Compact ========== */
+    .collapsible-header {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .collapsible-content.open {
+        max-height: 300px;
+    }
+
+    /* ========== Info Box ========== */
+    .info-box {
+        padding: var(--spacing-sm);
+    }
+
+    .info-row {
+        padding: var(--spacing-xs) 0;
+    }
+
+    .info-label {
+        font-size: 0.75rem;
+    }
+
+    .info-value {
+        font-size: 0.85rem;
+    }
+
+    /* ========== Setup Screen ========== */
+    .setup-screen {
+        min-height: 50vh;
+    }
+
+    .setup-panel {
+        max-width: 100%;
+    }
+
+    .setup-panel .panel-content {
+        padding: var(--spacing-lg);
+    }
+
+    .radio-group {
+        flex-direction: column;
+    }
+
+    .radio-label {
+        min-height: 60px;
+        padding: var(--spacing-sm);
+    }
+
+    .radio-title {
+        font-size: 0.85rem;
+    }
+
+    .radio-subtitle {
+        font-size: 0.7rem;
+    }
+
+    .preset-group {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .preset-btn {
+        padding: var(--spacing-sm);
+        font-size: 0.8rem;
+    }
+
+    .limits-row {
+        gap: var(--spacing-sm);
+    }
+
+    .setup-info {
+        padding: var(--spacing-sm);
+    }
+
+    .setup-info-title {
+        font-size: 0.8rem;
+    }
+
+    .setup-info-text {
+        font-size: 0.75rem;
+    }
+
+    /* Start game button */
+    .setup-form .btn-primary {
+        padding: var(--spacing-md) var(--spacing-lg);
+        font-size: 1rem;
+    }
+}
+
+/* ========== Small Mobile (max-width: 374px) ========== */
+@media (max-width: 374px) {
+    header h1 {
+        font-size: 1.2rem;
+        letter-spacing: 2px;
+    }
+
+    header .subtitle {
+        font-size: 0.65rem;
+    }
+
+    .wheel-wrapper {
+        width: min(240px, 90vw);
+        height: min(240px, 90vw);
+    }
+
+    .wheel-pocket-inner {
+        font-size: 7px;
+        width: 16px;
+        height: 35px;
+    }
+
+    .wheel-center {
+        width: 55px;
+        height: 55px;
+    }
+
+    .betting-table {
+        min-width: 420px;
+    }
+
+    .number-cell {
+        font-size: 0.75rem;
+        min-height: 30px;
+    }
+
+    .chip {
+        width: 40px;
+        height: 40px;
+        font-size: 0.65rem;
+    }
+
+    .preset-group {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .action-buttons .btn {
+        font-size: 0.6rem;
+        padding: var(--spacing-xs);
+    }
+}
+
+/* ========== Landscape Mobile ========== */
+@media (max-width: 767px) and (orientation: landscape) {
+    .container {
+        padding-bottom: 80px;
+    }
+
+    header {
+        padding: var(--spacing-xs) 0;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    header h1 {
+        font-size: 1.2rem;
+    }
+
+    header .subtitle {
+        display: none;
+    }
+
+    .wheel-container {
+        min-height: 200px;
+        padding: var(--spacing-sm);
+    }
+
+    .wheel-wrapper {
+        width: min(200px, 40vh);
+        height: min(200px, 40vh);
+    }
+
+    .bankroll-display {
+        padding: var(--spacing-sm);
+    }
+
+    .bankroll-amount {
+        font-size: 1.2rem;
+    }
+
+    /* Side-by-side layout in landscape */
+    .game-area {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: var(--spacing-sm);
+    }
+
+    .wheel-container {
+        grid-column: 1;
+    }
+
+    .betting-table-container {
+        grid-column: 2;
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .chip-selector {
+        grid-column: 1 / -1;
+    }
+
+    /* Action bar - slimmer in landscape */
+    .action-bar {
+        padding: var(--spacing-xs) var(--spacing-md);
+        grid-template-columns: auto 1fr auto;
+        grid-template-rows: 1fr;
+    }
+
+    .total-bet-display {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .action-buttons {
+        grid-column: 2;
+        grid-row: 1;
+        justify-content: center;
+    }
+
+    .btn-spin {
+        grid-column: 3;
+        grid-row: 1;
+    }
+}
+
+/* ========== Tablet Portrait (768px - 1023px) ========== */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .container {
+        padding: var(--spacing-md);
+    }
+
+    .wheel-wrapper {
+        width: 320px;
+        height: 320px;
+    }
+
+    .betting-table {
+        min-width: 550px;
+    }
+
+    .action-bar {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--spacing-md) var(--spacing-lg);
+    }
+
+    .action-buttons {
+        margin-top: 0;
+    }
+
+    .btn-spin {
+        min-width: 140px;
+    }
+}
+
+/* ========== Touch Device Enhancements ========== */
+@media (hover: none) and (pointer: coarse) {
+    /* Larger touch targets */
+    .number-cell,
+    .zero-cell,
+    .dozen-bet,
+    .even-money-bet,
+    .column-bet {
+        min-height: 44px;
+    }
+
+    /* Active state feedback */
+    .number-cell:active,
+    .zero-cell:active,
+    .dozen-bet:active,
+    .even-money-bet:active,
+    .column-bet:active {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+
+    .chip:active:not(:disabled) {
+        transform: scale(0.9);
+    }
+
+    /* Remove hover effects that don't work well on touch */
+    .number-cell:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    .chip:hover:not(:disabled) {
+        transform: none;
+        box-shadow: var(--shadow-chip);
+    }
+
+    /* Better tap highlight */
+    * {
+        -webkit-tap-highlight-color: rgba(212, 175, 55, 0.2);
+    }
+
+    /* Prevent text selection on game elements */
+    .wheel-wrapper,
+    .betting-table,
+    .chip-rack,
+    .action-bar {
+        user-select: none;
+        -webkit-user-select: none;
+    }
+}
+
+/* ========== High DPI / Retina Displays ========== */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .wheel-pocket-inner {
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .chip {
+        border-width: 2.5px;
+    }
+}
+
+/* ========== Dark Mode Enhancements ========== */
+@media (prefers-color-scheme: dark) {
+    /* Already dark theme, but ensure proper contrast */
+    .betting-table-container {
+        background: linear-gradient(
+            180deg,
+            rgba(0, 0, 0, 0.2) 0%,
+            transparent 10%,
+            transparent 90%,
+            rgba(0, 0, 0, 0.2) 100%
+        );
+    }
+}
+
+/* ========== Animations - Respect User Preferences ========== */
+@media (prefers-reduced-motion: no-preference) {
+    /* Smooth transitions for mobile interactions */
+    .number-cell,
+    .chip,
+    .btn {
+        transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    /* Wheel rotation */
+    .wheel-outer.spinning {
+        transition: none;
+    }
+}
+
+/* ========== Print Styles (hide interactive elements) ========== */
+@media print {
+    .action-bar,
+    .chip-selector,
+    .menu-btn,
+    .overlay {
+        display: none !important;
+    }
+
+    .container {
+        padding-bottom: 0;
+    }
+}
