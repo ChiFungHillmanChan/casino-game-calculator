@@ -51,6 +51,22 @@ h1 {
     text-transform: uppercase;
 }
 
+/* Back to main page link */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    margin-bottom: var(--spacing-md);
+    transition: color 0.2s ease;
+}
+
+.back-link:hover {
+    color: var(--accent-gold);
+}
+
 .main-grid {
     display: grid;
     grid-template-columns: 260px 1fr 300px;

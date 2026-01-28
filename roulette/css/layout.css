@@ -58,6 +58,22 @@ header .subtitle {
     letter-spacing: 1px;
 }
 
+/* Back to main page link */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    margin-bottom: var(--spacing-md);
+    transition: color 0.2s ease;
+}
+
+.back-link:hover {
+    color: var(--accent-gold);
+}
+
 /* Main app layout */
 .app-layout {
     display: flex;

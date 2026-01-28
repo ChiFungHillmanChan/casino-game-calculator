@@ -153,14 +153,13 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: var(--z-chips);
+    z-index: 50;
     pointer-events: none;
+    width: 32px;
+    height: 32px;
 }
 
 .chip-stack-container .chip {
-    position: absolute;
-    top: 0;
-    left: 0;
     cursor: default;
 }
 
@@ -181,7 +180,7 @@
     top: -12px;
 }
 
-/* Bet value tooltip */
+/* Bet value tooltip (shown on hover) */
 .chip-value-tooltip {
     position: absolute;
     bottom: calc(100% + 5px);
@@ -204,6 +203,20 @@
 .chip-stack-container:hover .chip-value-tooltip {
     opacity: 1;
     visibility: visible;
+}
+
+/* Bet amount label - always visible on top of chip stack */
+.chip-amount-label {
+    background: rgba(0, 0, 0, 0.85);
+    color: var(--accent-gold);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+    border: 1px solid var(--accent-gold);
 }
 
 /* Action bar */
