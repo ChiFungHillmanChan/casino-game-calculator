@@ -37,6 +37,7 @@
 .mode-card.normal-shoe { --mode-color: #2ecc71; }
 .mode-card.smart-shuffler { --mode-color: #9b59b6; }
 .mode-card.free-double { --mode-color: #3498db; }
+.mode-card.practice-mode { --mode-color: #e74c3c; }
 
 /* Coming Soon State */
 .mode-card.coming-soon {
