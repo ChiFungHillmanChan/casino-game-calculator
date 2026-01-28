@@ -116,6 +116,11 @@ header .subtitle {
     padding: var(--spacing-lg);
 }
 
+/* Mobile tab bar - hidden on larger screens */
+.mobile-tab-bar {
+    display: none;
+}
+
 /* Desktop layout */
 @media (min-width: 1024px) {
     .app-layout {
@@ -124,17 +129,18 @@ header .subtitle {
         grid-template-rows: auto 1fr auto;
         gap: var(--spacing-lg);
     }
-    
+
     .game-area {
         grid-column: 2;
         grid-row: 1 / -1;
     }
-    
+
     .stats-panel {
         grid-column: 1;
         grid-row: 1 / -1;
+        display: block !important;
     }
-    
+
     .controls-panel {
         grid-column: 3;
         grid-row: 1 / -1;

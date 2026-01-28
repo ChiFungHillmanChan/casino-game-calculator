@@ -37,8 +37,8 @@
     /* Container - full width mobile */
     .container {
         padding: var(--spacing-sm);
-        /* Space for fixed action bar + iPhone safe area */
-        padding-bottom: max(110px, calc(100px + env(safe-area-inset-bottom)));
+        /* Space for fixed action bar + iPhone safe area (increased for better clearance) */
+        padding-bottom: max(130px, calc(120px + env(safe-area-inset-bottom)));
     }
 
     /* Header - compact on mobile */
@@ -140,6 +140,70 @@
         font-size: 0.8rem;
         width: 100%;
         text-align: center;
+    }
+
+    /* ========== Mobile Tab Bar ========== */
+    .mobile-tab-bar {
+        display: flex;
+        background: var(--bg-card);
+        border-radius: var(--radius-md);
+        padding: 4px;
+        margin-top: var(--spacing-sm);
+        border: 1px solid var(--border-subtle);
+    }
+
+    .tab-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-sm) var(--spacing-md);
+        background: transparent;
+        border: none;
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+    }
+
+    .tab-btn:active {
+        transform: scale(0.98);
+    }
+
+    .tab-btn.active {
+        background: var(--accent-gold);
+        color: var(--bg-primary);
+    }
+
+    .tab-icon {
+        font-size: 1rem;
+    }
+
+    .tab-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Stats panel when shown via tab */
+    .stats-panel.tab-active {
+        display: block !important;
+        order: 1;
+        margin-top: 0;
+    }
+
+    /* Game area when hidden via tab */
+    .game-area.tab-hidden {
+        display: none !important;
+    }
+
+    /* Hide stats panel by default on mobile (controlled by tab) */
+    .stats-panel {
+        display: none;
     }
 
     /* ========== Wheel Container - Hero Element ========== */
@@ -368,9 +432,10 @@
         right: 0;
         margin: 0;
         padding: var(--spacing-sm) var(--spacing-md);
-        /* Ensure enough padding for iPhone home indicator (34px) plus spacing */
+        /* Ensure enough padding for iPhone home indicator (34px) plus extra buffer */
         /* Use max to handle both safe-area-aware browsers and fallback */
-        padding-bottom: max(20px, calc(env(safe-area-inset-bottom) + 12px));
+        /* Increased from 20px/12px to 34px/20px for better touch bar clearance */
+        padding-bottom: max(34px, calc(env(safe-area-inset-bottom) + 20px));
         background: linear-gradient(180deg, transparent 0%, var(--bg-card) 15%, var(--bg-card) 100%);
         border-radius: var(--radius-lg) var(--radius-lg) 0 0;
         border: 1px solid var(--border-subtle);
@@ -462,8 +527,8 @@
 
     /* ========== Game Screen Adjustments ========== */
     .game-screen {
-        /* Extra space for fixed action bar + iPhone safe area */
-        padding-bottom: max(130px, calc(120px + env(safe-area-inset-bottom)));
+        /* Extra space for fixed action bar + iPhone safe area (increased for better clearance) */
+        padding-bottom: max(150px, calc(140px + env(safe-area-inset-bottom)));
     }
 
     /* ========== Collapsible Sections - Compact ========== */
@@ -492,65 +557,122 @@
         font-size: 0.85rem;
     }
 
-    /* ========== Setup Screen ========== */
+    /* ========== Setup Screen - Optimized Mobile Layout ========== */
     .setup-screen {
-        min-height: 50vh;
+        min-height: auto;
+        align-items: flex-start;
+        padding-top: var(--spacing-sm);
     }
 
     .setup-panel {
         max-width: 100%;
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .setup-panel .panel-header {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .setup-panel .panel-title {
+        font-size: 0.9rem;
     }
 
     .setup-panel .panel-content {
-        padding: var(--spacing-lg);
+        padding: var(--spacing-md);
+    }
+
+    .setup-form {
+        gap: var(--spacing-md);
+    }
+
+    .form-group {
+        gap: var(--spacing-xs);
+    }
+
+    .form-label {
+        font-size: 0.75rem;
+        margin-bottom: 0;
     }
 
     .radio-group {
-        flex-direction: column;
+        flex-direction: row;
+        gap: var(--spacing-xs);
+    }
+
+    .radio-option {
+        flex: 1;
     }
 
     .radio-label {
-        min-height: 60px;
+        min-height: 52px;
         padding: var(--spacing-sm);
     }
 
     .radio-title {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
+        margin-bottom: 2px;
     }
 
     .radio-subtitle {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
+        line-height: 1.2;
     }
 
     .preset-group {
         grid-template-columns: repeat(4, 1fr);
+        gap: var(--spacing-xs);
     }
 
     .preset-btn {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: 0.75rem;
+        min-height: 36px;
+    }
+
+    .input-row {
+        margin-top: var(--spacing-xs);
+    }
+
+    .input-row .form-input {
         padding: var(--spacing-sm);
-        font-size: 0.8rem;
+        font-size: 0.85rem;
     }
 
     .limits-row {
         gap: var(--spacing-sm);
     }
 
+    .limits-row .form-hint {
+        font-size: 0.65rem;
+        margin-top: 0;
+        margin-bottom: 2px;
+    }
+
+    .limits-row .form-select {
+        padding: var(--spacing-sm);
+        font-size: 0.85rem;
+    }
+
     .setup-info {
         padding: var(--spacing-sm);
+        margin-top: 0;
     }
 
     .setup-info-title {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
+        margin-bottom: 2px;
     }
 
     .setup-info-text {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
+        line-height: 1.4;
     }
 
-    /* Start game button */
+    /* Start game button - prominent but compact */
     .setup-form .btn-primary {
-        padding: var(--spacing-md) var(--spacing-lg);
-        font-size: 1rem;
+        padding: var(--spacing-sm) var(--spacing-lg);
+        font-size: 0.95rem;
+        margin-top: var(--spacing-xs);
     }
 }
 
@@ -808,6 +930,54 @@
     .action-bar {
         user-select: none;
         -webkit-user-select: none;
+    }
+
+    /* ===== MOBILE PAYOUT LABELS - Always visible on touch devices ===== */
+    /* Hide hover-based payout labels on mobile - they don't work */
+    .number-cell::after,
+    .split-bet::after,
+    .corner-bet::after {
+        display: none;
+    }
+
+    /* Show payout labels on active tap for street and line */
+    .street-bet::after,
+    .line-bet::after {
+        opacity: 1;
+        bottom: -16px;
+        font-size: 0.55rem;
+    }
+
+    /* Make street and line bet areas more visible on touch */
+    .street-bet,
+    .line-bet {
+        width: 24px;
+        height: 24px;
+        background: rgba(155, 89, 182, 0.3);
+    }
+
+    .line-bet {
+        background: rgba(52, 152, 219, 0.3);
+    }
+
+    /* Larger touch targets for inside bets */
+    .street-bet:active,
+    .line-bet:active {
+        transform: scale(1.2);
+    }
+
+    .corner-bet {
+        width: 24px;
+        height: 24px;
+    }
+
+    .split-bet.vertical {
+        height: 20px;
+    }
+
+    .split-bet.horizontal {
+        width: 20px;
+        height: 28px;
     }
 }
 

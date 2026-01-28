@@ -141,23 +141,28 @@ function renderEvenMoneyBets() {
 function renderInsideBetAreas(isAmerican) {
     let html = '';
     
-    // Streets (left edge of each row of 3) - 12 streets
+    // Streets (bottom edge of each column - covers 3 numbers vertically) - 12 streets
+    // Each street covers one column: 1-2-3, 4-5-6, 7-8-9, etc.
     for (let i = 0; i < 12; i++) {
         const street = STREETS[i];
         const streetKey = street.join('-');
-        html += `<div class="street-bet" data-bet-type="street" data-bet-value="${streetKey}" 
-                     style="grid-column: ${i + 1}; grid-row: 4;"
-                     title="Street: ${street.join(', ')}"></div>`;
+        // Position at center of column, at the bottom edge
+        const colCenterPercent = ((i + 0.5) / 12) * 100;
+        html += `<div class="street-bet" data-bet-type="street" data-bet-value="${streetKey}"
+                     style="left: calc(${colCenterPercent}% - 10px); bottom: -10px;"
+                     title="Street: ${street.join(', ')} (11:1)"></div>`;
     }
-    
+
     // Lines (six-line bets) - between streets - 11 lines
+    // Each line covers two adjacent streets (6 numbers)
     for (let i = 0; i < 11; i++) {
         const line = LINES[i];
         const lineKey = line.join('-');
-        // Position between columns i and i+1, at the bottom
+        // Position between columns i and i+1, at the bottom edge
+        const leftPercent = ((i + 1) / 12) * 100;
         html += `<div class="line-bet" data-bet-type="line" data-bet-value="${lineKey}"
-                     style="left: calc(${(i + 1) * (100/12)}% - 8px); bottom: 0;"
-                     title="Line: ${line.join(', ')}"></div>`;
+                     style="left: calc(${leftPercent}% - 10px); bottom: -10px;"
+                     title="Line: ${line.join(', ')} (5:1)"></div>`;
     }
     
     // Vertical splits (between rows in same column)

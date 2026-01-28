@@ -414,6 +414,53 @@ function initStatsHandlers() {
     collapsibleHeaders.forEach(header => {
         header.addEventListener('click', handleCollapsibleToggle);
     });
+
+    // Mobile tab bar handlers
+    initMobileTabHandlers();
+}
+
+/**
+ * Initialize mobile tab bar handlers
+ */
+function initMobileTabHandlers() {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', handleTabSwitch);
+    });
+}
+
+/**
+ * Handle mobile tab switching between Game and Stats
+ */
+function handleTabSwitch(e) {
+    const btn = e.currentTarget;
+    const tab = btn.dataset.tab;
+
+    // Update button states
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+    });
+    btn.classList.add('active');
+
+    // Get elements
+    const gameArea = document.getElementById('gameArea');
+    const statsPanel = document.getElementById('statsPanel');
+    const actionBar = document.getElementById('actionBar');
+    const chipSelector = document.getElementById('chipSelector');
+
+    if (tab === 'game') {
+        // Show game, hide stats
+        if (gameArea) gameArea.classList.remove('tab-hidden');
+        if (statsPanel) statsPanel.classList.remove('tab-active');
+        if (actionBar) actionBar.style.display = '';
+        if (chipSelector) chipSelector.style.display = '';
+    } else if (tab === 'stats') {
+        // Show stats, hide game
+        if (gameArea) gameArea.classList.add('tab-hidden');
+        if (statsPanel) statsPanel.classList.add('tab-active');
+        if (actionBar) actionBar.style.display = 'none';
+        if (chipSelector) chipSelector.style.display = 'none';
+    }
 }
 
 /**
