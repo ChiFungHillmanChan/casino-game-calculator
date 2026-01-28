@@ -264,3 +264,73 @@
     color: var(--accent-green);
     border: 1px solid rgba(46, 204, 113, 0.3);
 }
+
+/* Saved Game Card */
+.saved-game-card {
+    background: var(--bg-card);
+    border: 2px solid var(--accent-gold);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+}
+
+.saved-game-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent-gold);
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.saved-game-details {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.saved-game-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-xs) 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.saved-game-row:last-child {
+    border-bottom: none;
+}
+
+.saved-game-row span:first-child {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.saved-game-row span:last-child {
+    font-weight: 600;
+}
+
+.saved-game-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.saved-game-actions .btn {
+    width: 100%;
+}
+
+@media (min-width: 400px) {
+    .saved-game-actions {
+        flex-direction: row;
+    }
+
+    .saved-game-actions .btn {
+        flex: 1;
+    }
+}

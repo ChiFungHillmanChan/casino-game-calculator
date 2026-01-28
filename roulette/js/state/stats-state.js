@@ -116,6 +116,11 @@ function recordSpin(result, wagered, won) {
     
     // Update cold numbers tracking
     updateColdNumbers(result);
+
+    // Save to localStorage
+    if (typeof saveStatsStateToStorage === 'function') {
+        saveStatsStateToStorage();
+    }
 }
 
 /**

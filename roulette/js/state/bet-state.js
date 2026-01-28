@@ -226,7 +226,7 @@ function getStraightBetNumbers() {
  */
 function validateAllBets(minBet, maxBet) {
     const errors = [];
-    
+
     for (const [betType, value] of Object.entries(betState)) {
         if (typeof value === 'object') {
             for (const [betValue, amount] of Object.entries(value)) {
@@ -246,9 +246,34 @@ function validateAllBets(minBet, maxBet) {
             }
         }
     }
-    
+
     return {
         valid: errors.length === 0,
         errors: errors
     };
+}
+
+/**
+ * Restore bets from storage (used when loading saved game)
+ * @param {object} savedBets - Bets object from storage
+ */
+function restoreBetsFromStorage(savedBets) {
+    if (!savedBets) return;
+
+    // Restore all bet types
+    betState.straight = savedBets.straight || {};
+    betState.split = savedBets.split || {};
+    betState.street = savedBets.street || {};
+    betState.corner = savedBets.corner || {};
+    betState.firstFour = savedBets.firstFour || 0;
+    betState.topLine = savedBets.topLine || 0;
+    betState.line = savedBets.line || {};
+    betState.column = savedBets.column || {};
+    betState.dozen = savedBets.dozen || {};
+    betState.red = savedBets.red || 0;
+    betState.black = savedBets.black || 0;
+    betState.even = savedBets.even || 0;
+    betState.odd = savedBets.odd || 0;
+    betState.low = savedBets.low || 0;
+    betState.high = savedBets.high || 0;
 }

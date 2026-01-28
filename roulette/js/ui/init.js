@@ -9,20 +9,116 @@ async function init() {
     try {
         // Load HTML components
         await loadComponents();
-        
+
         // Initialize event handlers
         initEventHandlers();
-        
+
         // Initialize chip selector
         renderChipSelector();
-        
-        // Show setup screen
-        showSetupScreen();
-        
+
+        // Check for saved game and restore or show setup
+        if (hasSavedGame()) {
+            const summary = getSavedGameSummary();
+            showSavedGamePrompt(summary);
+        } else {
+            showSetupScreen();
+        }
+
         console.log('Roulette initialized successfully');
     } catch (error) {
         console.error('Failed to initialize roulette:', error);
     }
+}
+
+/**
+ * Show prompt to continue saved game or start new
+ */
+function showSavedGamePrompt(summary) {
+    const setupScreen = document.getElementById('setupScreen');
+    const gameScreen = document.getElementById('gameScreen');
+    const statsPanel = document.getElementById('statsPanel');
+
+    if (setupScreen) setupScreen.classList.remove('hidden');
+    if (gameScreen) gameScreen.classList.add('hidden');
+    if (statsPanel) statsPanel.classList.add('hidden');
+
+    // Show saved game info in setup panel
+    const savedGameInfo = document.getElementById('savedGameInfo');
+    if (savedGameInfo && summary) {
+        const profit = summary.profit >= 0 ? '+$' + summary.profit : '-$' + Math.abs(summary.profit);
+        const profitClass = summary.profit >= 0 ? 'positive' : 'negative';
+        const rouletteLabel = summary.rouletteType === 'european' ? 'European' : 'American';
+        const lastPlayed = new Date(summary.lastPlayed).toLocaleDateString();
+
+        savedGameInfo.innerHTML = `
+            <div class="saved-game-card">
+                <h3 class="saved-game-title">Continue Previous Game?</h3>
+                <div class="saved-game-details">
+                    <div class="saved-game-row">
+                        <span>Type:</span>
+                        <span class="font-mono">${rouletteLabel}</span>
+                    </div>
+                    <div class="saved-game-row">
+                        <span>Bankroll:</span>
+                        <span class="font-mono text-gold">$${summary.bankroll.toLocaleString()}</span>
+                    </div>
+                    <div class="saved-game-row">
+                        <span>Session Profit:</span>
+                        <span class="font-mono ${profitClass}">${profit}</span>
+                    </div>
+                    <div class="saved-game-row">
+                        <span>Total Spins:</span>
+                        <span class="font-mono">${summary.totalSpins}</span>
+                    </div>
+                    <div class="saved-game-row">
+                        <span>Last Played:</span>
+                        <span class="font-mono text-dim">${lastPlayed}</span>
+                    </div>
+                </div>
+                <div class="saved-game-actions">
+                    <button class="btn btn-primary" onclick="continueSavedGame()">Continue Game</button>
+                    <button class="btn btn-secondary" onclick="startFreshGame()">New Game</button>
+                </div>
+            </div>
+        `;
+        savedGameInfo.classList.remove('hidden');
+    }
+}
+
+/**
+ * Continue with saved game
+ */
+function continueSavedGame() {
+    if (restoreGameState()) {
+        // Hide saved game prompt
+        const savedGameInfo = document.getElementById('savedGameInfo');
+        if (savedGameInfo) savedGameInfo.classList.add('hidden');
+
+        // Show game screen with restored state
+        showGameScreen();
+
+        // Re-render placed chips
+        renderPlacedChips();
+    } else {
+        // Failed to restore, start fresh
+        startFreshGame();
+    }
+}
+
+/**
+ * Start a fresh game (clears saved data)
+ */
+function startFreshGame() {
+    clearAllStorage();
+    resetGameState();
+    resetStatsState();
+    resetBetState();
+
+    // Hide saved game prompt
+    const savedGameInfo = document.getElementById('savedGameInfo');
+    if (savedGameInfo) savedGameInfo.classList.add('hidden');
+
+    showSetupScreen();
 }
 
 /**

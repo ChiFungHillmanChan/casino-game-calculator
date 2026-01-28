@@ -194,184 +194,169 @@
         height: 10px;
     }
 
-    /* ========== Betting Table - Horizontal Scroll ========== */
+    /* ========== Betting Table - Mobile Optimized ========== */
     .betting-table-container {
-        width: calc(100% + var(--spacing-md) * 2);
-        margin-left: calc(var(--spacing-md) * -1);
-        padding: var(--spacing-md);
+        width: 100%;
+        padding: var(--spacing-sm);
         overflow-x: auto;
         overflow-y: visible;
         -webkit-overflow-scrolling: touch;
         scroll-snap-type: x proximity;
-        /* Scroll hint gradient */
-        mask-image: linear-gradient(
-            to right,
-            transparent 0%,
-            black 3%,
-            black 97%,
-            transparent 100%
-        );
-        -webkit-mask-image: linear-gradient(
-            to right,
-            transparent 0%,
-            black 3%,
-            black 97%,
-            transparent 100%
-        );
-    }
-
-    /* Show scroll indicator on first load */
-    .betting-table-container::after {
-        content: '';
-        position: absolute;
-        right: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 30px;
-        height: 60px;
-        background: linear-gradient(to right, transparent, rgba(212, 175, 55, 0.2));
-        pointer-events: none;
-        opacity: 0;
-        animation: scrollHint 2s ease-in-out 1s 2;
-    }
-
-    @keyframes scrollHint {
-        0%, 100% { opacity: 0; }
-        50% { opacity: 1; }
+        /* Remove mask - allow full visibility */
     }
 
     .betting-table {
-        min-width: 480px;
-        padding: var(--spacing-sm);
-        border-width: 3px;
-        scroll-snap-align: center;
+        min-width: 380px;
+        padding: var(--spacing-xs);
+        border-width: 2px;
+        scroll-snap-align: start;
+        margin: 0 auto;
     }
 
     /* Zero section */
     .zero-section {
-        width: 40px;
+        width: 32px;
     }
 
     .zero-cell {
-        font-size: 1.2rem;
-        min-height: 100px;
+        font-size: 1rem;
+        min-height: 84px;
     }
 
     .zero-cell.american {
-        min-height: 50px;
+        min-height: 42px;
     }
 
-    /* Number cells - touch optimized */
+    /* Number cells - compact for mobile */
     .number-cell {
-        font-size: 0.85rem;
-        min-height: 33px;
-        /* Larger touch target */
+        font-size: 0.75rem;
+        min-height: 28px;
         position: relative;
-    }
-
-    /* Invisible touch area expansion */
-    .number-cell::before {
-        content: '';
-        position: absolute;
-        top: -4px;
-        left: -4px;
-        right: -4px;
-        bottom: -4px;
-        z-index: 1;
     }
 
     /* Column bets */
     .column-section {
-        width: 35px;
+        width: 28px;
     }
 
     .column-bet {
-        font-size: 0.65rem;
-        padding: var(--spacing-xs);
+        font-size: 0.6rem;
+        padding: 2px;
     }
 
     /* Outside bets */
     .outside-bets,
     .dozen-bets {
-        margin-left: 40px;
-        margin-top: var(--spacing-xs);
+        margin-left: 32px;
+        margin-top: 2px;
     }
 
     .dozen-bet,
     .even-money-bet {
-        font-size: 0.7rem;
-        min-height: 36px;
-        padding: var(--spacing-xs);
+        font-size: 0.65rem;
+        min-height: 28px;
+        padding: 2px;
     }
 
-    /* Inside bet areas - larger for touch */
+    /* Inside bet areas - hide backgrounds on mobile for cleaner look */
+    .split-bet,
+    .corner-bet,
+    .line-bet,
+    .first-four-bet,
+    .top-line-bet {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Show bet areas only on touch/hover */
+    .split-bet:active,
+    .corner-bet:active,
+    .line-bet:active {
+        background: rgba(212, 175, 55, 0.4) !important;
+    }
+
     .split-bet.vertical,
     .split-bet.horizontal {
-        min-width: 24px;
-        min-height: 24px;
+        min-width: 16px;
+        min-height: 16px;
+        width: 16px;
+        height: 16px;
     }
 
     .corner-bet,
     .line-bet {
-        width: 28px;
-        height: 28px;
+        width: 18px;
+        height: 18px;
     }
 
-    /* ========== Chip Selector - Touch Optimized ========== */
+    /* ========== Chip Selector - Compact Mobile ========== */
     .chip-selector {
-        padding: var(--spacing-sm);
-        margin-top: var(--spacing-md);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        margin-top: var(--spacing-sm);
+        background: rgba(20, 20, 30, 0.9);
+        border-radius: var(--radius-md);
     }
 
     .chip-selector-label {
-        font-size: 0.65rem;
-        margin-bottom: var(--spacing-xs);
+        font-size: 0.6rem;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .chip-rack {
-        gap: var(--spacing-xs);
+        gap: 6px;
         justify-content: center;
         flex-wrap: nowrap;
         overflow-x: auto;
-        padding: var(--spacing-xs) 0;
+        padding: 4px 0;
         -webkit-overflow-scrolling: touch;
     }
 
+    /* Smaller chips for mobile */
     .chip {
-        width: 44px;
-        height: 44px;
-        font-size: 0.7rem;
+        width: 36px;
+        height: 36px;
+        font-size: 0.6rem;
         flex-shrink: 0;
         border-width: 2px;
     }
 
     .chip::before {
-        top: 3px;
-        left: 3px;
-        right: 3px;
-        bottom: 3px;
-        border-width: 1.5px;
+        top: 2px;
+        left: 2px;
+        right: 2px;
+        bottom: 2px;
+        border-width: 1px;
     }
 
     .chip.selected {
-        transform: translateY(-3px) scale(1.08);
+        transform: translateY(-2px) scale(1.1);
+        box-shadow: 0 0 12px var(--accent-gold);
     }
 
-    /* Placed chips - smaller on mobile */
+    /* Placed chips - even smaller on mobile */
     .chip-sm {
-        width: 26px;
-        height: 26px;
-        font-size: 0.55rem;
+        width: 20px;
+        height: 20px;
+        font-size: 0.45rem;
+        border-width: 1px;
+    }
+
+    .chip-sm::before {
+        display: none;
     }
 
     .chip-stack-container {
-        width: 26px;
-        height: 26px;
+        width: 20px;
+        height: 20px;
     }
 
     .chip-amount-label {
-        font-size: 0.55rem;
-        padding: 1px 3px;
+        font-size: 0.5rem;
+        padding: 1px 2px;
+        border-width: 1px;
     }
 
     /* ========== Action Bar - Fixed Bottom ========== */
@@ -593,18 +578,59 @@
     }
 
     .betting-table {
-        min-width: 420px;
+        min-width: 340px;
+        padding: 2px;
+    }
+
+    .zero-section {
+        width: 26px;
+    }
+
+    .zero-cell {
+        font-size: 0.85rem;
+        min-height: 72px;
     }
 
     .number-cell {
-        font-size: 0.75rem;
-        min-height: 30px;
+        font-size: 0.65rem;
+        min-height: 24px;
     }
 
+    .column-section {
+        width: 22px;
+    }
+
+    .column-bet {
+        font-size: 0.5rem;
+    }
+
+    .outside-bets,
+    .dozen-bets {
+        margin-left: 26px;
+    }
+
+    .dozen-bet,
+    .even-money-bet {
+        font-size: 0.55rem;
+        min-height: 24px;
+    }
+
+    /* Even smaller chips */
     .chip {
-        width: 40px;
-        height: 40px;
-        font-size: 0.65rem;
+        width: 32px;
+        height: 32px;
+        font-size: 0.55rem;
+    }
+
+    .chip-sm {
+        width: 18px;
+        height: 18px;
+        font-size: 0.4rem;
+    }
+
+    .chip-stack-container {
+        width: 18px;
+        height: 18px;
     }
 
     .preset-group {
