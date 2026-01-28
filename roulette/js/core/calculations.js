@@ -228,7 +228,24 @@ function getPayoutForBet(betType) {
 }
 
 /**
+ * Check if a bet type is an even money bet
+ * @param {string} betType - The bet type
+ * @returns {boolean}
+ */
+function isEvenMoneyBet(betType) {
+    return [
+        BET_TYPES.RED,
+        BET_TYPES.BLACK,
+        BET_TYPES.EVEN,
+        BET_TYPES.ODD,
+        BET_TYPES.LOW,
+        BET_TYPES.HIGH
+    ].includes(betType);
+}
+
+/**
  * Resolve all bets for a spin result
+ * Implements La Partage rule: when zero comes, even money bets return half
  * @param {number|string} result - The winning number
  * @param {object} placedBets - All placed bets object
  * @param {string} rouletteType - 'european' or 'american'
@@ -236,9 +253,13 @@ function getPayoutForBet(betType) {
  */
 function resolveAllBets(result, placedBets, rouletteType) {
     const winningBets = [];
+    const laPartageBets = []; // Bets that get half back due to zero
     let totalWinnings = 0;
     let totalWagered = 0;
-    
+
+    // Check if result is zero (La Partage rule applies)
+    const isZeroResult = result === 0 || result === '0' || result === '00';
+
     // Process each bet category
     for (const [betType, bets] of Object.entries(placedBets)) {
         if (typeof bets === 'object' && bets !== null && !Array.isArray(bets)) {
@@ -263,7 +284,9 @@ function resolveAllBets(result, placedBets, rouletteType) {
         } else if (typeof bets === 'number' && bets > 0) {
             // Simple bets (red, black, even, odd, low, high)
             totalWagered += bets;
+
             if (isBetWinner(result, betType, null, rouletteType)) {
+                // Normal win
                 const payout = getPayoutForBet(betType);
                 const winAmount = calculateWinnings(bets, payout);
                 totalWinnings += winAmount;
@@ -274,13 +297,26 @@ function resolveAllBets(result, placedBets, rouletteType) {
                     payout: payout,
                     winnings: winAmount
                 });
+            } else if (isZeroResult && isEvenMoneyBet(betType)) {
+                // La Partage rule: return half the bet when zero comes
+                const laPartageReturn = Math.floor(bets * 0.5);
+                totalWinnings += laPartageReturn;
+                laPartageBets.push({
+                    type: betType,
+                    value: null,
+                    amount: bets,
+                    payout: 0.5,
+                    winnings: laPartageReturn,
+                    isLaPartage: true
+                });
             }
         }
     }
-    
+
     return {
         result: result,
         winningBets: winningBets,
+        laPartageBets: laPartageBets,
         totalWinnings: totalWinnings,
         totalWagered: totalWagered,
         netResult: totalWinnings - totalWagered

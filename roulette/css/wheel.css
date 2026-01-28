@@ -155,10 +155,12 @@
 
 @keyframes ballSpin {
     0% {
-        transform: translate(-50%, -50%) rotate(0deg) translateX(120px) rotate(0deg);
+        /* Ball starts in outer track area (78% of wheel radius ~117px for 300px wheel) */
+        transform: translate(-50%, -50%) rotate(0deg) translateX(117px) rotate(0deg);
     }
     100% {
-        transform: translate(-50%, -50%) rotate(var(--ball-rotation, -2160deg)) translateX(100px) rotate(calc(var(--ball-rotation, -2160deg) * -1));
+        /* Ball ends in the pocket groove area (78% of radius) */
+        transform: translate(-50%, -50%) rotate(var(--ball-rotation, -2160deg)) translateX(117px) rotate(calc(var(--ball-rotation, -2160deg) * -1));
     }
 }
 

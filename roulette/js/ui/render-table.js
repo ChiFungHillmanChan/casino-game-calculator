@@ -160,46 +160,71 @@ function renderInsideBetAreas(isAmerican) {
                      title="Line: ${line.join(', ')}"></div>`;
     }
     
-    // Vertical splits (between rows in same column) 
+    // Vertical splits (between rows in same column)
+    // These are positioned at the border between two vertically adjacent numbers
     for (let col = 0; col < 12; col++) {
-        // Split between row 1 (top) and row 2 (middle): numbers row1[col] and row2[col]
+        // Split between row 0 (top) and row 1 (middle): numbers row1[col] and row2[col]
         const num1 = TABLE_LAYOUT.row1[col]; // e.g., 3
         const num2 = TABLE_LAYOUT.row2[col]; // e.g., 2
         const splitKey1 = [Math.min(num1, num2), Math.max(num1, num2)].join('-');
+        // Center of column, at the border between rows (33.33%)
+        const colCenterPercent = ((col + 0.5) / 12) * 100;
         html += `<div class="split-bet vertical" data-bet-type="split" data-bet-value="${splitKey1}"
-                     style="left: calc(${col * (100/12)}% + ${100/24}%); top: calc(33.33% - 6px);"
+                     style="left: ${colCenterPercent}%; top: 33.33%;"
                      title="Split: ${num2}, ${num1}"></div>`;
-        
-        // Split between row 2 (middle) and row 3 (bottom): numbers row2[col] and row3[col]
+
+        // Split between row 1 (middle) and row 2 (bottom): numbers row2[col] and row3[col]
         const num3 = TABLE_LAYOUT.row3[col]; // e.g., 1
         const splitKey2 = [Math.min(num2, num3), Math.max(num2, num3)].join('-');
         html += `<div class="split-bet vertical" data-bet-type="split" data-bet-value="${splitKey2}"
-                     style="left: calc(${col * (100/12)}% + ${100/24}%); top: calc(66.66% - 6px);"
+                     style="left: ${colCenterPercent}%; top: 66.66%;"
                      title="Split: ${num3}, ${num2}"></div>`;
     }
-    
+
     // Horizontal splits (between adjacent columns in same row)
+    // These are positioned at the border between two horizontally adjacent numbers
     for (let col = 0; col < 11; col++) {
         for (let row = 0; row < 3; row++) {
             const rowData = row === 0 ? TABLE_LAYOUT.row1 : (row === 1 ? TABLE_LAYOUT.row2 : TABLE_LAYOUT.row3);
             const num1 = rowData[col];
             const num2 = rowData[col + 1];
             const splitKey = [Math.min(num1, num2), Math.max(num1, num2)].join('-');
+            // At column border, center of row
+            const leftPercent = ((col + 1) / 12) * 100;
+            const topPercent = ((row + 0.5) / 3) * 100;
             html += `<div class="split-bet horizontal" data-bet-type="split" data-bet-value="${splitKey}"
-                         style="left: calc(${(col + 1) * (100/12)}% - 6px); top: calc(${row * 33.33}% + 16.66%);"
+                         style="left: ${leftPercent}%; top: ${topPercent}%;"
                          title="Split: ${num1}, ${num2}"></div>`;
         }
     }
     
     // Corners (intersection of 4 numbers)
+    // Each corner is at the intersection between 4 adjacent numbers in a 2x2 square
+    // Grid layout:
+    //   Row 0 (top):    3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36
+    //   Row 1 (middle): 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35
+    //   Row 2 (bottom): 1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34
     for (let col = 0; col < 11; col++) {
         for (let row = 0; row < 2; row++) {
             const topRow = row === 0 ? TABLE_LAYOUT.row1 : TABLE_LAYOUT.row2;
             const bottomRow = row === 0 ? TABLE_LAYOUT.row2 : TABLE_LAYOUT.row3;
-            const nums = [topRow[col], topRow[col + 1], bottomRow[col], bottomRow[col + 1]].sort((a, b) => a - b);
+            // Get the 4 numbers that form this corner
+            const topLeft = topRow[col];
+            const topRight = topRow[col + 1];
+            const bottomLeft = bottomRow[col];
+            const bottomRight = bottomRow[col + 1];
+            const nums = [topLeft, topRight, bottomLeft, bottomRight].sort((a, b) => a - b);
             const cornerKey = nums.join('-');
+            
+            // Position at the intersection point between the 4 cells
+            // The corner is between columns (col) and (col+1), and between row (row) and (row+1)
+            // Horizontal: right edge of column col = (col+1) * columnWidth
+            // Vertical: bottom edge of row = (row+1) * rowHeight
+            const leftPercent = ((col + 1) / 12) * 100;
+            const topPercent = ((row + 1) / 3) * 100;
+            
             html += `<div class="corner-bet" data-bet-type="corner" data-bet-value="${cornerKey}"
-                         style="left: calc(${(col + 1) * (100/12)}% - 8px); top: calc(${(row + 1) * 33.33}% - 8px);"
+                         style="left: calc(${leftPercent}% - 10px); top: calc(${topPercent}% - 10px);"
                          title="Corner: ${nums.join(', ')}"></div>`;
         }
     }
