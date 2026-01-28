@@ -1111,7 +1111,11 @@ function initChipPreviewHandlers() {
 function setupChipPreviewOnTable() {
     const bettingTable = document.getElementById('bettingTable');
     if (!bettingTable) return;
-    
+
+    // Prevent duplicate preview handlers
+    if (bettingTable.dataset.previewInitialized === 'true') return;
+    bettingTable.dataset.previewInitialized = 'true';
+
     // Desktop: Use mouseover/mouseout with event delegation
     bettingTable.addEventListener('mouseover', (e) => {
         const betArea = e.target.closest('[data-bet-type]');

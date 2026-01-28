@@ -264,7 +264,11 @@ function renderInsideBetAreas(isAmerican) {
 function initBettingTableHandlers() {
     const table = document.getElementById('bettingTable');
     if (!table) return;
-    
+
+    // Prevent duplicate handlers - check if already initialized
+    if (table.dataset.handlersInitialized === 'true') return;
+    table.dataset.handlersInitialized = 'true';
+
     // Handle clicks on bet areas
     table.addEventListener('click', (e) => {
         const betElement = e.target.closest('[data-bet-type]');
