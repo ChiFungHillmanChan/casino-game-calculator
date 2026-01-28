@@ -300,14 +300,23 @@ function initGameControlHandlers() {
 function handleSpinClick() {
     if (isSpinning()) return;
     
-    // Allow spinning without bets (for statistics/fun)
-    // Store current bets for repeat (if any)
+    // Store current bets for repeat feature
+    // IMPORTANT: Always store the current bets (even if empty/null)
+    // This ensures "Repeat" only repeats the LAST spin's bets, not older bets
     if (hasBets()) {
         storeLastBets(getAllBets());
+    } else {
+        // Clear last bets if user spins without placing any bets
+        clearLastBets();
     }
     
     // Stop auto-spin countdown if running
     stopAutoSpinCountdown();
+    
+    // Clear previous winning marker before new spin
+    if (isWinningMarkerVisible()) {
+        clearWinningHighlight();
+    }
     
     // Disable betting during spin
     setGamePhase(GAME_PHASES.SPINNING);
@@ -620,6 +629,11 @@ function handleChipSelect(value) {
 function handleBetPlacement(betType, betValue, e) {
     if (getGamePhase() !== GAME_PHASES.BETTING) return;
     
+    // Remove winning marker when user starts placing new bets
+    if (isWinningMarkerVisible()) {
+        clearWinningHighlight();
+    }
+    
     const chipValue = getSelectedChip();
     const totalWagered = getTotalWagered();
     const currentBankroll = getCurrentBankroll();
@@ -806,14 +820,10 @@ function showResultWithAutoDismiss(result, resolution) {
         amountEl.className = 'result-amount';
     }
     
-    // Determine which action to take (same bets if we have last bets and can afford them)
-    const lastBets = getLastBets();
-    const canRepeat = lastBets && canAffordLastBets(lastBets);
-    
-    // Update action indicators
+    // Update action indicators - New Bets is always the default action
     if (actionNewBets && actionSameBets) {
-        actionNewBets.classList.toggle('active', !canRepeat);
-        actionSameBets.classList.toggle('active', canRepeat);
+        actionNewBets.classList.add('active');
+        actionSameBets.classList.remove('active');
     }
     
     // Show overlay
@@ -840,22 +850,10 @@ function showResultWithAutoDismiss(result, resolution) {
         
         hideResultOverlay();
         
-        if (canRepeat) {
-            // Same bets
-            if (lastBets && restoreBets(lastBets, getCurrentBankroll())) {
-                renderPlacedChips();
-                updateTotalBetDisplay();
-            } else {
-                clearAllBets();
-                renderPlacedChips();
-                updateTotalBetDisplay();
-            }
-        } else {
-            // New bets
-            clearAllBets();
-            renderPlacedChips();
-            updateTotalBetDisplay();
-        }
+        // Always clear bets after spin - user must press Repeat to restore
+        clearAllBets();
+        renderPlacedChips();
+        updateTotalBetDisplay();
         
         setGamePhase(GAME_PHASES.BETTING);
         updateButtonStates();

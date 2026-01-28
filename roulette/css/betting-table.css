@@ -573,6 +573,70 @@
     }
 }
 
+/* ====== WINNING MARKER / DOLLY ====== */
+/* Simple chess-piece style dolly placed on the winning number */
+
+.winning-marker {
+    position: absolute;
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-40px);
+    transition: none;
+}
+
+.winning-marker.visible {
+    opacity: 1;
+    transform: translateY(0);
+    animation: dollyDrop 0.4s ease-out forwards;
+}
+
+/* Hide unused elements */
+.dolly-top,
+.dolly-stick {
+    display: none;
+}
+
+/* Simple circular dolly - like a chess piece base */
+.dolly-base {
+    width: 28px;
+    height: 28px;
+    background: rgba(20, 20, 20, 0.65);
+    border-radius: 50%;
+    border: 3px solid rgba(212, 175, 55, 0.85);
+    box-shadow:
+        0 3px 6px rgba(0, 0, 0, 0.4),
+        inset 0 1px 2px rgba(255, 255, 255, 0.1);
+}
+
+/* Animation for dolly dropping onto number */
+@keyframes dollyDrop {
+    0% {
+        opacity: 0;
+        transform: translateY(-40px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Fade out animation when removing dolly */
+.winning-marker.removing {
+    animation: dollyRemove 0.25s ease-out forwards;
+}
+
+@keyframes dollyRemove {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
 /* Responsive adjustments */
 @media (max-width: 767px) {
     .betting-table {
@@ -596,5 +660,12 @@
     .outside-bets,
     .dozen-bets {
         margin-left: 45px;
+    }
+    
+    /* Smaller dolly on mobile */
+    .dolly-base {
+        width: 22px;
+        height: 22px;
+        border-width: 2px;
     }
 }

@@ -1,6 +1,6 @@
 /* =====================================================
-   ROULETTE WHEEL - Realistic Casino Wheel Design
-   Inspired by authentic European roulette wheels
+   ROULETTE WHEEL - SVG-based Casino Wheel Design
+   Mathematically precise geometry for authentic look
    ===================================================== */
 
 /* Wheel container */
@@ -17,7 +17,7 @@
     width: 340px;
     height: 340px;
     /* Default ball orbit radius for animation */
-    --ball-orbit-radius: 120px;
+    --ball-orbit-radius: 112px;
 }
 
 /* Outer wooden frame - the decorative rim */
@@ -41,16 +41,20 @@
         inset 0 0 40px rgba(0, 0, 0, 0.5);
     /* 3D effect */
     border: 3px solid #2D1507;
+    overflow: hidden;
 }
 
 /* Inner gold ring separating frame from pockets */
+/* Adjusted to be outside the pocket area (radius > 48%) */
 .wheel::before {
     content: '';
     position: absolute;
-    top: 18px;
-    left: 18px;
-    right: 18px;
-    bottom: 18px;
+    /* Pockets end at 48% radius (96% diameter) */
+    /* 340px * 0.02 = 6.8px. Use 6px to be safe */
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
     border-radius: 50%;
     border: 4px solid;
     border-color: #D4AF37 #B8860B #8B6914 #D4AF37;
@@ -61,187 +65,90 @@
     pointer-events: none;
 }
 
-/* Wheel outer ring (pockets area) - THIS ROTATES */
+/* SVG wheel container - fills the inner area of the wooden frame */
+.wheel-svg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100% - 52px);
+    height: calc(100% - 52px);
+    border-radius: 50%;
+    overflow: visible;
+}
+
+/* Wheel outer group (pockets area) - THIS ROTATES */
+/* viewBox is 300x300, so center is at 150px 150px */
 .wheel-outer {
-    position: absolute;
-    top: 26px;
-    left: 26px;
-    right: 26px;
-    bottom: 26px;
-    border-radius: 50%;
-    background: #1a1a1a;
-    transform-origin: center center;
-    overflow: hidden;
-    /* Inner ring shadow */
-    box-shadow:
-        inset 0 0 20px rgba(0, 0, 0, 0.8),
-        inset 0 0 40px rgba(0, 0, 0, 0.4);
+    transform-origin: 150px 150px;
 }
 
-/* Ball track - the groove where ball rolls */
-.wheel-outer::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    border-radius: 50%;
-    border: 3px solid #D4AF37;
-    box-shadow:
-        inset 0 2px 4px rgba(0, 0, 0, 0.5),
-        0 0 8px rgba(212, 175, 55, 0.2);
+/* Wheel spinning animation for SVG */
+.wheel-outer.spinning {
+    animation: wheelSpin var(--wheel-duration, 4s) cubic-bezier(0.17, 0.67, 0.12, 0.99) forwards;
+}
+
+@keyframes wheelSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(var(--wheel-rotation, 1440deg));
+    }
+}
+
+/* Pocket sectors - SVG paths */
+.wheel-pocket-sector {
+    transition: filter 0.3s ease;
+}
+
+.wheel-pocket-sector.red {
+    fill: #C41E3A;
+    stroke: #8B0000;
+}
+
+.wheel-pocket-sector.black {
+    fill: #1a1a1a;
+    stroke: #0D0D0D;
+}
+
+.wheel-pocket-sector.green {
+    fill: #006400;
+    stroke: #004D00;
+}
+
+/* Pocket number text - clear, bold, readable */
+.wheel-pocket-number {
+    font-family: 'Arial Black', 'Arial Narrow', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 900;
+    fill: white;
     pointer-events: none;
-    z-index: 50;
+    /* SVG doesn't support text-shadow, use stroke for outline effect */
+    stroke: rgba(0, 0, 0, 0.6);
+    stroke-width: 0.5px;
+    paint-order: stroke fill;
 }
 
-/* Individual pocket - each number section */
-.wheel-pocket {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    left: 0;
-    top: 0;
-    transform-origin: center center;
+/* Gold rings */
+.wheel-gold-ring {
     pointer-events: none;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
 }
 
-/* The colored pocket segment - number area */
-.wheel-pocket-inner {
-    position: absolute;
-    top: 4px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 24px;
-    height: 32px;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding-top: 4px;
-    font-family: 'Arial Narrow', Arial, sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    color: white;
-    text-shadow:
-        1px 1px 1px rgba(0, 0, 0, 0.8),
-        0 0 3px rgba(0, 0, 0, 0.5);
-    /* Pocket shape - trapezoid effect with inset edges to prevent color bleeding */
-    clip-path: polygon(20% 0%, 80% 0%, 95% 100%, 5% 100%);
-    border-radius: 2px 2px 0 0;
-}
-
-/* Ball pocket area - where ball actually lands */
-.wheel-pocket-ball-area {
-    position: absolute;
-    top: 36px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 22px;
-    height: 24px;
-    background: linear-gradient(
-        to bottom,
-        rgba(20, 20, 20, 0.9) 0%,
-        rgba(10, 10, 10, 0.95) 100%
-    );
-    /* Inset edges to prevent color bleeding */
-    clip-path: polygon(12% 0%, 88% 0%, 98% 100%, 2% 100%);
-    border-radius: 0 0 4px 4px;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
-}
-
-/* Pocket dividers - positioned at the RIGHT edge of each pocket */
-.wheel-pocket::after {
-    content: '';
-    position: absolute;
-    top: 4px;
-    left: 50%;
-    width: 3px;
-    height: 58px;
-    background: linear-gradient(
-        to bottom,
-        #D4AF37 0%,
-        #B8860B 30%,
-        #8B6914 70%,
-        #5C4A1F 100%
-    );
-    /* Rotate by half pocket width to place at edge - uses CSS variable set by JS */
-    transform: translateX(-50%) rotate(var(--half-pocket-angle, 4.86deg));
-    transform-origin: center 140px;
-    box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
-    z-index: 3;
-    /* Improve rendering consistency across all dividers */
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    will-change: transform;
-}
-
-
-.wheel-pocket-inner.red {
-    background: linear-gradient(
-        to bottom,
-        #DC143C 0%,
-        #B22222 50%,
-        #8B0000 100%
-    );
-    box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.4);
-}
-
-.wheel-pocket-inner.black {
-    background: linear-gradient(
-        to bottom,
-        #2D2D2D 0%,
-        #1a1a1a 50%,
-        #0D0D0D 100%
-    );
-    box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.6);
-}
-
-.wheel-pocket-inner.green {
-    background: linear-gradient(
-        to bottom,
-        #228B22 0%,
-        #006400 50%,
-        #004D00 100%
-    );
-    box-shadow:
-        inset 0 -2px 4px rgba(0, 0, 0, 0.4),
-        inset 3px 0 3px -2px rgba(0, 0, 0, 0.9);
-}
-
-/* Make divider next to zero thicker to cover any bleeding */
-.wheel-pocket[data-number="26"]::after {
-    width: 5px;
-    z-index: 10;
-}
-
-/* Dark mask between zero pocket and adjacent divider */
-.wheel-pocket[data-number="0"]::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: calc(50% - 18px);
-    width: 8px;
-    height: 65px;
-    background: #1a1a1a;
-    z-index: 1;
+.wheel-inner-gold-ring,
+.wheel-outer-gold-ring {
     pointer-events: none;
 }
 
-/* Inner pocket ring - gold trim separating number area from ball pocket area */
+/* Inner pocket ring - REMOVED, now rendered in SVG for perfect alignment */
 .wheel-inner-ring {
-    position: absolute;
-    top: 62px;
-    left: 62px;
-    right: 62px;
-    bottom: 62px;
-    border-radius: 50%;
-    border: 2px solid;
-    border-color: #D4AF37 #B8860B #8B6914 #D4AF37;
-    box-shadow:
-        0 0 5px rgba(0, 0, 0, 0.5),
-        inset 0 0 10px rgba(0, 0, 0, 0.3);
-    z-index: 8;
-    pointer-events: none;
+    display: none !important;
+}
+
+/* Divider lines */
+.wheel-divider {
+    stroke-linecap: round;
 }
 
 /* Wheel center hub - decorative gold center */
@@ -311,22 +218,41 @@
         inset 0 1px 3px rgba(255, 255, 255, 0.5);
 }
 
-/* Result indicator in center */
+/* Result indicator in center - large, clear, high contrast */
 .result-indicator {
     position: absolute;
-    font-family: 'Orbitron', 'Arial Black', sans-serif;
-    font-size: 1.8rem;
+    font-family: 'Arial Black', 'Helvetica Bold', sans-serif;
+    font-size: 2.2rem;
     font-weight: 900;
-    color: #1a1a1a;
-    text-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.3),
-        0 -1px 0 rgba(0, 0, 0, 0.2);
+    letter-spacing: -1px;
     z-index: 15;
 }
 
-.result-indicator.red { color: #DC143C; }
-.result-indicator.black { color: #1a1a1a; }
-.result-indicator.green { color: #228B22; }
+/* Red result - white text with red glow for contrast on gold */
+.result-indicator.red { 
+    color: #FFFFFF;
+    text-shadow:
+        0 0 8px #DC143C,
+        0 0 15px #DC143C,
+        2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Black result - white text with dark shadow for contrast */
+.result-indicator.black { 
+    color: #FFFFFF;
+    text-shadow:
+        0 0 8px #000000,
+        0 0 15px #1a1a1a,
+        2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+/* Green result (zero) - white text with green glow */
+.result-indicator.green { 
+    color: #FFFFFF;
+    text-shadow:
+        0 0 8px #228B22,
+        0 0 15px #006400,
+        2px 2px 4px rgba(0, 0, 0, 0.5);
+}
 
 /* Ball - realistic white ball with shine */
 .ball {
@@ -350,7 +276,6 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    /* z-index below overlay (--z-overlay: 50) so popups cover the ball */
     z-index: var(--z-ball, 30);
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -364,80 +289,67 @@
     animation: ballSpin var(--ball-duration, 4s) cubic-bezier(0.17, 0.67, 0.12, 0.99) forwards;
 }
 
-/* Wheel spinning animation */
-.wheel-outer.spinning {
-    animation: wheelSpin var(--wheel-duration, 4s) cubic-bezier(0.17, 0.67, 0.12, 0.99) forwards;
-}
-
-@keyframes wheelSpin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(var(--wheel-rotation, 1440deg));
-    }
-}
-
 @keyframes ballSpin {
     0% {
-        /* Ball starts at outer track, radius calculated for ball pocket area */
-        transform: translate(-50%, -50%) rotate(0deg) translateX(var(--ball-orbit-radius, 120px)) rotate(0deg);
+        transform: translate(-50%, -50%) rotate(0deg) translateX(var(--ball-orbit-radius, 112px)) rotate(0deg);
         opacity: 1;
     }
     100% {
-        /* Ball ends at the winning pocket position - calculated by physics engine */
-        transform: translate(-50%, -50%) rotate(var(--ball-rotation, -2160deg)) translateX(var(--ball-orbit-radius, 120px)) rotate(calc(var(--ball-rotation, -2160deg) * -1));
+        transform: translate(-50%, -50%) rotate(var(--ball-rotation, -2160deg)) translateX(var(--ball-orbit-radius, 112px)) rotate(calc(var(--ball-rotation, -2160deg) * -1));
         opacity: 1;
     }
 }
 
-/* Winning pocket highlight */
-.wheel-pocket.winning .wheel-pocket-inner {
-    box-shadow:
-        0 0 15px var(--accent-gold),
-        0 0 30px var(--accent-gold),
-        inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+/* Winning pocket highlight - SVG */
+.wheel-pocket.winning .wheel-pocket-sector {
+    filter: drop-shadow(0 0 8px var(--accent-gold, #D4AF37)) drop-shadow(0 0 15px var(--accent-gold, #D4AF37));
     animation: winningGlow 0.6s ease-in-out infinite alternate;
 }
 
 @keyframes winningGlow {
     from {
-        box-shadow:
-            0 0 10px var(--accent-gold),
-            inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+        filter: drop-shadow(0 0 5px var(--accent-gold, #D4AF37));
     }
     to {
-        box-shadow:
-            0 0 25px var(--accent-gold),
-            0 0 40px var(--accent-gold),
-            inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+        filter: drop-shadow(0 0 15px var(--accent-gold, #D4AF37)) drop-shadow(0 0 25px var(--accent-gold, #D4AF37));
     }
 }
 
-/* Responsive sizing */
+/* =====================================================
+   RESPONSIVE SIZING
+   ===================================================== */
+
 @media (max-width: 767px) {
     .wheel-wrapper {
         width: 280px;
         height: 280px;
-        --ball-orbit-radius: 95px;
+        --ball-orbit-radius: 92px;
     }
 
-    .wheel-pocket-inner {
-        font-size: 9px;
-        width: 18px;
-        height: 26px;
-        padding-top: 3px;
+    .wheel-svg {
+        width: calc(100% - 44px);
+        height: calc(100% - 44px);
     }
 
-    .wheel-pocket-ball-area {
-        top: 30px;
-        width: 16px;
-        height: 18px;
+    .wheel::before {
+        top: 5px;
+        left: 5px;
+        right: 5px;
+        bottom: 5px;
+        border-width: 3px;
     }
 
-    .wheel-pocket::after {
-        height: 50px;
-        transform-origin: center 112px;
+    .wheel-pocket-number {
+        font-size: 10px;
+    }
+    
+    .result-indicator {
+        font-size: 1.6rem;
+    }
+
+    .wheel-inner-ring {
+        width: 56%;
+        height: 56%;
     }
 
     .wheel-center {
@@ -469,25 +381,29 @@
     .wheel-wrapper {
         width: 400px;
         height: 400px;
-        --ball-orbit-radius: 140px;
+        --ball-orbit-radius: 132px;
     }
 
-    .wheel-pocket-inner {
-        font-size: 13px;
-        width: 28px;
-        height: 38px;
-        padding-top: 6px;
+    .wheel-svg {
+        width: calc(100% - 60px);
+        height: calc(100% - 60px);
     }
 
-    .wheel-pocket-ball-area {
-        top: 42px;
-        width: 26px;
-        height: 28px;
+    .wheel::before {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        border-width: 5px;
     }
 
-    .wheel-pocket::after {
-        height: 72px;
-        transform-origin: center 168px;
+    .wheel-pocket-number {
+        font-size: 15px;
+    }
+
+    .wheel-inner-ring {
+        width: 56%;
+        height: 56%;
     }
 
     .wheel-center {
@@ -506,11 +422,34 @@
     }
 
     .result-indicator {
-        font-size: 2.2rem;
+        font-size: 2.6rem;
     }
 
     .ball {
         width: 16px;
         height: 16px;
     }
+}
+
+/* =====================================================
+   LEGACY SUPPORT - Keep for backwards compatibility
+   ===================================================== */
+
+/* Legacy div-based pocket (if SVG fails) */
+.wheel-pocket-inner {
+    display: none;
+}
+
+.wheel-pocket-ball-area {
+    display: none;
+}
+
+/* Flash animation */
+.wheel.flash {
+    animation: wheelFlash 0.3s ease;
+}
+
+@keyframes wheelFlash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
 }

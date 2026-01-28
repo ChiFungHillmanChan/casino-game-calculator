@@ -113,6 +113,14 @@ function getLastBets() {
 }
 
 /**
+ * Clear last bets (when user spins without placing bets)
+ */
+function clearLastBets() {
+    gameState.lastBets = null;
+    saveGameStateToStorage();
+}
+
+/**
  * Set spin result data
  * @param {object} spinData - Spin animation and result data
  */

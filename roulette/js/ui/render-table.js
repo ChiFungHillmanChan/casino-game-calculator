@@ -467,6 +467,9 @@ function highlightWinningNumber(number) {
     if (cell) {
         cell.classList.add('winning');
     }
+    
+    // Place the winning marker (dolly) on the number
+    placeWinningMarker(number);
 }
 
 /**
@@ -474,4 +477,80 @@ function highlightWinningNumber(number) {
  */
 function clearWinningHighlight() {
     document.querySelectorAll('.winning').forEach(el => el.classList.remove('winning'));
+    removeWinningMarker();
+}
+
+/**
+ * Place the winning marker (dolly) on the winning number
+ * Like in real casinos where a marker is placed on the winning number
+ * @param {number|string} number - The winning number
+ */
+function placeWinningMarker(number) {
+    const marker = document.getElementById('winningMarker');
+    const container = document.getElementById('bettingTableContainer');
+    const table = document.getElementById('bettingTable');
+    
+    if (!marker || !container || !table) return;
+    
+    // Find the winning cell - straight bet cell for the number
+    let cell = table.querySelector(`.number-cell[data-bet-value="${number}"]`);
+    
+    // If not found in number cells, check zero cells
+    if (!cell) {
+        cell = table.querySelector(`.zero-cell[data-bet-value="${number}"]`);
+    }
+    
+    if (!cell) return;
+    
+    // Get positions
+    const containerRect = container.getBoundingClientRect();
+    const cellRect = cell.getBoundingClientRect();
+    
+    // Get dolly size for centering
+    const dollySize = window.innerWidth <= 767 ? 22 : 28;
+    
+    // Calculate position - center of the cell
+    const x = cellRect.left + cellRect.width / 2 - containerRect.left - dollySize / 2;
+    const y = cellRect.top + cellRect.height / 2 - containerRect.top - dollySize / 2;
+    
+    // Position the marker
+    marker.style.left = x + 'px';
+    marker.style.top = y + 'px';
+    
+    // Remove any existing animation classes
+    marker.classList.remove('removing');
+    
+    // Trigger reflow to ensure animation plays
+    marker.offsetHeight;
+    
+    // Show marker with animation
+    marker.classList.add('visible');
+}
+
+/**
+ * Remove the winning marker with animation
+ */
+function removeWinningMarker() {
+    const marker = document.getElementById('winningMarker');
+    if (!marker) return;
+    
+    // Only animate removal if currently visible
+    if (marker.classList.contains('visible')) {
+        marker.classList.add('removing');
+        marker.classList.remove('visible');
+        
+        // After animation completes, fully hide
+        setTimeout(() => {
+            marker.classList.remove('removing');
+        }, 300);
+    }
+}
+
+/**
+ * Check if winning marker is currently displayed
+ * @returns {boolean} True if marker is visible
+ */
+function isWinningMarkerVisible() {
+    const marker = document.getElementById('winningMarker');
+    return marker && marker.classList.contains('visible');
 }

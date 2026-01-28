@@ -149,6 +149,9 @@ This document tracks all functions, components, and modules in the codebase to p
 | `getChipBreakdown(amount)` | Get chips for amount | render-table.js |
 | `highlightWinningNumber(number)` | Highlight winning on table | render-table.js |
 | `clearWinningHighlight()` | Clear table highlights | render-table.js |
+| `placeWinningMarker(number)` | Place dolly marker on winning number | render-table.js |
+| `removeWinningMarker()` | Remove dolly marker with animation | render-table.js |
+| `isWinningMarkerVisible()` | Check if dolly marker is displayed | render-table.js |
 
 #### render-chips.js
 | Function | Purpose | Location |

@@ -1,9 +1,62 @@
 // =====================================================
-// RENDER WHEEL - Wheel DOM updates and animation triggers
+// RENDER WHEEL - SVG-based wheel with mathematically perfect geometry
 // =====================================================
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
 /**
- * Render the roulette wheel
+ * Calculate SVG arc path for a pocket sector
+ * @param {number} cx - Center X
+ * @param {number} cy - Center Y
+ * @param {number} innerRadius - Inner radius of the sector
+ * @param {number} outerRadius - Outer radius of the sector
+ * @param {number} startAngle - Start angle in degrees (0 = top, clockwise)
+ * @param {number} endAngle - End angle in degrees
+ * @returns {string} SVG path data
+ */
+function createSectorPath(cx, cy, innerRadius, outerRadius, startAngle, endAngle) {
+    // Convert angles to radians, offset by -90 degrees so 0 = top
+    const startRad = (startAngle - 90) * Math.PI / 180;
+    const endRad = (endAngle - 90) * Math.PI / 180;
+    
+    // Calculate points
+    const x1 = cx + outerRadius * Math.cos(startRad);
+    const y1 = cy + outerRadius * Math.sin(startRad);
+    const x2 = cx + outerRadius * Math.cos(endRad);
+    const y2 = cy + outerRadius * Math.sin(endRad);
+    const x3 = cx + innerRadius * Math.cos(endRad);
+    const y3 = cy + innerRadius * Math.sin(endRad);
+    const x4 = cx + innerRadius * Math.cos(startRad);
+    const y4 = cy + innerRadius * Math.sin(startRad);
+    
+    // Large arc flag (0 for arcs less than 180 degrees)
+    const largeArc = (endAngle - startAngle) > 180 ? 1 : 0;
+    
+    // Create path: outer arc, line to inner, inner arc (reverse), close
+    return `M ${x1} ${y1} 
+            A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x2} ${y2} 
+            L ${x3} ${y3} 
+            A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4} 
+            Z`;
+}
+
+/**
+ * Get color values for pocket
+ * @param {number|string} number - Pocket number
+ * @returns {object} Fill and stroke colors
+ */
+function getPocketColors(number) {
+    const color = getNumberColor(number);
+    const colors = {
+        red: { fill: '#C41E3A', stroke: '#8B0000', highlight: '#FF4444' },
+        black: { fill: '#1a1a1a', stroke: '#0D0D0D', highlight: '#444444' },
+        green: { fill: '#006400', stroke: '#004D00', highlight: '#00AA00' }
+    };
+    return colors[color] || colors.green;
+}
+
+/**
+ * Render the roulette wheel using SVG
  */
 function renderWheel() {
     const container = document.getElementById('wheel');
@@ -16,50 +69,210 @@ function renderWheel() {
     const degreesPerPocket = 360 / pocketCount;
     const halfPocketAngle = degreesPerPocket / 2;
 
-    // Set CSS variable for half-pocket-angle (for divider positioning)
+    // Use fixed viewBox size - SVG will scale to fit container via CSS
+    // This ensures consistent geometry regardless of container size
+    const size = 300;
+    const cx = size / 2;
+    const cy = size / 2;
+    
+    // Calculate radii as percentages of viewBox size for perfect scaling
+    // Layout from outside to inside:
+    // 1. Outer edge (outerRadius) - edge of wheel
+    // 2. Number area - numbers at 44% (pushed slightly out)
+    // 3. Gap - clear space
+    // 4. Ball landing area - gold ring at 110px (36.6%)
+    // 5. Inner hub area
+    const outerRadius = size * 0.48;          // 48% - outer edge of pockets
+    const numberRadius = size * 0.44;         // 44% - numbers pushed out slightly
+    const innerRadius = size * 0.33;          // 33% - inner edge of pocket area
+    
+    // Gold dividers/Ring - sit at requested 110px (36.6%)
+    const dividerOuterRadius = size * 0.366;  // 36.6% - dividers top / ring position (r=110)
+    const dividerInnerRadius = size * 0.33;   // 33% - dividers bottom
+
+    // Set CSS variables for ball animation
     if (wheelWrapper) {
+        const wrapperRect = wheelWrapper.getBoundingClientRect();
+        const wrapperSize = Math.min(wrapperRect.width, wrapperRect.height) || 340;
         wheelWrapper.style.setProperty('--half-pocket-angle', halfPocketAngle + 'deg');
-        // Default ball orbit radius for medium screens
-        if (!wheelWrapper.style.getPropertyValue('--ball-orbit-radius')) {
-            wheelWrapper.style.setProperty('--ball-orbit-radius', '120px');
-        }
+        // Ball orbit radius based on actual wrapper size
+        wheelWrapper.style.setProperty('--ball-orbit-radius', (wrapperSize * 0.33) + 'px');
     }
 
     // Clear existing content
     container.innerHTML = '';
 
-    // Add wheel outer ring
-    const outer = document.createElement('div');
-    outer.className = 'wheel-outer';
+    // Create SVG element with fixed viewBox - preserveAspectRatio centers it
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    svg.setAttribute('class', 'wheel-svg');
+    svg.style.width = '100%';
+    svg.style.height = '100%';
+    svg.style.display = 'block';
 
-    // Create pockets
+    // Create defs for gradients and filters
+    const defs = document.createElementNS(SVG_NS, 'defs');
+    
+    // Gold gradient for dividers
+    const goldGradient = document.createElementNS(SVG_NS, 'linearGradient');
+    goldGradient.setAttribute('id', 'goldDivider');
+    goldGradient.setAttribute('x1', '0%');
+    goldGradient.setAttribute('y1', '0%');
+    goldGradient.setAttribute('x2', '0%');
+    goldGradient.setAttribute('y2', '100%');
+    goldGradient.innerHTML = `
+        <stop offset="0%" stop-color="#D4AF37"/>
+        <stop offset="30%" stop-color="#B8860B"/>
+        <stop offset="70%" stop-color="#8B6914"/>
+        <stop offset="100%" stop-color="#5C4A1F"/>
+    `;
+    defs.appendChild(goldGradient);
+
+    // Wood/brown gradient for inner ring
+    const woodGradient = document.createElementNS(SVG_NS, 'radialGradient');
+    woodGradient.setAttribute('id', 'woodInner');
+    woodGradient.setAttribute('cx', '40%');
+    woodGradient.setAttribute('cy', '40%');
+    woodGradient.setAttribute('r', '60%');
+    woodGradient.innerHTML = `
+        <stop offset="0%" stop-color="#5D4037"/>
+        <stop offset="50%" stop-color="#4E342E"/>
+        <stop offset="100%" stop-color="#3E2723"/>
+    `;
+    defs.appendChild(woodGradient);
+
+    // Drop shadow filter for pockets
+    const dropShadow = document.createElementNS(SVG_NS, 'filter');
+    dropShadow.setAttribute('id', 'pocketShadow');
+    dropShadow.innerHTML = `
+        <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="rgba(0,0,0,0.5)"/>
+    `;
+    defs.appendChild(dropShadow);
+    
+    svg.appendChild(defs);
+
+    // Create wheel-outer group (this will rotate)
+    const wheelOuter = document.createElementNS(SVG_NS, 'g');
+    wheelOuter.setAttribute('class', 'wheel-outer');
+    // Set transform origin to center of viewBox (150px for 300x300 viewBox)
+    wheelOuter.style.transformOrigin = `${cx}px ${cy}px`;
+
+    // Background circle for pocket area
+    const bgCircle = document.createElementNS(SVG_NS, 'circle');
+    bgCircle.setAttribute('cx', cx);
+    bgCircle.setAttribute('cy', cy);
+    bgCircle.setAttribute('r', outerRadius);
+    bgCircle.setAttribute('fill', '#1a1a1a');
+    wheelOuter.appendChild(bgCircle);
+
+    // Create pockets group
+    const pocketsGroup = document.createElementNS(SVG_NS, 'g');
+    pocketsGroup.setAttribute('class', 'wheel-pockets');
+
+    // Create each pocket
     sequence.forEach((number, index) => {
-        const pocket = document.createElement('div');
-        pocket.className = 'wheel-pocket';
-        pocket.dataset.number = number;
-        // Set half-pocket-angle on each pocket for divider positioning
-        pocket.style.setProperty('--half-pocket-angle', halfPocketAngle + 'deg');
-
-        // Calculate rotation angle
-        // Add small offset to avoid rendering artifacts at exactly 0 degrees
-        const angle = index * degreesPerPocket + 0.3;
-        pocket.style.transform = `rotate(${angle}deg)`;
-
-        // Inner pocket with number
-        const inner = document.createElement('div');
-        inner.className = 'wheel-pocket-inner ' + getNumberColor(number);
-        inner.textContent = number;
-
-        // Ball pocket area - where ball actually lands
-        const ballArea = document.createElement('div');
-        ballArea.className = 'wheel-pocket-ball-area';
-
-        pocket.appendChild(inner);
-        pocket.appendChild(ballArea);
-        outer.appendChild(pocket);
+        const startAngle = index * degreesPerPocket;
+        const endAngle = startAngle + degreesPerPocket;
+        const midAngle = startAngle + halfPocketAngle;
+        
+        // Pocket group
+        const pocketGroup = document.createElementNS(SVG_NS, 'g');
+        pocketGroup.setAttribute('class', 'wheel-pocket');
+        pocketGroup.setAttribute('data-number', number);
+        
+        // Colored sector path - the full pocket from outer to inner
+        const colors = getPocketColors(number);
+        const sectorPath = document.createElementNS(SVG_NS, 'path');
+        sectorPath.setAttribute('d', createSectorPath(cx, cy, innerRadius, outerRadius, startAngle, endAngle));
+        sectorPath.setAttribute('fill', colors.fill);
+        sectorPath.setAttribute('stroke', colors.stroke);
+        sectorPath.setAttribute('stroke-width', '0.5');
+        sectorPath.setAttribute('class', 'wheel-pocket-sector ' + getNumberColor(number));
+        pocketGroup.appendChild(sectorPath);
+        
+        // Number text - positioned near the OUTER edge (top of pocket)
+        const textAngleRad = (midAngle - 90) * Math.PI / 180;
+        const textX = cx + numberRadius * Math.cos(textAngleRad);
+        const textY = cy + numberRadius * Math.sin(textAngleRad);
+        
+        const text = document.createElementNS(SVG_NS, 'text');
+        text.setAttribute('x', textX);
+        text.setAttribute('y', textY);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('dominant-baseline', 'central');
+        text.setAttribute('class', 'wheel-pocket-number');
+        // Rotate text to be radial - pointing outward from center (readable from outside)
+        text.setAttribute('transform', `rotate(${midAngle}, ${textX}, ${textY})`);
+        text.textContent = number;
+        pocketGroup.appendChild(text);
+        
+        pocketsGroup.appendChild(pocketGroup);
     });
 
-    container.appendChild(outer);
+    wheelOuter.appendChild(pocketsGroup);
+
+    // Inner wood circle - covers the inner area inside the pockets
+    const innerWoodCircle = document.createElementNS(SVG_NS, 'circle');
+    innerWoodCircle.setAttribute('cx', cx);
+    innerWoodCircle.setAttribute('cy', cy);
+    innerWoodCircle.setAttribute('r', innerRadius);
+    innerWoodCircle.setAttribute('fill', 'url(#woodInner)');
+    wheelOuter.appendChild(innerWoodCircle);
+
+    // Create dividers group - these go in the ball landing zone (UNDER the numbers)
+    const dividersGroup = document.createElementNS(SVG_NS, 'g');
+    dividersGroup.setAttribute('class', 'wheel-dividers');
+
+    // Create dividers between each pocket
+    sequence.forEach((number, index) => {
+        const angle = index * degreesPerPocket;
+        const angleRad = (angle - 90) * Math.PI / 180;
+        
+        const x1 = cx + dividerInnerRadius * Math.cos(angleRad);
+        const y1 = cy + dividerInnerRadius * Math.sin(angleRad);
+        const x2 = cx + dividerOuterRadius * Math.cos(angleRad);
+        const y2 = cy + dividerOuterRadius * Math.sin(angleRad);
+        
+        const divider = document.createElementNS(SVG_NS, 'line');
+        divider.setAttribute('x1', x1);
+        divider.setAttribute('y1', y1);
+        divider.setAttribute('x2', x2);
+        divider.setAttribute('y2', y2);
+        divider.setAttribute('stroke', 'url(#goldDivider)');
+        divider.setAttribute('stroke-width', '2');
+        divider.setAttribute('class', 'wheel-divider');
+        dividersGroup.appendChild(divider);
+    });
+
+    wheelOuter.appendChild(dividersGroup);
+
+    // Gold ring connecting the dividers (at the outer edge of dividers, below numbers)
+    const goldRing = document.createElementNS(SVG_NS, 'circle');
+    goldRing.setAttribute('cx', cx);
+    goldRing.setAttribute('cy', cy);
+    goldRing.setAttribute('r', 115); // Gold ring radius
+    goldRing.setAttribute('fill', 'none');
+    goldRing.setAttribute('stroke', 'url(#goldDivider)'); // Use gradient for gold effect
+    goldRing.setAttribute('stroke-width', '3');
+    goldRing.setAttribute('class', 'wheel-gold-ring');
+    wheelOuter.appendChild(goldRing);
+
+    // Outer gold ring - handled by CSS .wheel::before
+    /*
+    const outerRing = document.createElementNS(SVG_NS, 'circle');
+    outerRing.setAttribute('cx', cx);
+    outerRing.setAttribute('cy', cy);
+    outerRing.setAttribute('r', outerRadius);
+    outerRing.setAttribute('fill', 'none');
+    outerRing.setAttribute('stroke', '#D4AF37');
+    outerRing.setAttribute('stroke-width', '2');
+    outerRing.setAttribute('class', 'wheel-outer-gold-ring');
+    wheelOuter.appendChild(outerRing);
+    */
+
+    svg.appendChild(wheelOuter);
+    container.appendChild(svg);
 
     // Initialize ball
     const ball = document.getElementById('ball');
@@ -97,14 +310,14 @@ function animateWheelSpin(spinData, onComplete) {
     if (indicator) indicator.textContent = '';
 
     // Force reflow
-    wheelOuter.offsetHeight;
+    wheelOuter.getBoundingClientRect();
 
     // Get ball orbit radius from CSS or calculate it
     let ballOrbitRadius = 120; // default
     if (wheelWrapper) {
         const wrapperWidth = wheelWrapper.getBoundingClientRect().width;
-        // Ball lands in pocket area: wheelRadius - offset for ball pocket position
-        ballOrbitRadius = (wrapperWidth / 2) - 50;
+        // Ball lands in pocket area
+        ballOrbitRadius = wrapperWidth * 0.33; // 33% of wheel width
         ball.style.setProperty('--ball-orbit-radius', ballOrbitRadius + 'px');
     }
 
@@ -137,29 +350,23 @@ function animateWheelSpin(spinData, onComplete) {
     // Handle animation completion
     setTimeout(() => {
         // Calculate ball's final position BEFORE removing animation class
-        // Ball ends at TOP (12 o'clock) where the winning pocket is positioned
-        // TOP = -90 degrees from CSS right reference
-        // Using the same orbit radius from the animation
         const wrapperWidth = wheelWrapper ? wheelWrapper.getBoundingClientRect().width : 340;
-        const ballOrbitRadius = (wrapperWidth / 2) - 50;
+        const finalBallOrbitRadius = wrapperWidth * 0.33;
 
         // Ball's final angle is at TOP (12 o'clock position)
-        // In CSS coordinates: TOP is at angle -90° from right (3 o'clock)
-        // x = cos(-90°) * radius = 0
-        // y = sin(-90°) * radius = -radius
         const finalBallX = 0;
-        const finalBallY = -ballOrbitRadius;
+        const finalBallY = -finalBallOrbitRadius;
 
         // Set the ball's final position BEFORE removing spinning class
-        // This prevents the "jump" effect
         ball.style.transform = `translate(calc(-50% + ${finalBallX}px), calc(-50% + ${finalBallY}px))`;
 
         // Now safely remove spinning classes
         wheelOuter.classList.remove('spinning');
         ball.classList.remove('spinning');
 
-        // Set final rotation state on wheel-outer
+        // Set final rotation state on wheel-outer (center of 300x300 viewBox)
         wheelOuter.style.transform = `rotate(${wheelRotation}deg)`;
+        wheelOuter.style.transformOrigin = '150px 150px';
 
         // Show result and highlights
         requestAnimationFrame(() => {
@@ -189,7 +396,6 @@ function animateWheelSpin(spinData, onComplete) {
 
 /**
  * Position ball at TOP (12 o'clock) where winning pocket is located after wheel rotation
- * The wheel physics ensures the winning pocket always ends at TOP position
  * @param {number|string} number - Winning number (for reference, not used in positioning)
  * @param {number} wheelRotation - Final wheel rotation angle in degrees (for reference)
  */
@@ -201,19 +407,9 @@ function positionBallAtPocket(number, wheelRotation = 0) {
 
     // Get the wheel wrapper dimensions
     const wrapperRect = wheelWrapper.getBoundingClientRect();
-    const wheelRadius = wrapperRect.width / 2;
+    const ballOrbitRadius = wrapperRect.width * 0.33;
 
-    // Ball orbit radius - positioned in the ball pocket area
-    const ballOrbitRadius = wheelRadius - 50;
-
-    // Ball always lands at TOP (12 o'clock) where the winning pocket is positioned
-    // The wheel physics (calculateFinalWheelAngle) ensures the winning pocket
-    // rotates to TOP, and the ball animation (calculateBallAngle) ensures the ball
-    // ends at TOP as well
-    //
-    // TOP position in screen coordinates:
-    // - X offset from center: 0 (directly above center)
-    // - Y offset from center: -ballOrbitRadius (negative Y is up)
+    // Ball always lands at TOP (12 o'clock)
     const ballX = 0;
     const ballY = -ballOrbitRadius;
 
@@ -232,7 +428,7 @@ function highlightWinningPocket(number) {
         el.classList.remove('winning');
     });
     
-    // Find and highlight winning pocket
+    // Find and highlight winning pocket (SVG group)
     const pocket = document.querySelector(`.wheel-pocket[data-number="${number}"]`);
     if (pocket) {
         pocket.classList.add('winning');

@@ -61,8 +61,8 @@ function generateSpinParams() {
  * Coordinate system:
  * - Pockets are rendered starting from TOP (12 o'clock) at rotation 0
  * - Ball CSS animation reference is from RIGHT (3 o'clock) at rotation 0
- * - We rotate the wheel so the target pocket ends up at TOP (12 o'clock)
- * - Ball animation ends at TOP to match the winning pocket
+ * - We rotate the wheel so the CENTER of target pocket ends up at TOP (12 o'clock)
+ * - Ball animation ends at TOP to match the winning pocket center
  *
  * @param {number|string} targetPocket - The pocket to land on
  * @param {array} wheelSequence - The wheel sequence
@@ -73,14 +73,16 @@ function calculateFinalWheelAngle(targetPocket, wheelSequence, baseRotations) {
     const index = getPocketIndex(targetPocket, wheelSequence);
     const pocketCount = wheelSequence.length;
     const degreesPerPocket = 360 / pocketCount;
+    const halfPocket = degreesPerPocket / 2;
 
-    // The pocket's starting angle from TOP (12 o'clock)
-    const pocketStartAngle = index * degreesPerPocket;
+    // The pocket's CENTER angle from TOP (12 o'clock)
+    // Each pocket starts at index * degreesPerPocket, center is at start + half
+    const pocketCenterAngle = index * degreesPerPocket + halfPocket;
 
-    // Rotate wheel so target pocket ends at TOP (12 o'clock / 0 degrees)
+    // Rotate wheel so target pocket CENTER ends at TOP (12 o'clock / 0 degrees)
     // Wheel rotates clockwise (positive degrees)
-    // To bring a pocket from angle A to 0: rotate by (baseRotations * 360) - A
-    const finalAngle = (baseRotations * 360) - pocketStartAngle;
+    // To bring a pocket center from angle A to 0: rotate by (baseRotations * 360) - A
+    const finalAngle = (baseRotations * 360) - pocketCenterAngle;
 
     return finalAngle;
 }
