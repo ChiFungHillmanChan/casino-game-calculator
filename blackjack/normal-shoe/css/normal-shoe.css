@@ -617,6 +617,113 @@
 }
 
 /* =====================================================
+   ACTION BUTTONS (Player Decisions)
+   ===================================================== */
+
+.action-buttons-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    flex-wrap: wrap;
+    min-height: 44px;
+}
+
+.action-btn {
+    padding: 10px 20px;
+    border: 2px solid;
+    border-radius: var(--radius-md);
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.action-btn.stand {
+    background: rgba(231, 76, 60, 0.2);
+    border-color: #e74c3c;
+    color: #e74c3c;
+}
+
+.action-btn.stand:hover {
+    background: rgba(231, 76, 60, 0.4);
+}
+
+.action-btn.double {
+    background: rgba(241, 196, 15, 0.2);
+    border-color: #f1c40f;
+    color: #f1c40f;
+}
+
+.action-btn.double:hover {
+    background: rgba(241, 196, 15, 0.4);
+}
+
+.action-btn.split {
+    background: rgba(155, 89, 182, 0.2);
+    border-color: #9b59b6;
+    color: #9b59b6;
+}
+
+.action-btn.split:hover {
+    background: rgba(155, 89, 182, 0.4);
+}
+
+.action-btn.done {
+    background: rgba(46, 204, 113, 0.2);
+    border-color: #2ecc71;
+    color: #2ecc71;
+}
+
+.action-btn.done:hover {
+    background: rgba(46, 204, 113, 0.4);
+}
+
+.hit-label,
+.other-player-label,
+.dealer-turn-label,
+.result-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 8px;
+}
+
+.hit-label {
+    color: var(--ev-positive);
+    font-weight: 600;
+}
+
+/* Active player highlight */
+.seat.active-player .seat-circle {
+    animation: pulse-active 1s ease-in-out infinite;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
+}
+
+.seat.occupied.active-player .seat-circle {
+    animation: pulse-active-other 1s ease-in-out infinite;
+    box-shadow: 0 0 20px rgba(52, 152, 219, 0.6);
+}
+
+@keyframes pulse-active {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+}
+
+@keyframes pulse-active-other {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+}
+
+/* Standing indicator */
+.seat-total.standing {
+    opacity: 0.7;
+}
+
+/* =====================================================
    MOBILE RESPONSIVE - TABLET
    ===================================================== */
 
