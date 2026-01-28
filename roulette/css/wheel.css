@@ -1,0 +1,269 @@
+/* =====================================================
+   ROULETTE WHEEL - Wheel visual styling
+   ===================================================== */
+
+/* Wheel container */
+.wheel-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-lg);
+}
+
+/* Wheel wrapper - contains wheel and ball */
+.wheel-wrapper {
+    position: relative;
+    width: 300px;
+    height: 300px;
+}
+
+/* Main wheel - static container */
+.wheel {
+    width: 100%;
+    height: 100%;
+    border-radius: var(--radius-full);
+    background: radial-gradient(circle at 30% 30%, #4a4a4a 0%, #1a1a1a 100%);
+    border: 8px solid var(--accent-gold);
+    box-shadow: 
+        var(--shadow-lg),
+        inset 0 0 50px rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(212, 175, 55, 0.3);
+    position: relative;
+}
+
+/* Wheel outer ring (pockets area) - THIS ROTATES */
+.wheel-outer {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    transform-origin: center center;
+}
+
+/* Individual pocket */
+.wheel-pocket {
+    position: absolute;
+    width: 50%;
+    height: 20px;
+    left: 50%;
+    top: 50%;
+    transform-origin: left center;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 5px;
+}
+
+.wheel-pocket-inner {
+    width: 30px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: white;
+    border-radius: 2px;
+}
+
+.wheel-pocket-inner.red {
+    background: var(--roulette-red);
+}
+
+.wheel-pocket-inner.black {
+    background: var(--roulette-black);
+}
+
+.wheel-pocket-inner.green {
+    background: var(--roulette-green);
+}
+
+/* Wheel center hub */
+.wheel-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-full);
+    background: radial-gradient(circle at 30% 30%, #3a3a3a 0%, #1a1a1a 100%);
+    border: 4px solid var(--wheel-border-inner);
+    box-shadow: 
+        var(--shadow-md),
+        inset 0 0 20px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+/* Result indicator in center */
+.result-indicator {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-gold);
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+}
+
+/* Ball */
+.ball {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: radial-gradient(circle at 30% 30%, #ffffff 0%, #e0e0e0 50%, #b0b0b0 100%);
+    border-radius: var(--radius-full);
+    box-shadow: 
+        2px 2px 4px rgba(0, 0, 0, 0.4),
+        inset -2px -2px 4px rgba(0, 0, 0, 0.2),
+        0 0 10px rgba(255, 255, 255, 0.3);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: var(--z-ball);
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.ball.visible {
+    opacity: 1;
+}
+
+.ball.spinning {
+    animation: ballSpin var(--ball-duration, 4s) cubic-bezier(0.17, 0.67, 0.12, 0.99) forwards;
+}
+
+/* Wheel outer spinning state - only pockets rotate, not the entire wheel */
+.wheel-outer.spinning {
+    animation: wheelSpin var(--wheel-duration, 4s) cubic-bezier(0.17, 0.67, 0.12, 0.99) forwards;
+}
+
+/* Spin animations - will be dynamically set */
+@keyframes wheelSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(var(--wheel-rotation, 1440deg));
+    }
+}
+
+@keyframes ballSpin {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg) translateX(120px) rotate(0deg);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(var(--ball-rotation, -2160deg)) translateX(100px) rotate(calc(var(--ball-rotation, -2160deg) * -1));
+    }
+}
+
+/* Simplified wheel (CSS-only fallback) */
+.wheel-simple {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.wheel-simple::before {
+    content: '';
+    position: absolute;
+    top: 15%;
+    left: 15%;
+    right: 15%;
+    bottom: 15%;
+    border-radius: var(--radius-full);
+    background: conic-gradient(
+        from 0deg,
+        var(--roulette-green) 0deg 9.73deg,
+        var(--roulette-red) 9.73deg 19.46deg,
+        var(--roulette-black) 19.46deg 29.19deg,
+        var(--roulette-red) 29.19deg 38.92deg,
+        var(--roulette-black) 38.92deg 48.65deg,
+        var(--roulette-red) 48.65deg 58.38deg,
+        var(--roulette-black) 58.38deg 68.11deg,
+        var(--roulette-red) 68.11deg 77.84deg,
+        var(--roulette-black) 77.84deg 87.57deg,
+        var(--roulette-red) 87.57deg 97.3deg,
+        var(--roulette-black) 97.3deg 107.03deg,
+        var(--roulette-red) 107.03deg 116.76deg,
+        var(--roulette-black) 116.76deg 126.49deg,
+        var(--roulette-red) 126.49deg 136.22deg,
+        var(--roulette-black) 136.22deg 145.95deg,
+        var(--roulette-red) 145.95deg 155.68deg,
+        var(--roulette-black) 155.68deg 165.41deg,
+        var(--roulette-red) 165.41deg 175.14deg,
+        var(--roulette-black) 175.14deg 184.86deg,
+        var(--roulette-red) 184.86deg 194.59deg,
+        var(--roulette-black) 194.59deg 204.32deg,
+        var(--roulette-red) 204.32deg 214.05deg,
+        var(--roulette-black) 214.05deg 223.78deg,
+        var(--roulette-red) 223.78deg 233.51deg,
+        var(--roulette-black) 233.51deg 243.24deg,
+        var(--roulette-red) 243.24deg 252.97deg,
+        var(--roulette-black) 252.97deg 262.7deg,
+        var(--roulette-red) 262.7deg 272.43deg,
+        var(--roulette-black) 272.43deg 282.16deg,
+        var(--roulette-red) 282.16deg 291.89deg,
+        var(--roulette-black) 291.89deg 301.62deg,
+        var(--roulette-red) 301.62deg 311.35deg,
+        var(--roulette-black) 311.35deg 321.08deg,
+        var(--roulette-red) 321.08deg 330.81deg,
+        var(--roulette-black) 330.81deg 340.54deg,
+        var(--roulette-red) 340.54deg 350.27deg,
+        var(--roulette-black) 350.27deg 360deg
+    );
+    border: 3px solid var(--wheel-border-inner);
+}
+
+/* Winning pocket glow */
+.wheel-pocket.winning .wheel-pocket-inner {
+    box-shadow: 0 0 20px var(--accent-gold), 0 0 40px var(--accent-gold);
+    animation: winningGlow 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes winningGlow {
+    from {
+        box-shadow: 0 0 10px var(--accent-gold);
+    }
+    to {
+        box-shadow: 0 0 30px var(--accent-gold), 0 0 50px var(--accent-gold);
+    }
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+    .wheel-wrapper {
+        width: 250px;
+        height: 250px;
+    }
+    
+    .wheel-center {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .result-indicator {
+        font-size: 1.2rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .wheel-wrapper {
+        width: 350px;
+        height: 350px;
+    }
+    
+    .wheel-center {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .result-indicator {
+        font-size: 2rem;
+    }
+}

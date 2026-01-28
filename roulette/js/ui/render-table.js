@@ -1,0 +1,436 @@
+// =====================================================
+// RENDER TABLE - Betting table DOM updates
+// =====================================================
+
+/**
+ * Render the complete betting table
+ */
+function renderBettingTable() {
+    const container = document.getElementById('bettingTable');
+    if (!container) return;
+    
+    const rouletteConfig = getRouletteConfig();
+    const isAmerican = gameState.config.rouletteType === 'american';
+    
+    container.innerHTML = `
+        <!-- Main table section -->
+        <div class="table-main">
+            <!-- Zero section -->
+            <div class="zero-section">
+                ${renderZeroSection(isAmerican)}
+            </div>
+            
+            <!-- Numbers grid with inside bets overlay -->
+            <div class="numbers-area">
+                <div class="numbers-grid">
+                    ${renderNumbersGrid()}
+                </div>
+                <!-- Inside bet areas (splits, corners, streets, lines) -->
+                <div class="inside-bets-overlay">
+                    ${renderInsideBetAreas(isAmerican)}
+                </div>
+            </div>
+            
+            <!-- Column bets -->
+            <div class="column-section">
+                ${renderColumnBets()}
+            </div>
+        </div>
+        
+        <!-- Dozen bets -->
+        <div class="dozen-bets">
+            ${renderDozenBets()}
+        </div>
+        
+        <!-- Even money bets -->
+        <div class="outside-bets">
+            ${renderEvenMoneyBets()}
+        </div>
+    `;
+    
+    // Initialize betting table event handlers
+    initBettingTableHandlers();
+}
+
+/**
+ * Render zero section
+ */
+function renderZeroSection(isAmerican) {
+    if (isAmerican) {
+        return `
+            <div class="zero-cell american" data-bet-type="straight" data-bet-value="0">0</div>
+            <div class="zero-cell american" data-bet-type="straight" data-bet-value="00">00</div>
+        `;
+    }
+    return `
+        <div class="zero-cell" data-bet-type="straight" data-bet-value="0">0</div>
+    `;
+}
+
+/**
+ * Render numbers grid (1-36)
+ */
+function renderNumbersGrid() {
+    let html = '';
+    
+    // Grid goes: row 3 (3,6,9...), row 2 (2,5,8...), row 1 (1,4,7...)
+    // But displayed as: row 1 on top (3,6,9...), row 2 middle (2,5,8...), row 3 bottom (1,4,7...)
+    const rows = [
+        TABLE_LAYOUT.row1, // 3, 6, 9, 12...
+        TABLE_LAYOUT.row2, // 2, 5, 8, 11...
+        TABLE_LAYOUT.row3  // 1, 4, 7, 10...
+    ];
+    
+    rows.forEach((row, rowIndex) => {
+        row.forEach(num => {
+            const color = getNumberColor(num);
+            html += `
+                <div class="number-cell ${color}" 
+                     data-number="${num}"
+                     data-bet-type="straight" 
+                     data-bet-value="${num}">
+                    ${num}
+                </div>
+            `;
+        });
+    });
+    
+    return html;
+}
+
+/**
+ * Render column bets
+ */
+function renderColumnBets() {
+    return `
+        <div class="column-bet" data-bet-type="column" data-bet-value="3">2:1</div>
+        <div class="column-bet" data-bet-type="column" data-bet-value="2">2:1</div>
+        <div class="column-bet" data-bet-type="column" data-bet-value="1">2:1</div>
+    `;
+}
+
+/**
+ * Render dozen bets
+ */
+function renderDozenBets() {
+    return `
+        <div class="dozen-bet" data-bet-type="dozen" data-bet-value="1">1st 12</div>
+        <div class="dozen-bet" data-bet-type="dozen" data-bet-value="2">2nd 12</div>
+        <div class="dozen-bet" data-bet-type="dozen" data-bet-value="3">3rd 12</div>
+    `;
+}
+
+/**
+ * Render even money bets
+ */
+function renderEvenMoneyBets() {
+    return `
+        <div class="even-money-bet" data-bet-type="low" data-bet-value="low">1-18</div>
+        <div class="even-money-bet" data-bet-type="even" data-bet-value="even">EVEN</div>
+        <div class="even-money-bet red-bet" data-bet-type="red" data-bet-value="red">RED</div>
+        <div class="even-money-bet black-bet" data-bet-type="black" data-bet-value="black">BLACK</div>
+        <div class="even-money-bet" data-bet-type="odd" data-bet-value="odd">ODD</div>
+        <div class="even-money-bet" data-bet-type="high" data-bet-value="high">19-36</div>
+    `;
+}
+
+/**
+ * Render inside bet areas (splits, corners, streets, lines)
+ * These are positioned on top of the numbers grid
+ */
+function renderInsideBetAreas(isAmerican) {
+    let html = '';
+    
+    // Streets (left edge of each row of 3) - 12 streets
+    for (let i = 0; i < 12; i++) {
+        const street = STREETS[i];
+        const streetKey = street.join('-');
+        html += `<div class="street-bet" data-bet-type="street" data-bet-value="${streetKey}" 
+                     style="grid-column: ${i + 1}; grid-row: 4;"
+                     title="Street: ${street.join(', ')}"></div>`;
+    }
+    
+    // Lines (six-line bets) - between streets - 11 lines
+    for (let i = 0; i < 11; i++) {
+        const line = LINES[i];
+        const lineKey = line.join('-');
+        // Position between columns i and i+1, at the bottom
+        html += `<div class="line-bet" data-bet-type="line" data-bet-value="${lineKey}"
+                     style="left: calc(${(i + 1) * (100/12)}% - 8px); bottom: 0;"
+                     title="Line: ${line.join(', ')}"></div>`;
+    }
+    
+    // Vertical splits (between rows in same column) 
+    for (let col = 0; col < 12; col++) {
+        // Split between row 1 (top) and row 2 (middle): numbers row1[col] and row2[col]
+        const num1 = TABLE_LAYOUT.row1[col]; // e.g., 3
+        const num2 = TABLE_LAYOUT.row2[col]; // e.g., 2
+        const splitKey1 = [Math.min(num1, num2), Math.max(num1, num2)].join('-');
+        html += `<div class="split-bet vertical" data-bet-type="split" data-bet-value="${splitKey1}"
+                     style="left: calc(${col * (100/12)}% + ${100/24}%); top: calc(33.33% - 6px);"
+                     title="Split: ${num2}, ${num1}"></div>`;
+        
+        // Split between row 2 (middle) and row 3 (bottom): numbers row2[col] and row3[col]
+        const num3 = TABLE_LAYOUT.row3[col]; // e.g., 1
+        const splitKey2 = [Math.min(num2, num3), Math.max(num2, num3)].join('-');
+        html += `<div class="split-bet vertical" data-bet-type="split" data-bet-value="${splitKey2}"
+                     style="left: calc(${col * (100/12)}% + ${100/24}%); top: calc(66.66% - 6px);"
+                     title="Split: ${num3}, ${num2}"></div>`;
+    }
+    
+    // Horizontal splits (between adjacent columns in same row)
+    for (let col = 0; col < 11; col++) {
+        for (let row = 0; row < 3; row++) {
+            const rowData = row === 0 ? TABLE_LAYOUT.row1 : (row === 1 ? TABLE_LAYOUT.row2 : TABLE_LAYOUT.row3);
+            const num1 = rowData[col];
+            const num2 = rowData[col + 1];
+            const splitKey = [Math.min(num1, num2), Math.max(num1, num2)].join('-');
+            html += `<div class="split-bet horizontal" data-bet-type="split" data-bet-value="${splitKey}"
+                         style="left: calc(${(col + 1) * (100/12)}% - 6px); top: calc(${row * 33.33}% + 16.66%);"
+                         title="Split: ${num1}, ${num2}"></div>`;
+        }
+    }
+    
+    // Corners (intersection of 4 numbers)
+    for (let col = 0; col < 11; col++) {
+        for (let row = 0; row < 2; row++) {
+            const topRow = row === 0 ? TABLE_LAYOUT.row1 : TABLE_LAYOUT.row2;
+            const bottomRow = row === 0 ? TABLE_LAYOUT.row2 : TABLE_LAYOUT.row3;
+            const nums = [topRow[col], topRow[col + 1], bottomRow[col], bottomRow[col + 1]].sort((a, b) => a - b);
+            const cornerKey = nums.join('-');
+            html += `<div class="corner-bet" data-bet-type="corner" data-bet-value="${cornerKey}"
+                         style="left: calc(${(col + 1) * (100/12)}% - 8px); top: calc(${(row + 1) * 33.33}% - 8px);"
+                         title="Corner: ${nums.join(', ')}"></div>`;
+        }
+    }
+    
+    // Zero splits (between 0 and 1, 2, 3)
+    if (!isAmerican) {
+        // European: 0-1, 0-2, 0-3
+        html += `<div class="split-bet zero-split" data-bet-type="split" data-bet-value="0-3"
+                     style="left: -30px; top: 16.66%;" title="Split: 0, 3"></div>`;
+        html += `<div class="split-bet zero-split" data-bet-type="split" data-bet-value="0-2"
+                     style="left: -30px; top: 50%;" title="Split: 0, 2"></div>`;
+        html += `<div class="split-bet zero-split" data-bet-type="split" data-bet-value="0-1"
+                     style="left: -30px; top: 83.33%;" title="Split: 0, 1"></div>`;
+        // First Four (0,1,2,3)
+        html += `<div class="first-four-bet" data-bet-type="firstFour" data-bet-value="firstFour"
+                     style="left: -15px; top: calc(100% - 8px);" title="First Four: 0, 1, 2, 3"></div>`;
+    } else {
+        // American: 0-00 split, plus zero splits
+        html += `<div class="split-bet zero-split" data-bet-type="split" data-bet-value="0-00"
+                     style="left: -45px; top: 50%;" title="Split: 0, 00"></div>`;
+        // Top Line (0, 00, 1, 2, 3)
+        html += `<div class="top-line-bet" data-bet-type="topLine" data-bet-value="topLine"
+                     style="left: -15px; top: calc(100% - 8px);" title="Top Line: 0, 00, 1, 2, 3"></div>`;
+    }
+    
+    return html;
+}
+
+/**
+ * Initialize betting table click handlers
+ */
+function initBettingTableHandlers() {
+    const table = document.getElementById('bettingTable');
+    if (!table) return;
+    
+    // Handle clicks on bet areas
+    table.addEventListener('click', (e) => {
+        const betElement = e.target.closest('[data-bet-type]');
+        if (betElement) {
+            const betType = betElement.dataset.betType;
+            const betValue = betElement.dataset.betValue;
+            handleBetPlacement(betType, betValue, e);
+        }
+    });
+    
+    // Handle right-clicks for bet removal
+    table.addEventListener('contextmenu', (e) => {
+        const betElement = e.target.closest('[data-bet-type]');
+        if (betElement) {
+            const betType = betElement.dataset.betType;
+            const betValue = betElement.dataset.betValue;
+            handleBetRemoval(betType, betValue, e);
+        }
+    });
+}
+
+/**
+ * Render placed chips on the table
+ */
+function renderPlacedChips() {
+    // Remove existing placed chips
+    document.querySelectorAll('.chip-stack-container').forEach(el => el.remove());
+    
+    const bets = getAllBets();
+    const table = document.getElementById('bettingTable');
+    if (!table) return;
+    
+    // Render straight bets
+    for (const [value, amount] of Object.entries(bets.straight)) {
+        if (amount > 0) {
+            const cell = table.querySelector(`[data-bet-type="straight"][data-bet-value="${value}"]`);
+            if (cell) {
+                renderChipOnElement(cell, amount);
+            }
+        }
+    }
+    
+    // Render split bets
+    for (const [value, amount] of Object.entries(bets.split)) {
+        if (amount > 0) {
+            const cell = table.querySelector(`[data-bet-type="split"][data-bet-value="${value}"]`);
+            if (cell) {
+                renderChipOnElement(cell, amount);
+            }
+        }
+    }
+    
+    // Render street bets
+    for (const [value, amount] of Object.entries(bets.street)) {
+        if (amount > 0) {
+            const cell = table.querySelector(`[data-bet-type="street"][data-bet-value="${value}"]`);
+            if (cell) {
+                renderChipOnElement(cell, amount);
+            }
+        }
+    }
+    
+    // Render corner bets
+    for (const [value, amount] of Object.entries(bets.corner)) {
+        if (amount > 0) {
+            const cell = table.querySelector(`[data-bet-type="corner"][data-bet-value="${value}"]`);
+            if (cell) {
+                renderChipOnElement(cell, amount);
+            }
+        }
+    }
+    
+    // Render line bets (six-line)
+    for (const [value, amount] of Object.entries(bets.line)) {
+        if (amount > 0) {
+            const cell = table.querySelector(`[data-bet-type="line"][data-bet-value="${value}"]`);
+            if (cell) {
+                renderChipOnElement(cell, amount);
+            }
+        }
+    }
+    
+    // Render First Four (European) or Top Line (American)
+    if (bets.firstFour > 0) {
+        const cell = table.querySelector(`[data-bet-type="firstFour"]`);
+        if (cell) {
+            renderChipOnElement(cell, bets.firstFour);
+        }
+    }
+    if (bets.topLine > 0) {
+        const cell = table.querySelector(`[data-bet-type="topLine"]`);
+        if (cell) {
+            renderChipOnElement(cell, bets.topLine);
+        }
+    }
+    
+    // Render column bets
+    for (const [value, amount] of Object.entries(bets.column)) {
+        if (amount > 0) {
+            const cell = table.querySelector(`[data-bet-type="column"][data-bet-value="${value}"]`);
+            if (cell) {
+                renderChipOnElement(cell, amount);
+            }
+        }
+    }
+    
+    // Render dozen bets
+    for (const [value, amount] of Object.entries(bets.dozen)) {
+        if (amount > 0) {
+            const cell = table.querySelector(`[data-bet-type="dozen"][data-bet-value="${value}"]`);
+            if (cell) {
+                renderChipOnElement(cell, amount);
+            }
+        }
+    }
+    
+    // Render even money bets
+    const evenMoneyBets = ['red', 'black', 'even', 'odd', 'low', 'high'];
+    evenMoneyBets.forEach(betType => {
+        if (bets[betType] > 0) {
+            const cell = table.querySelector(`[data-bet-type="${betType}"]`);
+            if (cell) {
+                renderChipOnElement(cell, bets[betType]);
+            }
+        }
+    });
+}
+
+/**
+ * Render chip stack on a table element
+ * Chips are placed inside the cell element directly
+ */
+function renderChipOnElement(element, amount) {
+    // Create chip stack - positioned inside the element
+    const stack = document.createElement('div');
+    stack.className = 'chip-stack-container';
+    
+    // Determine chip breakdown
+    const chips = getChipBreakdown(amount);
+    
+    // Create visual chips (max 5 shown)
+    const displayChips = chips.slice(0, 5);
+    displayChips.forEach((chip, index) => {
+        const chipEl = document.createElement('div');
+        chipEl.className = `chip chip-${chip} chip-sm`;
+        chipEl.style.top = (-index * 3) + 'px';
+        stack.appendChild(chipEl);
+    });
+    
+    // Add tooltip with total
+    const tooltip = document.createElement('div');
+    tooltip.className = 'chip-value-tooltip';
+    tooltip.textContent = '$' + amount;
+    stack.appendChild(tooltip);
+    
+    // Add chip stack directly to the cell
+    element.appendChild(stack);
+}
+
+/**
+ * Get chip breakdown for an amount
+ */
+function getChipBreakdown(amount) {
+    const chips = [];
+    let remaining = amount;
+    
+    // Work through denominations from highest to lowest
+    const denoms = [...CHIP_DENOMINATIONS].reverse();
+    
+    for (const denom of denoms) {
+        while (remaining >= denom) {
+            chips.push(denom);
+            remaining -= denom;
+        }
+    }
+    
+    return chips;
+}
+
+/**
+ * Highlight winning number on table
+ */
+function highlightWinningNumber(number) {
+    // Remove existing highlights
+    document.querySelectorAll('.winning').forEach(el => el.classList.remove('winning'));
+    
+    // Find and highlight the winning cell
+    const cell = document.querySelector(`[data-bet-value="${number}"]`);
+    if (cell) {
+        cell.classList.add('winning');
+    }
+}
+
+/**
+ * Clear winning number highlight
+ */
+function clearWinningHighlight() {
+    document.querySelectorAll('.winning').forEach(el => el.classList.remove('winning'));
+}

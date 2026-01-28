@@ -1,0 +1,469 @@
+/* =====================================================
+   ROULETTE BETTING TABLE - Table grid and number cells
+   ===================================================== */
+
+/* Table container */
+.betting-table-container {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding: var(--spacing-md);
+}
+
+/* Betting table */
+.betting-table {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: var(--roulette-felt);
+    border: 4px solid var(--accent-gold);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-lg), inset 0 0 50px rgba(0, 0, 0, 0.3);
+    min-width: 600px;
+    position: relative;
+    overflow: visible;
+}
+
+/* Table sections */
+.table-main {
+    display: flex;
+    gap: 0;
+}
+
+/* Zero section */
+.zero-section {
+    display: flex;
+    flex-direction: column;
+    width: 60px;
+}
+
+.zero-cell {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--roulette-green);
+    border: 2px solid var(--roulette-green-dark);
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    min-height: 120px;
+    position: relative;
+    overflow: visible;
+}
+
+.zero-cell:hover {
+    background: var(--roulette-green-dark);
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.zero-cell.american {
+    min-height: 60px;
+}
+
+/* Numbers area - contains grid and inside bet overlay */
+.numbers-area {
+    position: relative;
+    flex: 1;
+}
+
+/* Numbers grid */
+.numbers-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    width: 100%;
+    height: 100%;
+}
+
+/* Inside bets overlay - positioned over the numbers grid */
+.inside-bets-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.inside-bets-overlay > * {
+    pointer-events: auto;
+}
+
+/* Number cell */
+.number-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    min-height: 40px;
+    position: relative;
+    overflow: visible;
+}
+
+.number-cell:hover {
+    z-index: 2;
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+.number-cell.red {
+    background: var(--roulette-red);
+}
+
+.number-cell.red:hover {
+    background: var(--roulette-red-dark);
+}
+
+.number-cell.black {
+    background: var(--roulette-black);
+}
+
+.number-cell.black:hover {
+    background: var(--roulette-black-light);
+}
+
+/* Column bets */
+.column-section {
+    display: flex;
+    flex-direction: column;
+    width: 50px;
+}
+
+.column-bet {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--roulette-felt-dark);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    position: relative;
+    overflow: visible;
+}
+
+.column-bet:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+/* Outside bets section */
+.outside-bets {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0;
+    margin-top: var(--spacing-sm);
+    margin-left: 60px; /* Align with numbers grid */
+}
+
+/* Dozen bets */
+.dozen-bets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin-top: var(--spacing-sm);
+    margin-left: 60px;
+}
+
+.dozen-bet {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--roulette-felt-dark);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    padding: var(--spacing-sm);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    min-height: 40px;
+    position: relative;
+    overflow: visible;
+}
+
+.dozen-bet:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.dozen-bet:first-child {
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.dozen-bet:last-child {
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* Even money bets */
+.even-money-bet {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--roulette-felt-dark);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    padding: var(--spacing-sm);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    min-height: 40px;
+    position: relative;
+    overflow: visible;
+}
+
+.even-money-bet:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.even-money-bet:first-child {
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.even-money-bet:last-child {
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.even-money-bet.red-bet {
+    color: var(--roulette-red);
+}
+
+.even-money-bet.black-bet {
+    color: white;
+}
+
+/* ====== Inside bet areas (splits, corners, streets, lines) ====== */
+
+/* Split bet areas - on the border between two numbers */
+.split-bet {
+    position: absolute;
+    background: transparent;
+    cursor: pointer;
+    z-index: 15;
+    transition: all var(--transition-fast);
+}
+
+.split-bet:hover {
+    background: rgba(212, 175, 55, 0.5);
+    box-shadow: 0 0 10px var(--accent-gold);
+}
+
+.split-bet.vertical {
+    width: 60%;
+    height: 12px;
+    transform: translateX(-50%);
+    border-radius: 6px;
+}
+
+.split-bet.horizontal {
+    width: 12px;
+    height: 26px;
+    transform: translateY(-50%);
+    border-radius: 6px;
+}
+
+.split-bet.zero-split {
+    width: 20px;
+    height: 12px;
+    transform: translateY(-50%);
+    border-radius: 6px;
+}
+
+/* Corner bet areas - at intersection of 4 numbers */
+.corner-bet {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: var(--radius-full);
+    background: transparent;
+    cursor: pointer;
+    z-index: 20;
+    transition: all var(--transition-fast);
+}
+
+.corner-bet:hover {
+    background: rgba(212, 175, 55, 0.5);
+    box-shadow: 0 0 12px var(--accent-gold);
+    transform: scale(1.2);
+}
+
+/* Street bet area - at the left edge of a row */
+.street-bet {
+    position: absolute;
+    width: calc(100% / 12);
+    height: 14px;
+    left: 0;
+    bottom: -7px;
+    background: transparent;
+    cursor: pointer;
+    z-index: 12;
+    border-radius: 4px;
+    transition: all var(--transition-fast);
+}
+
+/* Position streets - override with left positioning */
+.street-bet {
+    position: relative;
+    display: none; /* Hide for now, will use line bets approach */
+}
+
+/* Line bet area - between two streets (6 numbers) */
+.line-bet {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: var(--radius-full);
+    background: transparent;
+    cursor: pointer;
+    z-index: 20;
+    transition: all var(--transition-fast);
+}
+
+.line-bet:hover {
+    background: rgba(212, 175, 55, 0.5);
+    box-shadow: 0 0 12px var(--accent-gold);
+    transform: scale(1.2);
+}
+
+/* First Four bet (European) */
+.first-four-bet {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: var(--radius-full);
+    background: transparent;
+    cursor: pointer;
+    z-index: 20;
+    transition: all var(--transition-fast);
+}
+
+.first-four-bet:hover {
+    background: rgba(46, 204, 113, 0.5);
+    box-shadow: 0 0 12px var(--roulette-green);
+    transform: scale(1.2);
+}
+
+/* Top Line bet (American) */
+.top-line-bet {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: var(--radius-full);
+    background: transparent;
+    cursor: pointer;
+    z-index: 20;
+    transition: all var(--transition-fast);
+}
+
+.top-line-bet:hover {
+    background: rgba(46, 204, 113, 0.5);
+    box-shadow: 0 0 12px var(--roulette-green);
+    transform: scale(1.2);
+}
+
+/* Placed chip on bet */
+.placed-chip {
+    position: absolute;
+    z-index: var(--z-chips);
+    pointer-events: none;
+}
+
+/* Chip stack on bet area */
+.chip-stack {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    position: absolute;
+    z-index: var(--z-chips);
+}
+
+.chip-stack .chip {
+    margin-bottom: -20px;
+}
+
+.chip-stack .chip:first-child {
+    margin-bottom: 0;
+}
+
+/* Bet amount label */
+.bet-amount-label {
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--accent-gold);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 4px;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    z-index: calc(var(--z-chips) + 1);
+}
+
+/* Winning number highlight */
+.number-cell.winning,
+.zero-cell.winning {
+    animation: winPulse 1s ease-in-out infinite;
+    box-shadow: 0 0 30px var(--accent-gold), inset 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+@keyframes winPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 20px var(--accent-gold);
+    }
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 0 40px var(--accent-gold);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+    .betting-table {
+        min-width: 500px;
+        padding: var(--spacing-sm);
+    }
+    
+    .zero-section {
+        width: 45px;
+    }
+    
+    .number-cell {
+        font-size: 0.9rem;
+        min-height: 35px;
+    }
+    
+    .column-section {
+        width: 40px;
+    }
+    
+    .outside-bets,
+    .dozen-bets {
+        margin-left: 45px;
+    }
+}
