@@ -139,26 +139,24 @@
     }
     
     .bead-road {
-        grid-template-columns: repeat(15, 1fr);
-        min-height: 120px;
-        gap: 3px;
-        padding: 8px;
+        min-height: 100px;
+        gap: 2px;
+        padding: 6px;
     }
     
     .bead-cell {
-        font-size: 0.55rem;
-        min-width: 18px;
+        font-size: 0.45rem;
+        min-width: 0;
     }
     
     .big-road {
-        grid-template-columns: repeat(25, 1fr);
-        min-height: 90px;
-        gap: 2px;
-        padding: 8px;
+        min-height: 80px;
+        gap: 1px;
+        padding: 6px;
     }
     
     .big-road-cell {
-        min-width: 12px;
+        min-width: 0;
     }
 }
 
@@ -174,27 +172,20 @@
     }
     
     .bead-road {
-        grid-template-columns: repeat(12, 1fr);
-        min-height: 100px;
-        gap: 2px;
-        padding: 6px;
+        min-height: 90px;
+        gap: 1px;
+        padding: 4px;
     }
     
     .bead-cell {
-        font-size: 0.5rem;
-        min-width: 14px;
+        font-size: 0.4rem;
     }
     
     .big-road {
-        grid-template-columns: repeat(20, 1fr);
-        min-height: 80px;
+        min-height: 70px;
         gap: 1px;
-        padding: 6px;
+        padding: 4px;
         margin-top: 6px;
-    }
-    
-    .big-road-cell {
-        min-width: 10px;
     }
     
     .big-road-cell.player,
@@ -203,11 +194,15 @@
     }
     
     .big-road-cell .tie-count {
-        width: 7px;
-        height: 7px;
-        font-size: 0.35rem;
+        width: 6px;
+        height: 6px;
+        font-size: 0.3rem;
         top: -1px;
         right: -1px;
+    }
+    
+    .big-road-cell .tie-slash {
+        height: 1.5px;
     }
 }
 
@@ -228,55 +223,49 @@
     }
 
     .bead-road {
-        grid-template-columns: repeat(10, 1fr);
-        min-height: 100px;
-        gap: 3px;
-        padding: 6px;
+        min-height: 80px;
+        gap: 1px;
+        padding: 4px;
         border-radius: 6px;
     }
 
     .bead-cell {
-        font-size: 0.55rem;
-        min-width: 14px;
+        font-size: 0.35rem;
     }
 
     .big-road {
-        grid-template-columns: repeat(15, 1fr);
-        min-height: 75px;
-        gap: 2px;
-        padding: 6px;
-        margin-top: 8px;
+        min-height: 60px;
+        gap: 1px;
+        padding: 4px;
+        margin-top: 6px;
         border-radius: 6px;
-    }
-
-    .big-road-cell {
-        min-width: 10px;
-        border-width: 1.5px;
     }
 
     .big-road-cell.player,
     .big-road-cell.banker {
-        border-width: 1.5px;
+        border-width: 1px;
     }
 
     .big-road-cell .tie-slash {
-        height: 1.5px;
+        height: 1px;
     }
 
     .big-road-cell .tie-count {
-        width: 8px;
-        height: 8px;
-        font-size: 0.4rem;
+        width: 5px;
+        height: 5px;
+        font-size: 0.25rem;
+        top: -1px;
+        right: -1px;
     }
 }
 
 /* Extra Small Phone */
 @media (max-width: 360px) {
-    .bead-road {
-        grid-template-columns: repeat(8, 1fr);
+    .bead-cell {
+        font-size: 0.3rem;
     }
     
-    .big-road {
-        grid-template-columns: repeat(12, 1fr);
+    .big-road-cell .tie-count {
+        display: none;
     }
 }

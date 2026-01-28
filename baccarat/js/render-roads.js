@@ -6,7 +6,12 @@ function renderBeadRoad() {
     const beadRoad = document.getElementById('beadRoad');
     beadRoad.innerHTML = '';
 
-    for (let i = 0; i < 120; i++) {
+    // Fixed grid size - same as real baccarat tables
+    const cols = 20;
+    const rows = 6;
+    const totalCells = cols * rows;
+
+    for (let i = 0; i < totalCells; i++) {
         const cell = document.createElement('div');
         cell.className = 'bead-cell';
         
@@ -29,16 +34,19 @@ function renderBigRoad() {
     const bigRoad = document.getElementById('bigRoad');
     bigRoad.innerHTML = '';
 
-    const grid = Array(6).fill(null).map(() => Array(35).fill(null));
+    // Fixed grid size - same as real baccarat tables
+    const cols = 35;
+    const rows = 6;
+    const grid = Array(rows).fill(null).map(() => Array(cols).fill(null));
 
     bigRoadData.forEach(entry => {
-        if (entry.col < 35 && entry.row < 6) {
+        if (entry.col < cols && entry.row < rows) {
             grid[entry.row][entry.col] = entry;
         }
     });
 
-    for (let r = 0; r < 6; r++) {
-        for (let c = 0; c < 35; c++) {
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
             const cell = document.createElement('div');
             cell.className = 'big-road-cell';
             
