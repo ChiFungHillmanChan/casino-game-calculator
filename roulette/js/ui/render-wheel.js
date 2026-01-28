@@ -148,51 +148,71 @@ function animateWheelSpin(spinData, onComplete) {
 /**
  * Position ball at winning pocket
  * Uses the actual DOM position of the winning pocket for accurate placement
- * Ball sits in the pocket groove at the outer edge of the numbers
  * @param {number|string} number - Winning number
- * @param {number} wheelRotation - Final wheel rotation angle in degrees (unused, kept for API compatibility)
+ * @param {number} wheelRotation - Final wheel rotation angle in degrees
  */
 function positionBallAtPocket(number, wheelRotation = 0) {
     const ball = document.getElementById('ball');
     const wheelWrapper = document.querySelector('.wheel-wrapper');
     const winningPocket = document.querySelector(`.wheel-pocket[data-number="${number}"]`);
 
-    if (!ball || !wheelWrapper || !winningPocket) return;
+    if (!ball || !wheelWrapper) return;
 
-    // Get the wheel wrapper's bounding box
+    // Get the wheel wrapper dimensions
     const wrapperRect = wheelWrapper.getBoundingClientRect();
-    const centerX = wrapperRect.width / 2;
-    const centerY = wrapperRect.height / 2;
-
-    // Get the winning pocket's inner element (the number label)
-    const pocketInner = winningPocket.querySelector('.wheel-pocket-inner');
-    if (!pocketInner) return;
-
-    const pocketRect = pocketInner.getBoundingClientRect();
-
-    // Calculate the pocket's center position relative to the wheel wrapper
-    const pocketCenterX = pocketRect.left + pocketRect.width / 2 - wrapperRect.left;
-    const pocketCenterY = pocketRect.top + pocketRect.height / 2 - wrapperRect.top;
-
-    // Calculate vector from wheel center to pocket
-    let dx = pocketCenterX - centerX;
-    let dy = pocketCenterY - centerY;
-
-    // Get the distance (for normalization)
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    // Ball should be in the pocket groove - slightly outside the number labels
-    // Position it at the same angle but at a radius that's in the pocket area
     const wheelRadius = wrapperRect.width / 2;
-    const ballOrbitRadius = wheelRadius * 0.78; // Pocket groove area
 
-    if (distance > 0) {
-        // Normalize and scale to ball orbit radius
-        dx = (dx / distance) * ballOrbitRadius;
-        dy = (dy / distance) * ballOrbitRadius;
+    // Ball orbit radius - positioned in the pocket area (between outer edge and center)
+    // For the new design: pockets start at ~26px from edge, so ball at ~35px from edge
+    const ballOrbitRadius = wheelRadius - 40;
+
+    // If we found the pocket, use its actual position
+    if (winningPocket) {
+        const pocketInner = winningPocket.querySelector('.wheel-pocket-inner');
+        if (pocketInner) {
+            const pocketRect = pocketInner.getBoundingClientRect();
+            const centerX = wrapperRect.width / 2;
+            const centerY = wrapperRect.height / 2;
+
+            // Calculate the pocket's center position
+            const pocketCenterX = pocketRect.left + pocketRect.width / 2 - wrapperRect.left;
+            const pocketCenterY = pocketRect.top + pocketRect.height / 2 - wrapperRect.top;
+
+            // Calculate vector from wheel center to pocket
+            let dx = pocketCenterX - centerX;
+            let dy = pocketCenterY - centerY;
+
+            // Get the distance (for normalization)
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > 0) {
+                // Normalize and scale to ball orbit radius
+                dx = (dx / distance) * ballOrbitRadius;
+                dy = (dy / distance) * ballOrbitRadius;
+            }
+
+            ball.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+            ball.classList.add('visible');
+            ball.classList.remove('spinning');
+            return;
+        }
     }
 
-    ball.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+    // Fallback: use mathematical calculation
+    const rouletteConfig = getRouletteConfig();
+    const sequence = rouletteConfig.wheelSequence;
+    const pocketIndex = sequence.findIndex(p => p.toString() === number.toString());
+    const pocketCount = sequence.length;
+    const degreesPerPocket = 360 / pocketCount;
+
+    const pocketStartAngle = pocketIndex * degreesPerPocket;
+    const finalAngle = pocketStartAngle + wheelRotation;
+    const angleInRadians = (finalAngle * Math.PI) / 180;
+
+    const ballX = Math.sin(angleInRadians) * ballOrbitRadius;
+    const ballY = -Math.cos(angleInRadians) * ballOrbitRadius;
+
+    ball.style.transform = `translate(calc(-50% + ${ballX}px), calc(-50% + ${ballY}px))`;
     ball.classList.add('visible');
     ball.classList.remove('spinning');
 }
