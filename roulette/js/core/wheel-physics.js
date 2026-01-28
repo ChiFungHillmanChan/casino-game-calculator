@@ -41,9 +41,14 @@ function getPocketAngle(pocketNumber, wheelSequence) {
  * @returns {object} Animation parameters for the spin
  */
 function generateSpinParams() {
+    // Use INTEGER rotations to ensure precise landing
+    // Random integer between 4-7 for wheel, 6-10 for ball
+    const wheelRotations = 4 + Math.floor(Math.random() * 4);  // 4, 5, 6, or 7 full spins
+    const ballRotations = 6 + Math.floor(Math.random() * 5);   // 6, 7, 8, 9, or 10 orbits
+
     return {
-        wheelRotations: 4 + Math.random() * 3,      // 4-7 full wheel spins
-        ballRotations: 6 + Math.random() * 4,       // 6-10 ball orbits (opposite direction)
+        wheelRotations: wheelRotations,
+        ballRotations: ballRotations,
         spinDuration: 4000 + Math.random() * 2000,  // 4-6 seconds total
         // Easing for natural deceleration
         easingFunction: 'cubic-bezier(0.17, 0.67, 0.12, 0.99)'
