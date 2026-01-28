@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="description" content="Baccarat Edge Calculator with Egalité Bets, Custom Payouts, and Live EV Tracking">
-    <title>Baccarat Edge Calculator V5</title>
+    <title>Baccarat</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -25,14 +25,48 @@
     <link rel="stylesheet" href="css/egalite.css">
     <link rel="stylesheet" href="css/bets.css">
     <link rel="stylesheet" href="css/recommendations.css">
+    <link rel="stylesheet" href="../css/hamburger-menu.css">
 </head>
 <body>
+    <!-- Fixed Hamburger Menu -->
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu" aria-expanded="false">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+    </button>
+    <nav class="dropdown-menu" id="dropdownMenu" aria-hidden="true">
+        <div class="dropdown-section">
+            <div class="dropdown-label">Games</div>
+            <a href="../roulette/index.html" class="dropdown-item">
+                <span class="dropdown-icon">🎡</span>
+                <span>Roulette</span>
+            </a>
+            <a href="../blackjack/index.html" class="dropdown-item">
+                <span class="dropdown-icon">🃏</span>
+                <span>Blackjack</span>
+            </a>
+            <a href="index.html" class="dropdown-item active">
+                <span class="dropdown-icon">🎴</span>
+                <span>Baccarat</span>
+                <span class="current-badge">Current</span>
+            </a>
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-section">
+            <a href="../index.html" class="dropdown-item">
+                <span class="dropdown-icon">🏠</span>
+                <span>Back to Games</span>
+            </a>
+            <a href="https://buymeacoffee.com/hillmanchan709" class="dropdown-item support-item" target="_blank" rel="noopener noreferrer">
+                <span class="dropdown-icon">☕</span>
+                <span>Support Me</span>
+            </a>
+        </div>
+    </nav>
+
     <div class="container">
-        <a href="../index.html" class="back-link">← Back to Games</a>
-        
         <header>
-            <h1>BACCARAT EDGE CALCULATOR V5</h1>
-            <p class="subtitle">Egalité Bets • Custom Payouts • Live EV Tracking</p>
+            <h1>BACCARAT</h1>
         </header>
 
         <!-- Mobile-First Layout: Most Important at Top -->
@@ -94,5 +128,6 @@
         // Load components before initialization
         loadComponents().then(() => init());
     </script>
+    <script src="../js/hamburger-menu.js"></script>
 </body>
 </html>

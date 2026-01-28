@@ -6,17 +6,96 @@
  * Initialize all event handlers
  */
 function initEventHandlers() {
+    // Header menu handlers
+    initHamburgerMenu();
+
     // Setup form handlers
     initSetupHandlers();
-    
+
     // Game control handlers
     initGameControlHandlers();
-    
+
     // Betting table handlers (initialized after table is rendered)
     // initBettingTableHandlers();
-    
+
     // Stats panel handlers
     initStatsHandlers();
+}
+
+/**
+ * Initialize hamburger menu functionality
+ */
+function initHamburgerMenu() {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    if (!hamburgerBtn || !dropdownMenu) return;
+
+    // Toggle menu on hamburger click
+    hamburgerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleDropdownMenu();
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!dropdownMenu.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+            closeDropdownMenu();
+        }
+    });
+
+    // Close menu on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeDropdownMenu();
+        }
+    });
+}
+
+/**
+ * Toggle dropdown menu open/closed
+ */
+function toggleDropdownMenu() {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    if (!hamburgerBtn || !dropdownMenu) return;
+
+    const isOpen = dropdownMenu.classList.contains('open');
+
+    if (isOpen) {
+        closeDropdownMenu();
+    } else {
+        openDropdownMenu();
+    }
+}
+
+/**
+ * Open dropdown menu
+ */
+function openDropdownMenu() {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    if (!hamburgerBtn || !dropdownMenu) return;
+
+    hamburgerBtn.setAttribute('aria-expanded', 'true');
+    dropdownMenu.classList.add('open');
+    dropdownMenu.setAttribute('aria-hidden', 'false');
+}
+
+/**
+ * Close dropdown menu
+ */
+function closeDropdownMenu() {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    if (!hamburgerBtn || !dropdownMenu) return;
+
+    hamburgerBtn.setAttribute('aria-expanded', 'false');
+    dropdownMenu.classList.remove('open');
+    dropdownMenu.setAttribute('aria-hidden', 'true');
 }
 
 /**
@@ -193,12 +272,6 @@ function initGameControlHandlers() {
     const newGameBtn = document.getElementById('newGameBtn');
     if (newGameBtn) {
         newGameBtn.addEventListener('click', handleNewGame);
-    }
-    
-    // Menu button
-    const menuBtn = document.getElementById('menuBtn');
-    if (menuBtn) {
-        menuBtn.addEventListener('click', handleMenuClick);
     }
 }
 
@@ -397,15 +470,6 @@ function handleNewGame() {
 }
 
 /**
- * Handle menu button click
- */
-function handleMenuClick() {
-    if (confirm('Return to setup? Current game will be lost.')) {
-        handleNewGame();
-    }
-}
-
-/**
  * Stats panel event handlers
  */
 function initStatsHandlers() {
@@ -447,6 +511,10 @@ function handleTabSwitch(e) {
     const statsPanel = document.getElementById('statsPanel');
     const actionBar = document.getElementById('actionBar');
     const chipSelector = document.getElementById('chipSelector');
+    const bankrollDisplay = document.getElementById('bankrollDisplay');
+    const mobileTabBar = document.getElementById('mobileTabBar');
+    const gameScreen = document.getElementById('gameScreen');
+    const statsContainer = document.getElementById('stats-container');
 
     if (tab === 'game') {
         // Show game, hide stats
@@ -454,12 +522,24 @@ function handleTabSwitch(e) {
         if (statsPanel) statsPanel.classList.remove('tab-active');
         if (actionBar) actionBar.style.display = '';
         if (chipSelector) chipSelector.style.display = '';
+
+        // Move bankroll and tabs back to game screen (at the beginning)
+        if (gameScreen && bankrollDisplay && mobileTabBar) {
+            gameScreen.insertBefore(mobileTabBar, gameScreen.firstChild);
+            gameScreen.insertBefore(bankrollDisplay, gameScreen.firstChild);
+        }
     } else if (tab === 'stats') {
         // Show stats, hide game
         if (gameArea) gameArea.classList.add('tab-hidden');
         if (statsPanel) statsPanel.classList.add('tab-active');
         if (actionBar) actionBar.style.display = 'none';
         if (chipSelector) chipSelector.style.display = 'none';
+
+        // Move bankroll and tabs to stats container (at the beginning)
+        if (statsContainer && bankrollDisplay && mobileTabBar) {
+            statsContainer.insertBefore(mobileTabBar, statsContainer.firstChild);
+            statsContainer.insertBefore(bankrollDisplay, statsContainer.firstChild);
+        }
     }
 }
 

@@ -21,13 +21,48 @@
     <link rel="stylesheet" href="../css/buttons.css">
     <link rel="stylesheet" href="../css/decision.css">
     <link rel="stylesheet" href="css/normal-shoe.css">
+    <link rel="stylesheet" href="../../css/hamburger-menu.css">
 </head>
 <body>
+    <!-- Fixed Hamburger Menu -->
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu" aria-expanded="false">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+    </button>
+    <nav class="dropdown-menu" id="dropdownMenu" aria-hidden="true">
+        <div class="dropdown-section">
+            <div class="dropdown-label">Games</div>
+            <a href="../../roulette/index.html" class="dropdown-item">
+                <span class="dropdown-icon">🎡</span>
+                <span>Roulette</span>
+            </a>
+            <a href="../index.html" class="dropdown-item active">
+                <span class="dropdown-icon">🃏</span>
+                <span>Blackjack</span>
+                <span class="current-badge">Current</span>
+            </a>
+            <a href="../../baccarat/index.html" class="dropdown-item">
+                <span class="dropdown-icon">🎴</span>
+                <span>Baccarat</span>
+            </a>
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-section">
+            <a href="../../index.html" class="dropdown-item">
+                <span class="dropdown-icon">🏠</span>
+                <span>Back to Games</span>
+            </a>
+            <a href="https://buymeacoffee.com/hillmanchan709" class="dropdown-item support-item" target="_blank" rel="noopener noreferrer">
+                <span class="dropdown-icon">☕</span>
+                <span>Support Me</span>
+            </a>
+        </div>
+    </nav>
+
     <!-- Setup Screen (shown first) -->
     <div id="setupScreen" class="setup-screen">
         <div class="setup-container">
-            <a href="../index.html" class="back-link">← Back to Blackjack</a>
-
             <h1>NORMAL SHOE SETUP</h1>
             <p class="setup-subtitle">Configure your game settings before playing</p>
 
@@ -359,5 +394,6 @@
     <script src="../js/core/illustrious-18.js"></script>
     <script src="../js/core/ev-calculator.js"></script>
     <script src="js/normal-shoe-game.js"></script>
+    <script src="../../js/hamburger-menu.js"></script>
 </body>
 </html>
