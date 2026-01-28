@@ -4,6 +4,9 @@
 
 let betState = createInitialBetState();
 
+// Undo stack to track bet actions for undo functionality
+let betUndoStack = [];
+
 /**
  * Create initial bet state
  * @returns {object} Fresh bet state object
@@ -18,11 +21,11 @@ function createInitialBetState() {
         firstFour: 0,    // European only (0,1,2,3)
         topLine: 0,      // American only (0,00,1,2,3)
         line: {},        // { "1-2-3-4-5-6": 15 }
-        
+
         // Outside bets
         column: {},      // { "1": 50, "2": 25, "3": 30 }
         dozen: {},       // { "1": 100, "2": 50 }
-        
+
         // Even money bets (simple number values)
         red: 0,
         black: 0,
@@ -38,6 +41,7 @@ function createInitialBetState() {
  */
 function resetBetState() {
     betState = createInitialBetState();
+    betUndoStack = [];
 }
 
 /**
@@ -49,22 +53,26 @@ function resetBetState() {
  */
 function addBet(betType, betValue, amount) {
     if (amount <= 0) return false;
-    
+
     // Even money bets (no betValue needed)
     if (['red', 'black', 'even', 'odd', 'low', 'high', 'firstFour', 'topLine'].includes(betType)) {
         betState[betType] += amount;
+        // Record action for undo
+        betUndoStack.push({ action: 'add', betType, betValue: null, amount });
         return true;
     }
-    
+
     // Object-based bets
     if (betState[betType] !== undefined && typeof betState[betType] === 'object') {
         if (!betState[betType][betValue]) {
             betState[betType][betValue] = 0;
         }
         betState[betType][betValue] += amount;
+        // Record action for undo
+        betUndoStack.push({ action: 'add', betType, betValue, amount });
         return true;
     }
-    
+
     return false;
 }
 
@@ -123,6 +131,41 @@ function clearBet(betType, betValue) {
  */
 function clearAllBets() {
     betState = createInitialBetState();
+    betUndoStack = [];
+}
+
+/**
+ * Undo the last bet action
+ * @returns {boolean} True if undo was successful, false if nothing to undo
+ */
+function undoLastBet() {
+    if (betUndoStack.length === 0) return false;
+
+    const lastAction = betUndoStack.pop();
+
+    if (lastAction.action === 'add') {
+        // Reverse an add by removing the amount
+        if (['red', 'black', 'even', 'odd', 'low', 'high', 'firstFour', 'topLine'].includes(lastAction.betType)) {
+            betState[lastAction.betType] = Math.max(0, betState[lastAction.betType] - lastAction.amount);
+        } else if (betState[lastAction.betType] && typeof betState[lastAction.betType] === 'object') {
+            if (betState[lastAction.betType][lastAction.betValue]) {
+                betState[lastAction.betType][lastAction.betValue] -= lastAction.amount;
+                if (betState[lastAction.betType][lastAction.betValue] <= 0) {
+                    delete betState[lastAction.betType][lastAction.betValue];
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Check if there are any actions to undo
+ * @returns {boolean} True if undo stack has items
+ */
+function canUndo() {
+    return betUndoStack.length > 0;
 }
 
 /**
