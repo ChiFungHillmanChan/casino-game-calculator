@@ -1,0 +1,62 @@
+/* Practice Mode Shared Styles */
+.practice-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
+
+.practice-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.practice-title {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.practice-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.practice-btn {
+    padding: 12px 24px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: none;
+}
+
+.practice-btn-primary {
+    background: var(--accent-gold);
+    color: var(--bg-dark);
+}
+
+.practice-btn-primary:hover {
+    background: var(--accent-gold-light);
+    transform: translateY(-2px);
+}
+
+.practice-btn-secondary {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.back-link:hover {
+    color: var(--accent-gold);
+}
