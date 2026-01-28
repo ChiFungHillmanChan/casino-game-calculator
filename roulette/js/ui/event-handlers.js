@@ -2,6 +2,19 @@
 // EVENT HANDLERS - All click/touch event bindings
 // =====================================================
 
+// Auto-spin state
+let autoSpinState = {
+    enabled: false,
+    interval: null,
+    countdown: 0,
+    duration: 30, // default 30 seconds
+    countdownInterval: null
+};
+
+// Result auto-dismiss state
+let resultDismissTimeout = null;
+let resultProgressInterval = null;
+
 /**
  * Initialize all event handlers
  */
@@ -20,6 +33,12 @@ function initEventHandlers() {
 
     // Stats panel handlers
     initStatsHandlers();
+
+    // Auto-spin handlers
+    initAutoSpinHandlers();
+
+    // Chip preview for touch devices
+    initChipPreviewHandlers();
 }
 
 /**
@@ -279,14 +298,23 @@ function initGameControlHandlers() {
  * Handle spin button click
  */
 function handleSpinClick() {
-    if (isSpinning() || !hasBets()) return;
+    if (isSpinning()) return;
     
-    // Store current bets for repeat
-    storeLastBets(getAllBets());
+    // Allow spinning without bets (for statistics/fun)
+    // Store current bets for repeat (if any)
+    if (hasBets()) {
+        storeLastBets(getAllBets());
+    }
+    
+    // Stop auto-spin countdown if running
+    stopAutoSpinCountdown();
     
     // Disable betting during spin
     setGamePhase(GAME_PHASES.SPINNING);
     updateButtonStates();
+    
+    // Show "No More Bets" overlay
+    showNoMoreBets();
     
     // Generate spin and animate
     const rouletteConfig = getRouletteConfig();
@@ -295,6 +323,9 @@ function handleSpinClick() {
     
     // Start wheel animation
     animateWheelSpin(spinData, () => {
+        // Hide "No More Bets" overlay
+        hideNoMoreBets();
+        
         // Animation complete - resolve bets
         const resolution = resolveAllBets(spinData.result, getAllBets(), gameState.config.rouletteType);
         
@@ -327,8 +358,8 @@ function handleSpinClick() {
                 showGameOver();
             }, 2000);
         } else {
-            // Normal result display
-            showResult(spinData.result, resolution);
+            // Normal result display with auto-dismiss
+            showResultWithAutoDismiss(spinData.result, resolution);
             setGamePhase(GAME_PHASES.RESULT);
         }
     });
@@ -430,18 +461,31 @@ function handleRepeatBets() {
  * Handle new bets after result
  */
 function handleNewBets() {
+    // Clear any pending auto-dismiss
+    if (resultDismissTimeout) clearTimeout(resultDismissTimeout);
+    if (resultProgressInterval) clearInterval(resultProgressInterval);
+    
     hideResultOverlay();
     clearAllBets();
     renderPlacedChips();
     updateTotalBetDisplay();
     setGamePhase(GAME_PHASES.BETTING);
     updateButtonStates();
+    
+    // Restart auto-spin countdown if enabled
+    if (autoSpinState.enabled) {
+        startAutoSpinCountdown();
+    }
 }
 
 /**
  * Handle same bets after result
  */
 function handleSameBets() {
+    // Clear any pending auto-dismiss
+    if (resultDismissTimeout) clearTimeout(resultDismissTimeout);
+    if (resultProgressInterval) clearInterval(resultProgressInterval);
+    
     hideResultOverlay();
     
     const lastBets = getLastBets();
@@ -456,6 +500,11 @@ function handleSameBets() {
     
     setGamePhase(GAME_PHASES.BETTING);
     updateButtonStates();
+    
+    // Restart auto-spin countdown if enabled
+    if (autoSpinState.enabled) {
+        startAutoSpinCountdown();
+    }
 }
 
 /**
@@ -511,8 +560,7 @@ function handleTabSwitch(e) {
     const statsPanel = document.getElementById('statsPanel');
     const actionBar = document.getElementById('actionBar');
     const chipSelector = document.getElementById('chipSelector');
-    const bankrollDisplay = document.getElementById('bankrollDisplay');
-    const mobileTabBar = document.getElementById('mobileTabBar');
+    const mobileTopStack = document.getElementById('mobileTopStack');
     const gameScreen = document.getElementById('gameScreen');
     const statsContainer = document.getElementById('stats-container');
 
@@ -520,25 +568,25 @@ function handleTabSwitch(e) {
         // Show game, hide stats
         if (gameArea) gameArea.classList.remove('tab-hidden');
         if (statsPanel) statsPanel.classList.remove('tab-active');
+        if (statsContainer) statsContainer.classList.remove('active');
         if (actionBar) actionBar.style.display = '';
         if (chipSelector) chipSelector.style.display = '';
 
-        // Move bankroll and tabs back to game screen (at the beginning)
-        if (gameScreen && bankrollDisplay && mobileTabBar) {
-            gameScreen.insertBefore(mobileTabBar, gameScreen.firstChild);
-            gameScreen.insertBefore(bankrollDisplay, gameScreen.firstChild);
+        // Move bankroll + tabs back to game screen (at the beginning)
+        if (gameScreen && mobileTopStack) {
+            gameScreen.insertBefore(mobileTopStack, gameScreen.firstChild);
         }
     } else if (tab === 'stats') {
         // Show stats, hide game
         if (gameArea) gameArea.classList.add('tab-hidden');
         if (statsPanel) statsPanel.classList.add('tab-active');
+        if (statsContainer) statsContainer.classList.add('active');
         if (actionBar) actionBar.style.display = 'none';
         if (chipSelector) chipSelector.style.display = 'none';
 
-        // Move bankroll and tabs to stats container (at the beginning)
-        if (statsContainer && bankrollDisplay && mobileTabBar) {
-            statsContainer.insertBefore(mobileTabBar, statsContainer.firstChild);
-            statsContainer.insertBefore(bankrollDisplay, statsContainer.firstChild);
+        // Move bankroll + tabs to stats container (at the beginning)
+        if (statsContainer && mobileTopStack) {
+            statsContainer.insertBefore(mobileTopStack, statsContainer.firstChild);
         }
     }
 }
@@ -661,7 +709,8 @@ function updateButtonStates() {
     const repeatBtn = document.getElementById('repeatBtn');
 
     if (spinBtn) {
-        spinBtn.disabled = phase !== GAME_PHASES.BETTING || !hasBetsPlaced;
+        // Allow spinning without bets (for statistics/practice)
+        spinBtn.disabled = phase !== GAME_PHASES.BETTING;
         spinBtn.classList.toggle('spinning', phase === GAME_PHASES.SPINNING);
     }
 
@@ -686,4 +735,482 @@ function updateTotalBetDisplay() {
     if (totalEl) {
         totalEl.textContent = '$' + getTotalWagered().toLocaleString();
     }
+}
+
+// =====================================================
+// NO MORE BETS OVERLAY
+// =====================================================
+
+/**
+ * Show "No More Bets" overlay during spin
+ */
+function showNoMoreBets() {
+    const overlay = document.getElementById('noMoreBetsOverlay');
+    if (overlay) {
+        overlay.classList.add('active');
+    }
+}
+
+/**
+ * Hide "No More Bets" overlay
+ */
+function hideNoMoreBets() {
+    const overlay = document.getElementById('noMoreBetsOverlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+    }
+}
+
+// =====================================================
+// RESULT AUTO-DISMISS
+// =====================================================
+
+/**
+ * Show result with auto-dismiss after 1 second
+ * Auto-selects "Same Bets" if available, otherwise "New Bets"
+ */
+function showResultWithAutoDismiss(result, resolution) {
+    const overlay = document.getElementById('resultOverlay');
+    const numberEl = document.getElementById('resultNumber');
+    const textEl = document.getElementById('resultText');
+    const amountEl = document.getElementById('resultAmount');
+    const progressBar = document.getElementById('actionProgressBar');
+    const actionNewBets = document.getElementById('actionNewBets');
+    const actionSameBets = document.getElementById('actionSameBets');
+    
+    if (!overlay) return;
+    
+    // Clear any existing timeouts
+    if (resultDismissTimeout) clearTimeout(resultDismissTimeout);
+    if (resultProgressInterval) clearInterval(resultProgressInterval);
+    
+    // Set result number
+    const color = getNumberColor(result);
+    numberEl.textContent = result;
+    numberEl.className = 'result-number ' + color;
+    
+    // Set result text
+    const colorText = color.charAt(0).toUpperCase() + color.slice(1);
+    textEl.textContent = colorText + (result !== 0 && result !== '00' ? 
+        (isEven(result) ? ' Even' : ' Odd') : '');
+    
+    // Set amount
+    if (resolution.netResult > 0) {
+        amountEl.textContent = '+$' + resolution.netResult.toLocaleString();
+        amountEl.className = 'result-amount win';
+    } else if (resolution.netResult < 0) {
+        amountEl.textContent = '-$' + Math.abs(resolution.netResult).toLocaleString();
+        amountEl.className = 'result-amount lose';
+    } else {
+        amountEl.textContent = '$0';
+        amountEl.className = 'result-amount';
+    }
+    
+    // Determine which action to take (same bets if we have last bets and can afford them)
+    const lastBets = getLastBets();
+    const canRepeat = lastBets && canAffordLastBets(lastBets);
+    
+    // Update action indicators
+    if (actionNewBets && actionSameBets) {
+        actionNewBets.classList.toggle('active', !canRepeat);
+        actionSameBets.classList.toggle('active', canRepeat);
+    }
+    
+    // Show overlay
+    overlay.classList.add('active');
+    
+    // Animate progress bar over 1 second
+    let progress = 0;
+    const duration = 1000; // 1 second
+    const interval = 50; // Update every 50ms
+    const increment = (interval / duration) * 100;
+    
+    if (progressBar) {
+        progressBar.style.width = '0%';
+        
+        resultProgressInterval = setInterval(() => {
+            progress += increment;
+            progressBar.style.width = Math.min(progress, 100) + '%';
+        }, interval);
+    }
+    
+    // Auto-dismiss after 1 second
+    resultDismissTimeout = setTimeout(() => {
+        if (resultProgressInterval) clearInterval(resultProgressInterval);
+        
+        hideResultOverlay();
+        
+        if (canRepeat) {
+            // Same bets
+            if (lastBets && restoreBets(lastBets, getCurrentBankroll())) {
+                renderPlacedChips();
+                updateTotalBetDisplay();
+            } else {
+                clearAllBets();
+                renderPlacedChips();
+                updateTotalBetDisplay();
+            }
+        } else {
+            // New bets
+            clearAllBets();
+            renderPlacedChips();
+            updateTotalBetDisplay();
+        }
+        
+        setGamePhase(GAME_PHASES.BETTING);
+        updateButtonStates();
+        
+        // Restart auto-spin countdown if enabled
+        if (autoSpinState.enabled) {
+            startAutoSpinCountdown();
+        }
+    }, duration);
+    
+    // Allow clicking on action options to change selection
+    if (actionNewBets) {
+        actionNewBets.onclick = () => {
+            if (resultDismissTimeout) clearTimeout(resultDismissTimeout);
+            if (resultProgressInterval) clearInterval(resultProgressInterval);
+            handleNewBets();
+        };
+    }
+    
+    if (actionSameBets) {
+        actionSameBets.onclick = () => {
+            if (resultDismissTimeout) clearTimeout(resultDismissTimeout);
+            if (resultProgressInterval) clearInterval(resultProgressInterval);
+            handleSameBets();
+        };
+    }
+}
+
+/**
+ * Check if we can afford last bets
+ */
+function canAffordLastBets(lastBets) {
+    if (!lastBets) return false;
+    
+    let total = 0;
+    
+    // Sum all bet types
+    for (const [type, bets] of Object.entries(lastBets)) {
+        if (typeof bets === 'object' && bets !== null) {
+            for (const amount of Object.values(bets)) {
+                total += amount;
+            }
+        } else if (typeof bets === 'number') {
+            total += bets;
+        }
+    }
+    
+    return total <= getCurrentBankroll();
+}
+
+// =====================================================
+// AUTO-SPIN FUNCTIONALITY
+// =====================================================
+
+/**
+ * Initialize auto-spin handlers
+ */
+function initAutoSpinHandlers() {
+    const autoSpinBtn = document.getElementById('autoSpinBtn');
+    const autoSpinDropdown = document.getElementById('autoSpinDropdown');
+    const stopAutoBtn = document.getElementById('stopAutoBtn');
+    const cancelAutoSpinBtn = document.getElementById('cancelAutoSpinBtn');
+    
+    if (autoSpinBtn) {
+        autoSpinBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleAutoSpinDropdown();
+        });
+    }
+    
+    // Time option buttons
+    const timeOptions = document.querySelectorAll('.auto-spin-option');
+    timeOptions.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const time = parseInt(btn.dataset.time);
+            selectAutoSpinTime(time);
+        });
+    });
+    
+    if (stopAutoBtn) {
+        stopAutoBtn.addEventListener('click', () => {
+            stopAutoSpin();
+        });
+    }
+    
+    if (cancelAutoSpinBtn) {
+        cancelAutoSpinBtn.addEventListener('click', () => {
+            stopAutoSpinCountdown();
+            stopAutoSpin();
+        });
+    }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.auto-spin-control')) {
+            closeAutoSpinDropdown();
+        }
+    });
+}
+
+/**
+ * Toggle auto-spin dropdown
+ */
+function toggleAutoSpinDropdown() {
+    const dropdown = document.getElementById('autoSpinDropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('open');
+    }
+}
+
+/**
+ * Close auto-spin dropdown
+ */
+function closeAutoSpinDropdown() {
+    const dropdown = document.getElementById('autoSpinDropdown');
+    if (dropdown) {
+        dropdown.classList.remove('open');
+    }
+}
+
+/**
+ * Select auto-spin time and start
+ */
+function selectAutoSpinTime(seconds) {
+    autoSpinState.duration = seconds;
+    autoSpinState.enabled = true;
+    
+    // Update UI
+    const autoSpinBtn = document.getElementById('autoSpinBtn');
+    const autoSpinLabel = document.getElementById('autoSpinLabel');
+    const stopAutoBtn = document.getElementById('stopAutoBtn');
+    
+    if (autoSpinBtn) autoSpinBtn.classList.add('active');
+    if (autoSpinLabel) autoSpinLabel.textContent = seconds + 's';
+    if (stopAutoBtn) stopAutoBtn.style.display = 'block';
+    
+    // Update selected state
+    document.querySelectorAll('.auto-spin-option').forEach(btn => {
+        btn.classList.toggle('selected', parseInt(btn.dataset.time) === seconds);
+    });
+    
+    closeAutoSpinDropdown();
+    
+    // Start countdown if in betting phase
+    if (getGamePhase() === GAME_PHASES.BETTING) {
+        startAutoSpinCountdown();
+    }
+}
+
+/**
+ * Stop auto-spin
+ */
+function stopAutoSpin() {
+    autoSpinState.enabled = false;
+    stopAutoSpinCountdown();
+    
+    // Update UI
+    const autoSpinBtn = document.getElementById('autoSpinBtn');
+    const autoSpinLabel = document.getElementById('autoSpinLabel');
+    const stopAutoBtn = document.getElementById('stopAutoBtn');
+    
+    if (autoSpinBtn) autoSpinBtn.classList.remove('active');
+    if (autoSpinLabel) autoSpinLabel.textContent = 'Auto';
+    if (stopAutoBtn) stopAutoBtn.style.display = 'none';
+    
+    // Clear selected state
+    document.querySelectorAll('.auto-spin-option').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+}
+
+/**
+ * Start auto-spin countdown
+ */
+function startAutoSpinCountdown() {
+    if (!autoSpinState.enabled) return;
+    
+    autoSpinState.countdown = autoSpinState.duration;
+    
+    const countdownDisplay = document.getElementById('autoSpinCountdown');
+    const countdownTimer = document.getElementById('countdownTimer');
+    
+    if (countdownDisplay) {
+        countdownDisplay.classList.add('active');
+        countdownDisplay.classList.remove('warning');
+    }
+    
+    if (countdownTimer) {
+        countdownTimer.textContent = autoSpinState.countdown;
+    }
+    
+    // Clear any existing interval
+    if (autoSpinState.countdownInterval) {
+        clearInterval(autoSpinState.countdownInterval);
+    }
+    
+    autoSpinState.countdownInterval = setInterval(() => {
+        autoSpinState.countdown--;
+        
+        if (countdownTimer) {
+            countdownTimer.textContent = autoSpinState.countdown;
+        }
+        
+        // Warning at 5 seconds or less
+        if (autoSpinState.countdown <= 5 && countdownDisplay) {
+            countdownDisplay.classList.add('warning');
+        }
+        
+        if (autoSpinState.countdown <= 0) {
+            stopAutoSpinCountdown();
+            
+            // Trigger spin if in betting phase
+            if (getGamePhase() === GAME_PHASES.BETTING) {
+                handleSpinClick();
+            }
+        }
+    }, 1000);
+}
+
+/**
+ * Stop auto-spin countdown
+ */
+function stopAutoSpinCountdown() {
+    if (autoSpinState.countdownInterval) {
+        clearInterval(autoSpinState.countdownInterval);
+        autoSpinState.countdownInterval = null;
+    }
+    
+    const countdownDisplay = document.getElementById('autoSpinCountdown');
+    if (countdownDisplay) {
+        countdownDisplay.classList.remove('active');
+        countdownDisplay.classList.remove('warning');
+    }
+}
+
+// =====================================================
+// CHIP PREVIEW FOR HOVER/TOUCH
+// =====================================================
+
+// Track current hovered element for chip preview
+let currentHoveredBetArea = null;
+
+/**
+ * Initialize chip preview handlers for both desktop and mobile/tablet
+ */
+function initChipPreviewHandlers() {
+    // Will be initialized when betting table is rendered
+    // Called from initBettingTableHandlers
+}
+
+/**
+ * Setup chip preview on betting table using event delegation
+ * Called after betting table is rendered
+ */
+function setupChipPreviewOnTable() {
+    const bettingTable = document.getElementById('bettingTable');
+    if (!bettingTable) return;
+    
+    // Desktop: Use mouseover/mouseout with event delegation
+    bettingTable.addEventListener('mouseover', (e) => {
+        const betArea = e.target.closest('[data-bet-type]');
+        if (betArea && betArea !== currentHoveredBetArea) {
+            currentHoveredBetArea = betArea;
+            showChipPreviewOnElement(betArea);
+        }
+    });
+    
+    bettingTable.addEventListener('mouseout', (e) => {
+        const betArea = e.target.closest('[data-bet-type]');
+        const relatedBetArea = e.relatedTarget?.closest?.('[data-bet-type]');
+        
+        // Only hide if leaving bet area and not entering another bet area
+        if (betArea && betArea !== relatedBetArea) {
+            currentHoveredBetArea = null;
+            hideChipPreview();
+        }
+    });
+    
+    bettingTable.addEventListener('mousemove', (e) => {
+        if (currentHoveredBetArea) {
+            updateChipPreviewPosition(e);
+        }
+    });
+    
+    // Mobile/Tablet: Show chip preview briefly on touch, then hide after placement
+    // Use pointerdown for better cross-device support
+    bettingTable.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'touch') {
+            const betArea = e.target.closest('[data-bet-type]');
+            if (betArea) {
+                showChipPreviewOnElement(betArea);
+                // Hide preview after a short delay (after the visual feedback)
+                setTimeout(hideChipPreview, 300);
+            }
+        }
+    });
+}
+
+/**
+ * Show chip preview on a specific bet element
+ */
+function showChipPreviewOnElement(element) {
+    if (getGamePhase() !== GAME_PHASES.BETTING) return;
+    
+    const chipPreview = document.getElementById('chipPreview');
+    const bettingTableContainer = document.getElementById('bettingTableContainer');
+    
+    if (!chipPreview || !bettingTableContainer) return;
+    
+    const selectedChip = getSelectedChip();
+    
+    // Create chip preview content
+    chipPreview.innerHTML = `<div class="chip chip-${selectedChip} chip-preview-chip">${selectedChip >= 1000 ? (selectedChip / 1000) + 'K' : selectedChip}</div>`;
+    
+    // Get element position relative to container
+    const containerRect = bettingTableContainer.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+    
+    // Position at center of element, above it
+    const x = elementRect.left + elementRect.width / 2 - containerRect.left;
+    const y = elementRect.top - containerRect.top - 20;
+    
+    chipPreview.style.left = x + 'px';
+    chipPreview.style.top = y + 'px';
+    chipPreview.classList.add('visible');
+}
+
+/**
+ * Update chip preview position on mouse move
+ */
+function updateChipPreviewPosition(e) {
+    if (getGamePhase() !== GAME_PHASES.BETTING) return;
+    
+    const chipPreview = document.getElementById('chipPreview');
+    const bettingTableContainer = document.getElementById('bettingTableContainer');
+    
+    if (!chipPreview || !bettingTableContainer || !chipPreview.classList.contains('visible')) return;
+    
+    const containerRect = bettingTableContainer.getBoundingClientRect();
+    
+    // Follow mouse cursor
+    const x = e.clientX - containerRect.left;
+    const y = e.clientY - containerRect.top - 40;
+    
+    chipPreview.style.left = x + 'px';
+    chipPreview.style.top = y + 'px';
+}
+
+/**
+ * Hide chip preview
+ */
+function hideChipPreview() {
+    const chipPreview = document.getElementById('chipPreview');
+    if (chipPreview) {
+        chipPreview.classList.remove('visible');
+    }
+    currentHoveredBetArea = null;
 }

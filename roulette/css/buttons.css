@@ -231,6 +231,30 @@
     }
 }
 
+/* Auto-spin button */
+.btn-auto-spin {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    font-family: 'Rajdhani', sans-serif;
+}
+
+.btn-auto-spin:hover:not(:disabled) {
+    background: var(--bg-card-hover);
+    color: var(--text-primary);
+    border-color: var(--accent-gold);
+}
+
+.btn-auto-spin.active {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    border-color: var(--accent-gold);
+}
+
+.btn-auto-spin.active:hover:not(:disabled) {
+    background: var(--accent-gold-dim);
+}
+
 /* Pulse animation for spinning */
 @keyframes pulse {
     0%, 100% {

@@ -44,10 +44,24 @@ var dealtCardsHistory = [];
 
 // LocalStorage key for settings
 var STORAGE_KEY = 'blackjack_normal_shoe_settings';
+var GAME_STATE_KEY = 'blackjack_normal_shoe_game_state';
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    initializeSetup();
+    // Check if there's a saved game in progress
+    if (hasSavedGameState()) {
+        // Restore and continue the game
+        if (restoreSavedGameState()) {
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            initializeGameUI();
+            console.log('Blackjack game restored and continued');
+        } else {
+            initializeSetup();
+        }
+    } else {
+        initializeSetup();
+    }
 });
 
 function initializeSetup() {
@@ -96,6 +110,113 @@ function saveSettings() {
     } catch (e) {
         console.warn('Could not save settings to localStorage:', e);
     }
+}
+
+// =====================================================
+// GAME STATE PERSISTENCE
+// =====================================================
+
+// Check if there's a saved game in progress
+function hasSavedGameState() {
+    try {
+        var saved = localStorage.getItem(GAME_STATE_KEY);
+        if (!saved) return false;
+        var state = JSON.parse(saved);
+        // Only restore if game was in progress (not setup phase)
+        return state && state.phase && state.phase !== 'setup';
+    } catch (e) {
+        return false;
+    }
+}
+
+// Save current game state to localStorage
+function saveGameState() {
+    if (GameState.phase === 'setup') return;
+    
+    try {
+        var stateToSave = {
+            config: GameState.config,
+            bankroll: GameState.bankroll,
+            count: GameState.count,
+            table: {
+                seats: GameState.table.seats,
+                dealer: GameState.table.dealer,
+                activeSeats: GameState.table.activeSeats,
+                currentDealIndex: GameState.table.currentDealIndex,
+                currentPlayerIndex: GameState.table.currentPlayerIndex,
+                dealPhase: GameState.table.dealPhase
+            },
+            session: {
+                hands: GameState.session.hands,
+                startTime: GameState.session.startTime
+            },
+            phase: GameState.phase,
+            dealtCardsHistory: dealtCardsHistory,
+            timestamp: Date.now()
+        };
+        localStorage.setItem(GAME_STATE_KEY, JSON.stringify(stateToSave));
+    } catch (e) {
+        console.warn('Could not save game state:', e);
+    }
+}
+
+// Restore game state from localStorage
+function restoreSavedGameState() {
+    try {
+        var saved = localStorage.getItem(GAME_STATE_KEY);
+        if (!saved) return false;
+        
+        var state = JSON.parse(saved);
+        
+        // Restore GameState
+        GameState.config = state.config;
+        GameState.bankroll = state.bankroll;
+        GameState.count = state.count;
+        GameState.table.seats = state.table.seats;
+        GameState.table.dealer = state.table.dealer;
+        GameState.table.activeSeats = state.table.activeSeats;
+        GameState.table.currentDealIndex = state.table.currentDealIndex;
+        GameState.table.currentPlayerIndex = state.table.currentPlayerIndex;
+        GameState.table.dealPhase = state.table.dealPhase;
+        GameState.session = state.session;
+        GameState.phase = state.phase;
+        
+        // Restore dealt cards history
+        dealtCardsHistory = state.dealtCardsHistory || [];
+        
+        return true;
+    } catch (e) {
+        console.warn('Could not restore game state:', e);
+        return false;
+    }
+}
+
+// Clear saved game state (called when starting new game or finishing session)
+function clearSavedGameState() {
+    try {
+        localStorage.removeItem(GAME_STATE_KEY);
+    } catch (e) {
+        console.warn('Could not clear game state:', e);
+    }
+}
+
+// Initialize game UI without going through setup form
+function initializeGameUI() {
+    updateSettingsBar();
+    renderSeats();
+    renderCardInput();
+    renderDealtCards();
+    updateCountDisplay();
+    updateRecommendationPanel();
+    renderActionButtons();
+    updateDealingIndicator();
+    
+    // Set up event listeners
+    document.getElementById('undoBtn').addEventListener('click', undoLastCard);
+    document.getElementById('newShoeBtn').addEventListener('click', newShoe);
+    document.getElementById('newRoundBtn').addEventListener('click', startNewRound);
+    document.getElementById('finishBtn').addEventListener('click', finishSession);
+    document.getElementById('settingsBtn').addEventListener('click', showSettings);
 }
 
 // Load settings from localStorage
@@ -310,6 +431,9 @@ function startNewRound() {
     renderSeats();
     renderActionButtons();
     updateDealingIndicator();
+    
+    // Save game state
+    saveGameState();
 }
 
 function updateSettingsBar() {
@@ -1024,6 +1148,9 @@ function playerStand() {
     seat.isStanding = true;
     GameState.table.currentPlayerIndex--;
     advanceToNextPlayer();
+    
+    // Save game state
+    saveGameState();
 }
 
 function playerDouble() {
@@ -1047,6 +1174,9 @@ function dealerDone() {
     renderSeats();
     renderActionButtons();
     updateDealingIndicator();
+    
+    // Save game state
+    saveGameState();
 }
 
 function getSeatIcon(status) {
@@ -1173,6 +1303,9 @@ function dealCard(rank) {
     updateCountDisplay();
     updateRecommendationPanel();
     updateDealingIndicator();
+    
+    // Save game state after card is dealt
+    saveGameState();
 }
 
 function calculateHandTotal(cards) {
@@ -1267,6 +1400,9 @@ function undoLastCard() {
     renderDealtCards();
     updateCountDisplay();
     updateRecommendationPanel();
+    
+    // Save game state after undo
+    saveGameState();
 }
 
 function newShoe() {
@@ -1278,6 +1414,9 @@ function newShoe() {
         renderDealtCards();
         updateCountDisplay();
         updateRecommendationPanel();
+        
+        // Save game state
+        saveGameState();
     }
 }
 
@@ -1351,7 +1490,18 @@ function updateRecommendationPanel() {
 }
 
 function finishSession() {
-    alert('Session summary coming soon');
+    if (confirm('End this session? Your progress will be saved in history.')) {
+        // Clear saved game state so next load shows setup
+        clearSavedGameState();
+        
+        // Reset to setup screen
+        GameState.phase = 'setup';
+        document.getElementById('gameScreen').style.display = 'none';
+        document.getElementById('setupScreen').style.display = 'block';
+        
+        // Show session summary (to be implemented)
+        alert('Session complete! Returning to setup.');
+    }
 }
 
 function showSettings() {

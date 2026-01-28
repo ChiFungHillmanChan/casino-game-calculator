@@ -109,20 +109,23 @@
 /* Small Phone */
 @media (max-width: 480px) {
     .dealing-indicator {
-        padding: 8px;
-        font-size: 0.75rem;
-        margin-top: 8px;
+        padding: 10px;
+        font-size: 0.85rem;
+        margin-top: 10px;
+        border-radius: 6px;
+        font-weight: 600;
     }
-    
+
     .action-buttons {
-        gap: 8px;
-        margin-top: 8px;
+        gap: 10px;
+        margin-top: 12px;
     }
-    
+
     .btn {
-        padding: 10px 8px;
-        font-size: 0.75rem;
-        min-height: 44px;
-        letter-spacing: 0.5px;
+        padding: 12px 10px;
+        font-size: 0.85rem;
+        min-height: 48px;
+        letter-spacing: 1px;
+        border-radius: 6px;
     }
 }

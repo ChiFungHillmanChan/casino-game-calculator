@@ -148,29 +148,29 @@ h1 {
 /* Small Phone (up to 480px) */
 @media (max-width: 480px) {
     html {
-        font-size: 14px;
+        font-size: 15px;
     }
-    
+
     .container {
-        padding: 4px;
+        padding: 6px;
     }
-    
+
     .main-grid {
-        gap: 6px;
+        gap: 8px;
     }
-    
+
     h1 {
-        font-size: 1rem;
-        letter-spacing: 0.5px;
+        font-size: 1.3rem;
+        letter-spacing: 1px;
     }
-    
+
     .subtitle {
-        font-size: 0.6rem;
+        font-size: 0.7rem;
         letter-spacing: 0.5px;
     }
-    
+
     header {
-        padding: 6px 0;
-        margin-bottom: 6px;
+        padding: 10px 0;
+        margin-bottom: 8px;
     }
 }

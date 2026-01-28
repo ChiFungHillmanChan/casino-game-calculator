@@ -248,51 +248,57 @@
 
 @media (max-width: 480px) {
     .app-layout {
-        gap: 6px;
+        gap: 10px;
     }
-    
+
     .recommendation-section {
-        padding: 8px;
-        margin-bottom: 6px;
-        border-radius: 4px;
+        padding: 12px;
+        margin-bottom: 10px;
+        border-radius: 6px;
     }
-    
+
     .recommendation-section .panel-title {
-        font-size: 0.7rem;
+        font-size: 0.85rem;
     }
-    
+
     .section-divider {
-        margin: 8px 0;
+        margin: 10px 0;
     }
-    
+
     .collapsible-section {
-        margin-bottom: 5px;
-        border-radius: 4px;
+        margin-bottom: 8px;
+        border-radius: 6px;
     }
-    
+
     .collapsible-header {
-        padding: 8px;
+        padding: 12px;
     }
-    
+
+    .collapsible-header .panel-title {
+        font-size: 0.8rem;
+    }
+
     .collapsible-title {
-        gap: 8px;
+        gap: 10px;
     }
-    
+
     .collapsible-toggle {
-        font-size: 0.7rem;
+        font-size: 0.85rem;
     }
-    
+
     .collapsible-content {
-        padding: 8px;
+        padding: 12px;
     }
-    
+
     .scoreboard-stats-inline {
-        font-size: 0.6rem;
-        gap: 4px;
+        font-size: 0.8rem;
+        gap: 8px;
+        font-weight: 600;
     }
-    
+
     .road-label {
-        font-size: 0.6rem;
+        font-size: 0.75rem;
+        font-weight: 500;
     }
 }
 

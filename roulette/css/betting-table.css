@@ -8,6 +8,7 @@
     overflow-x: auto;
     overflow-y: visible;
     padding: var(--spacing-md);
+    position: relative;
 }
 
 /* Betting table */
@@ -286,8 +287,8 @@
 /* Split bet areas - on the border between two numbers */
 .split-bet {
     position: absolute;
-    background: rgba(212, 175, 55, 0.1);
-    border: 1px solid rgba(212, 175, 55, 0.2);
+    background: transparent;
+    border: 1px solid transparent;
     cursor: pointer;
     z-index: 15;
     transition: all var(--transition-fast);
@@ -325,7 +326,7 @@
 }
 
 .split-bet.vertical {
-    width: 40%;
+    width: 20px;
     height: 16px;
     transform: translate(-50%, -50%);
     border-radius: 8px;
@@ -339,10 +340,10 @@
 }
 
 .split-bet.zero-split {
-    width: 24px;
-    height: 14px;
-    transform: translateY(-50%);
-    border-radius: 7px;
+    width: 20px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
 }
 
 /* Corner bet areas - at intersection of 4 numbers */
@@ -351,8 +352,8 @@
     width: 20px;
     height: 20px;
     border-radius: var(--radius-full);
-    background: rgba(212, 175, 55, 0.15);
-    border: 1px solid rgba(212, 175, 55, 0.3);
+    background: transparent;
+    border: 1px solid transparent;
     cursor: pointer;
     z-index: 25;
     transition: all var(--transition-fast);
@@ -395,8 +396,8 @@
     width: 20px;
     height: 20px;
     border-radius: var(--radius-full);
-    background: rgba(155, 89, 182, 0.15);
-    border: 1px solid rgba(155, 89, 182, 0.3);
+    background: transparent;
+    border: 1px solid transparent;
     cursor: pointer;
     z-index: 20;
     transition: all var(--transition-fast);
@@ -439,8 +440,8 @@
     width: 20px;
     height: 20px;
     border-radius: var(--radius-full);
-    background: rgba(52, 152, 219, 0.15);
-    border: 1px solid rgba(52, 152, 219, 0.3);
+    background: transparent;
+    border: 1px solid transparent;
     cursor: pointer;
     z-index: 22;
     transition: all var(--transition-fast);

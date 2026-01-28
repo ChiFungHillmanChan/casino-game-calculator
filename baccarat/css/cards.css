@@ -211,58 +211,58 @@
 @media (max-width: 480px) {
     .card-grid {
         grid-template-columns: repeat(7, 1fr);
-        gap: 3px;
-    }
-    
-    .card-btn {
-        padding: 6px 2px;
-        font-size: 0.75rem;
-        min-height: 40px;
-        border-width: 1px;
-    }
-    
-    .card-btn .count-badge {
-        font-size: 0.45rem;
-        padding: 1px 2px;
-        top: -2px;
-        right: -2px;
-    }
-    
-    .hand-display {
-        padding: 6px;
-        margin-top: 6px;
-        border-radius: 4px;
-    }
-    
-    .hand-row {
         gap: 4px;
-        margin-bottom: 6px;
     }
-    
-    .hand-label {
-        font-size: 0.55rem;
-        width: 35px;
-        letter-spacing: 0;
-    }
-    
-    .hand-cards {
-        gap: 3px;
-    }
-    
-    .hand-card {
-        width: 26px;
-        height: 35px;
-        font-size: 0.7rem;
-        border-width: 1px;
-    }
-    
-    .hand-card.empty {
-        font-size: 0.45rem;
-    }
-    
-    .hand-total {
+
+    .card-btn {
+        padding: 8px 4px;
         font-size: 0.9rem;
-        width: 20px;
+        min-height: 44px;
+        border-width: 2px;
+    }
+
+    .card-btn .count-badge {
+        font-size: 0.55rem;
+        padding: 2px 4px;
+        top: -3px;
+        right: -3px;
+    }
+
+    .hand-display {
+        padding: 10px;
+        margin-top: 10px;
+        border-radius: 6px;
+    }
+
+    .hand-row {
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .hand-label {
+        font-size: 0.7rem;
+        width: 45px;
+        letter-spacing: 0.5px;
+    }
+
+    .hand-cards {
+        gap: 4px;
+    }
+
+    .hand-card {
+        width: 32px;
+        height: 42px;
+        font-size: 0.85rem;
+        border-width: 2px;
+    }
+
+    .hand-card.empty {
+        font-size: 0.55rem;
+    }
+
+    .hand-total {
+        font-size: 1.1rem;
+        width: 24px;
     }
 }
 
@@ -271,15 +271,15 @@
     .card-grid {
         grid-template-columns: repeat(5, 1fr);
     }
-    
+
     .hand-label {
-        width: 30px;
-        font-size: 0.5rem;
-    }
-    
-    .hand-card {
-        width: 22px;
-        height: 30px;
+        width: 38px;
         font-size: 0.6rem;
+    }
+
+    .hand-card {
+        width: 28px;
+        height: 36px;
+        font-size: 0.75rem;
     }
 }

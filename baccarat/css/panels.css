@@ -55,13 +55,13 @@
 /* Small Phone */
 @media (max-width: 480px) {
     .panel {
-        padding: 6px;
-        border-radius: 4px;
+        padding: 10px;
+        border-radius: 6px;
     }
-    
+
     .panel-title {
-        font-size: 0.55rem;
-        letter-spacing: 0.5px;
-        margin-bottom: 5px;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
     }
 }

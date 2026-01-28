@@ -166,7 +166,9 @@ function restoreGameState() {
     }
 
     // Restore game state
-    gameState.phase = savedGame.phase;
+    // Always restore to BETTING phase since SPINNING/RESULT are transient states
+    // that should not persist across page refreshes
+    gameState.phase = GAME_PHASES.BETTING;
     gameState.config = savedGame.config;
     gameState.bankroll = savedGame.bankroll;
     gameState.lastBets = savedGame.lastBets;

@@ -41,7 +41,8 @@ function renderWheel() {
         pocket.style.setProperty('--half-pocket-angle', halfPocketAngle + 'deg');
 
         // Calculate rotation angle
-        const angle = index * degreesPerPocket;
+        // Add small offset to avoid rendering artifacts at exactly 0 degrees
+        const angle = index * degreesPerPocket + 0.3;
         pocket.style.transform = `rotate(${angle}deg)`;
 
         // Inner pocket with number

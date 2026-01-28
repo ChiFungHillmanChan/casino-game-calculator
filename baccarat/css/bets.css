@@ -190,59 +190,61 @@
 /* Small Phone */
 @media (max-width: 480px) {
     .bet-cards {
-        gap: 5px;
+        gap: 8px;
     }
-    
+
     .bet-card {
-        padding: 6px;
-        border-radius: 4px;
+        padding: 10px;
+        border-radius: 6px;
     }
-    
+
     .bet-header {
-        margin-bottom: 4px;
+        margin-bottom: 6px;
     }
-    
+
     .bet-name {
-        font-size: 0.7rem;
+        font-size: 0.85rem;
     }
-    
+
     .bet-tag {
-        font-size: 0.45rem;
-        padding: 2px 3px;
-        letter-spacing: 0;
+        font-size: 0.6rem;
+        padding: 3px 6px;
+        letter-spacing: 0.5px;
     }
-    
+
     .ev-comparison {
-        font-size: 0.6rem;
-        padding: 3px;
-        gap: 3px;
+        font-size: 0.8rem;
+        padding: 8px;
+        gap: 6px;
     }
-    
+
     .ev-change {
-        font-size: 0.5rem;
-        padding: 1px 2px;
+        font-size: 0.65rem;
+        padding: 2px 5px;
     }
-    
+
     .bets-column-title {
-        font-size: 0.6rem;
-        margin-bottom: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: var(--text-secondary);
     }
 }
 
 /* Extra Small Phone */
 @media (max-width: 360px) {
     .bet-name {
-        font-size: 0.65rem;
+        font-size: 0.8rem;
     }
-    
+
     .ev-comparison {
-        font-size: 0.55rem;
+        font-size: 0.75rem;
     }
-    
+
     .ev-arrow {
         display: none;
     }
-    
+
     .ev-original::after {
         content: '→';
         margin-left: 3px;

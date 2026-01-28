@@ -238,11 +238,11 @@ function renderInsideBetAreas(isAmerican) {
     if (!isAmerican) {
         // European: 0-1, 0-2, 0-3
         html += `<div class="split-bet zero-split" data-bet-type="split" data-bet-value="0-3"
-                     style="left: -30px; top: 16.66%;" title="Split: 0, 3"></div>`;
+                     style="left: 0; top: 16.66%;" title="Split: 0, 3"></div>`;
         html += `<div class="split-bet zero-split" data-bet-type="split" data-bet-value="0-2"
-                     style="left: -30px; top: 50%;" title="Split: 0, 2"></div>`;
+                     style="left: 0; top: 50%;" title="Split: 0, 2"></div>`;
         html += `<div class="split-bet zero-split" data-bet-type="split" data-bet-value="0-1"
-                     style="left: -30px; top: 83.33%;" title="Split: 0, 1"></div>`;
+                     style="left: 0; top: 83.33%;" title="Split: 0, 1"></div>`;
         // First Four (0,1,2,3)
         html += `<div class="first-four-bet" data-bet-type="firstFour" data-bet-value="firstFour"
                      style="left: -15px; top: calc(100% - 8px);" title="First Four: 0, 1, 2, 3"></div>`;
@@ -284,6 +284,9 @@ function initBettingTableHandlers() {
             handleBetRemoval(betType, betValue, e);
         }
     });
+    
+    // Setup chip preview on hover/touch
+    setupChipPreviewOnTable();
 }
 
 /**

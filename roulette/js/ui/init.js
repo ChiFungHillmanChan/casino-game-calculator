@@ -16,10 +16,17 @@ async function init() {
         // Initialize chip selector
         renderChipSelector();
 
-        // Check for saved game and restore or show setup
+        // Check for saved game and auto-continue without prompt
         if (hasSavedGame()) {
-            const summary = getSavedGameSummary();
-            showSavedGamePrompt(summary);
+            // Automatically restore and continue the game
+            if (restoreGameState()) {
+                showGameScreen();
+                renderPlacedChips();
+                console.log('Roulette game restored and continued');
+            } else {
+                // Failed to restore, start fresh
+                showSetupScreen();
+            }
         } else {
             showSetupScreen();
         }
@@ -34,13 +41,7 @@ async function init() {
  * Show prompt to continue saved game or start new
  */
 function showSavedGamePrompt(summary) {
-    const setupScreen = document.getElementById('setupScreen');
-    const gameScreen = document.getElementById('gameScreen');
-    const statsPanel = document.getElementById('statsPanel');
-
-    if (setupScreen) setupScreen.classList.remove('hidden');
-    if (gameScreen) gameScreen.classList.add('hidden');
-    if (statsPanel) statsPanel.classList.add('hidden');
+    showSetupScreen();
 
     // Show saved game info in setup panel
     const savedGameInfo = document.getElementById('savedGameInfo');
@@ -147,10 +148,14 @@ function showSetupScreen() {
     const setupScreen = document.getElementById('setupScreen');
     const gameScreen = document.getElementById('gameScreen');
     const statsPanel = document.getElementById('statsPanel');
+    const setupContainer = document.getElementById('setup-container');
+    const gameContainer = document.getElementById('game-container');
     
     if (setupScreen) setupScreen.classList.remove('hidden');
     if (gameScreen) gameScreen.classList.add('hidden');
     if (statsPanel) statsPanel.classList.add('hidden');
+    if (setupContainer) setupContainer.classList.remove('hidden');
+    if (gameContainer) gameContainer.classList.add('hidden');
 }
 
 /**
@@ -160,10 +165,14 @@ function showGameScreen() {
     const setupScreen = document.getElementById('setupScreen');
     const gameScreen = document.getElementById('gameScreen');
     const statsPanel = document.getElementById('statsPanel');
+    const setupContainer = document.getElementById('setup-container');
+    const gameContainer = document.getElementById('game-container');
     
     if (setupScreen) setupScreen.classList.add('hidden');
     if (gameScreen) gameScreen.classList.remove('hidden');
     if (statsPanel) statsPanel.classList.remove('hidden');
+    if (setupContainer) setupContainer.classList.add('hidden');
+    if (gameContainer) gameContainer.classList.remove('hidden');
     
     // Render game components
     renderWheel();
