@@ -4,11 +4,18 @@
    ===================================================== */
 
 /* ========== Safe Area Support ========== */
+/* Ensure content respects iOS safe areas (notch, home indicator, etc.) */
 @supports (padding: max(0px)) {
     .container {
         padding-left: max(var(--spacing-sm), env(safe-area-inset-left));
         padding-right: max(var(--spacing-sm), env(safe-area-inset-right));
-        padding-bottom: max(var(--spacing-md), env(safe-area-inset-bottom));
+        /* Bottom padding handled by mobile media query for action bar clearance */
+    }
+    
+    /* Ensure the body also respects safe areas */
+    body {
+        /* Prevent content from going under the home indicator when scrolled to bottom */
+        padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 }
 
@@ -37,8 +44,9 @@
     /* Container - full width mobile */
     .container {
         padding: var(--spacing-sm);
-        /* Space for fixed action bar + iPhone safe area (increased for better clearance) */
-        padding-bottom: max(130px, calc(120px + env(safe-area-inset-bottom)));
+        /* Space for fixed action bar (~100px height) + safe area + buffer
+           Ensures all content above the fixed action bar is visible */
+        padding-bottom: max(140px, calc(130px + env(safe-area-inset-bottom, 34px)));
     }
 
     /* Header - compact on mobile */
@@ -488,10 +496,13 @@
         right: 0;
         margin: 0;
         padding: var(--spacing-sm) var(--spacing-md);
-        /* Ensure enough padding for iPhone home indicator (34px) plus extra buffer */
-        /* Use max to handle both safe-area-aware browsers and fallback */
-        /* Increased from 20px/12px to 34px/20px for better touch bar clearance */
-        padding-bottom: max(34px, calc(env(safe-area-inset-bottom) + 20px));
+        /* iOS Safe Area: Use env() with fallback for iPhone home indicator
+           - iPhone X/11/12/13/14/15 home indicator is ~34px
+           - Add extra padding (16px) to ensure buttons aren't too close to the bar
+           - Total minimum padding-bottom: 50px (fallback) or env() + 16px */
+        padding-bottom: max(50px, calc(env(safe-area-inset-bottom, 34px) + 16px));
+        padding-left: max(var(--spacing-md), env(safe-area-inset-left));
+        padding-right: max(var(--spacing-md), env(safe-area-inset-right));
         background: linear-gradient(180deg, transparent 0%, var(--bg-card) 15%, var(--bg-card) 100%);
         border-radius: var(--radius-lg) var(--radius-lg) 0 0;
         border: 1px solid var(--border-subtle);
@@ -622,8 +633,9 @@
 
     /* ========== Game Screen Adjustments ========== */
     .game-screen {
-        /* Extra space for fixed action bar + iPhone safe area (increased for better clearance) */
-        padding-bottom: max(150px, calc(140px + env(safe-area-inset-bottom)));
+        /* Extra space for fixed action bar + iPhone safe area + buffer
+           Ensures game content doesn't get hidden behind action bar */
+        padding-bottom: max(160px, calc(150px + env(safe-area-inset-bottom, 34px)));
     }
 
     /* ========== Collapsible Sections - Compact ========== */
@@ -906,7 +918,8 @@
 /* ========== Landscape Mobile ========== */
 @media (max-width: 767px) and (orientation: landscape) {
     .container {
-        padding-bottom: 80px;
+        /* Landscape still needs safe area support for notch/home indicator on sides */
+        padding-bottom: max(90px, calc(80px + env(safe-area-inset-bottom, 20px)));
     }
 
     header {
@@ -1131,7 +1144,10 @@
         align-items: center;
         justify-content: space-between;
         padding: var(--spacing-md) var(--spacing-lg);
-        padding-bottom: max(var(--spacing-md), env(safe-area-inset-bottom));
+        /* Tablet safe area padding - slightly less than mobile since tablets have smaller home indicators */
+        padding-bottom: max(var(--spacing-lg), calc(env(safe-area-inset-bottom, 20px) + var(--spacing-md)));
+        padding-left: max(var(--spacing-lg), env(safe-area-inset-left));
+        padding-right: max(var(--spacing-lg), env(safe-area-inset-right));
         background: var(--bg-card);
         border-top: 1px solid var(--border-subtle);
         box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
