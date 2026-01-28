@@ -213,14 +213,22 @@
 
                 <!-- Card Input Area -->
                 <div class="card-input-area">
+                    <!-- Dealing Target Selector -->
+                    <div class="dealing-targets-section">
+                        <div class="dealing-targets-label">Deal to:</div>
+                        <div class="dealing-targets" id="dealingTargets">
+                            <!-- Target buttons rendered here -->
+                        </div>
+                    </div>
                     <div class="dealing-indicator" id="dealingIndicator">
-                        Tap a card as it's dealt
+                        Dealing to: DEALER
                     </div>
                     <div class="card-input-grid" id="cardInputGrid">
                         <!-- Card buttons rendered here -->
                     </div>
                     <div class="control-buttons">
                         <button class="btn btn-undo" id="undoBtn">↩ Undo</button>
+                        <button class="btn btn-new-round" id="newRoundBtn">New Round</button>
                         <button class="btn btn-new-shoe" id="newShoeBtn">New Shoe</button>
                         <button class="btn btn-finish" id="finishBtn">Finish</button>
                     </div>

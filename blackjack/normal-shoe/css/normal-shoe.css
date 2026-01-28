@@ -386,6 +386,236 @@
     color: var(--text-dim);
 }
 
+/* Target indicators on dealt cards */
+.dealt-card-mini.dealer-dealt {
+    border-top: 2px solid #e74c3c;
+}
+
+.dealt-card-mini.mine-dealt {
+    border-top: 2px solid var(--accent-gold);
+}
+
+.dealt-card-mini.other-dealt {
+    border-top: 2px solid #3498db;
+}
+
+/* =====================================================
+   DEALING TARGET SELECTOR
+   ===================================================== */
+
+.dealing-targets-section {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.dealing-targets-label {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.dealing-targets {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.target-btn {
+    padding: 6px 12px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.target-btn:hover {
+    border-color: var(--text-dim);
+    color: var(--text-primary);
+}
+
+.target-btn.active {
+    border-color: #e74c3c;
+    background: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+}
+
+.target-btn.mine {
+    border-color: rgba(212, 175, 55, 0.5);
+}
+
+.target-btn.mine.active {
+    border-color: var(--accent-gold);
+    background: rgba(212, 175, 55, 0.15);
+    color: var(--accent-gold);
+}
+
+.target-btn.other {
+    border-color: rgba(52, 152, 219, 0.5);
+}
+
+.target-btn.other.active {
+    border-color: #3498db;
+    background: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+}
+
+/* Dealing Indicator */
+.dealing-indicator {
+    text-align: center;
+    padding: 8px;
+    margin-bottom: var(--spacing-sm);
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+}
+
+.dealing-indicator.dealer {
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.dealing-indicator.mine {
+    color: var(--accent-gold);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.dealing-indicator.other {
+    color: #3498db;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+}
+
+/* =====================================================
+   SEAT CARDS
+   ===================================================== */
+
+.seat-card {
+    width: 32px;
+    height: 40px;
+    background: var(--bg-card);
+    border: 2px solid var(--border-subtle);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    position: relative;
+}
+
+/* Mine cards - gold/yellow border */
+.seat-card.mine-card {
+    border-color: var(--accent-gold);
+    background: rgba(212, 175, 55, 0.1);
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+}
+
+/* Other player cards - blue border */
+.seat-card.other-card {
+    border-color: #3498db;
+    background: rgba(52, 152, 219, 0.1);
+}
+
+/* Hi-Lo color coding for card text */
+.seat-card.high-card {
+    color: var(--ev-negative);
+}
+
+.seat-card.low-card {
+    color: var(--ev-positive);
+}
+
+/* Dealer cards */
+.dealer-card {
+    width: 36px;
+    height: 44px;
+    background: var(--bg-card);
+    border: 2px solid #e74c3c;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.dealer-card.high-card {
+    color: var(--ev-negative);
+}
+
+.dealer-card.low-card {
+    color: var(--ev-positive);
+}
+
+/* Active dealing seat highlight */
+.seat.dealing-active .seat-circle {
+    animation: pulse-dealing 1s ease-in-out infinite;
+}
+
+@keyframes pulse-dealing {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 25px rgba(212, 175, 55, 0.7);
+    }
+}
+
+.seat.occupied.dealing-active .seat-circle {
+    animation: pulse-dealing-other 1s ease-in-out infinite;
+}
+
+@keyframes pulse-dealing-other {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 15px rgba(52, 152, 219, 0.4);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 25px rgba(52, 152, 219, 0.7);
+    }
+}
+
+/* Seat total styling */
+.seat-total.bust {
+    color: var(--ev-negative) !important;
+}
+
+.seat-total.blackjack {
+    color: var(--accent-gold) !important;
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+}
+
+/* New Round button */
+.btn-new-round {
+    background: rgba(46, 204, 113, 0.2);
+    border-color: #2ecc71;
+    color: #2ecc71;
+}
+
+.btn-new-round:hover {
+    background: rgba(46, 204, 113, 0.3);
+}
+
 /* =====================================================
    MOBILE RESPONSIVE - TABLET
    ===================================================== */
@@ -522,6 +752,35 @@
         width: 24px;
         height: 28px;
         font-size: 0.65rem;
+    }
+
+    /* Dealing targets mobile */
+    .dealing-targets-section {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .target-btn {
+        padding: 5px 10px;
+        font-size: 0.7rem;
+    }
+
+    .dealing-indicator {
+        font-size: 0.7rem;
+        padding: 6px;
+    }
+
+    /* Seat cards mobile */
+    .seat-card {
+        width: 26px;
+        height: 32px;
+        font-size: 0.75rem;
+    }
+
+    .dealer-card {
+        width: 30px;
+        height: 36px;
+        font-size: 0.85rem;
     }
 }
 

@@ -26,8 +26,8 @@ const GameState = {
     },
     table: {
         seats: [],
-        dealer: { cards: [], holeCard: null },
-        activeSeatIndex: -1
+        dealer: { cards: [], total: 0 },
+        dealingTarget: 'dealer' // 'dealer' or seat index (0-6)
     },
     session: {
         hands: [],
@@ -35,6 +35,9 @@ const GameState = {
     },
     phase: 'setup'
 };
+
+// Track dealt cards history for display
+var dealtCardsHistory = [];
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -127,6 +130,8 @@ function handleSetupSubmit(e) {
             id: index + 1,
             status: status,
             cards: [],
+            total: 0,
+            isSoft: false,
             bet: 0,
             splitHands: [],
             result: null
@@ -157,6 +162,7 @@ function resetCount() {
 
 function initializeGame() {
     updateSettingsBar();
+    renderDealingTargets();
     renderSeats();
     renderCardInput();
     updateCountDisplay();
@@ -164,6 +170,7 @@ function initializeGame() {
 
     document.getElementById('undoBtn').addEventListener('click', undoLastCard);
     document.getElementById('newShoeBtn').addEventListener('click', newShoe);
+    document.getElementById('newRoundBtn').addEventListener('click', newRound);
     document.getElementById('finishBtn').addEventListener('click', finishSession);
     document.getElementById('settingsBtn').addEventListener('click', showSettings);
 }
@@ -188,6 +195,58 @@ function updateBankrollDisplay() {
     }
 }
 
+// Render dealing target selector
+function renderDealingTargets() {
+    const container = document.getElementById('dealingTargets');
+    if (!container) return;
+
+    while (container.firstChild) {
+        container.removeChild(container.firstChild);
+    }
+
+    // Dealer target button
+    const dealerBtn = document.createElement('button');
+    dealerBtn.className = 'target-btn' + (GameState.table.dealingTarget === 'dealer' ? ' active' : '');
+    dealerBtn.textContent = 'Dealer';
+    dealerBtn.onclick = function() { setDealingTarget('dealer'); };
+    container.appendChild(dealerBtn);
+
+    // Seat target buttons (only for active seats)
+    GameState.table.seats.forEach((seat, index) => {
+        if (seat.status !== 'empty') {
+            const btn = document.createElement('button');
+            const isMine = seat.status === 'mine';
+            btn.className = 'target-btn' + (GameState.table.dealingTarget === index ? ' active' : '');
+            btn.classList.add(isMine ? 'mine' : 'other');
+            btn.textContent = 'Seat ' + seat.id;
+            btn.onclick = function() { setDealingTarget(index); };
+            container.appendChild(btn);
+        }
+    });
+}
+
+function setDealingTarget(target) {
+    GameState.table.dealingTarget = target;
+    renderDealingTargets();
+    renderSeats();
+    updateDealingIndicator();
+}
+
+function updateDealingIndicator() {
+    const indicator = document.getElementById('dealingIndicator');
+    if (!indicator) return;
+
+    if (GameState.table.dealingTarget === 'dealer') {
+        indicator.textContent = 'Dealing to: DEALER';
+        indicator.className = 'dealing-indicator dealer';
+    } else {
+        const seat = GameState.table.seats[GameState.table.dealingTarget];
+        const isMine = seat && seat.status === 'mine';
+        indicator.textContent = 'Dealing to: Seat ' + (GameState.table.dealingTarget + 1);
+        indicator.className = 'dealing-indicator ' + (isMine ? 'mine' : 'other');
+    }
+}
+
 function renderSeats() {
     const container = document.getElementById('seatsContainer');
     while (container.firstChild) {
@@ -197,11 +256,14 @@ function renderSeats() {
     GameState.table.seats.forEach((seat, index) => {
         const seatEl = document.createElement('div');
         seatEl.className = 'seat ' + seat.status;
+        if (GameState.table.dealingTarget === index) {
+            seatEl.classList.add('dealing-active');
+        }
         seatEl.dataset.seatId = seat.id;
 
         const circleEl = document.createElement('div');
         circleEl.className = 'seat-circle';
-        circleEl.onclick = function() { toggleSeatStatus(index); };
+        circleEl.onclick = function() { setDealingTarget(index); };
 
         const numberEl = document.createElement('span');
         numberEl.className = 'seat-number';
@@ -215,28 +277,116 @@ function renderSeats() {
 
         seatEl.appendChild(circleEl);
 
+        // Seat cards display
         const cardsEl = document.createElement('div');
         cardsEl.className = 'seat-cards';
         cardsEl.id = 'seatCards' + seat.id;
+
+        // Render cards for this seat
+        seat.cards.forEach((card, cardIndex) => {
+            const cardEl = createSeatCardElement(card, seat.status, cardIndex);
+            cardsEl.appendChild(cardEl);
+        });
+
         seatEl.appendChild(cardsEl);
 
+        // Seat info (total)
         const infoEl = document.createElement('div');
         infoEl.className = 'seat-info';
 
         const totalEl = document.createElement('div');
         totalEl.className = 'seat-total';
         totalEl.id = 'seatTotal' + seat.id;
-        totalEl.textContent = '-';
+        if (seat.cards.length > 0) {
+            const totalText = seat.isSoft ? seat.total + ' (soft)' : seat.total;
+            totalEl.textContent = totalText;
+            if (seat.total > 21) {
+                totalEl.classList.add('bust');
+            } else if (seat.total === 21 && seat.cards.length === 2) {
+                totalEl.classList.add('blackjack');
+            }
+        } else {
+            totalEl.textContent = '-';
+        }
         infoEl.appendChild(totalEl);
-
-        const betEl = document.createElement('div');
-        betEl.className = 'seat-bet';
-        betEl.id = 'seatBet' + seat.id;
-        infoEl.appendChild(betEl);
 
         seatEl.appendChild(infoEl);
         container.appendChild(seatEl);
     });
+
+    // Render dealer cards
+    renderDealerCards();
+}
+
+function createSeatCardElement(rank, seatStatus, cardIndex) {
+    const cardEl = document.createElement('div');
+    cardEl.className = 'seat-card';
+
+    // Color based on seat status
+    if (seatStatus === 'mine') {
+        cardEl.classList.add('mine-card');
+    } else {
+        cardEl.classList.add('other-card');
+    }
+
+    // Hi-Lo color coding
+    const hiLoValue = HI_LO_VALUES[rank];
+    if (hiLoValue > 0) {
+        cardEl.classList.add('low-card');
+    } else if (hiLoValue < 0) {
+        cardEl.classList.add('high-card');
+    }
+
+    cardEl.textContent = rank;
+
+    // Overlap effect
+    if (cardIndex > 0) {
+        cardEl.style.marginLeft = '-12px';
+    }
+
+    return cardEl;
+}
+
+function renderDealerCards() {
+    const container = document.getElementById('dealerCards');
+    if (!container) return;
+
+    while (container.firstChild) {
+        container.removeChild(container.firstChild);
+    }
+
+    GameState.table.dealer.cards.forEach((rank, index) => {
+        const cardEl = document.createElement('div');
+        cardEl.className = 'dealer-card';
+
+        // Hi-Lo color coding
+        const hiLoValue = HI_LO_VALUES[rank];
+        if (hiLoValue > 0) {
+            cardEl.classList.add('low-card');
+        } else if (hiLoValue < 0) {
+            cardEl.classList.add('high-card');
+        }
+
+        cardEl.textContent = rank;
+
+        if (index > 0) {
+            cardEl.style.marginLeft = '-12px';
+        }
+
+        container.appendChild(cardEl);
+    });
+
+    // Update dealer total
+    const totalEl = document.getElementById('dealerTotal');
+    if (totalEl) {
+        if (GameState.table.dealer.cards.length > 0) {
+            const result = calculateHandTotal(GameState.table.dealer.cards);
+            totalEl.textContent = result.total + (result.isSoft ? ' (soft)' : '');
+            GameState.table.dealer.total = result.total;
+        } else {
+            totalEl.textContent = '-';
+        }
+    }
 }
 
 function getSeatIcon(status) {
@@ -245,25 +395,6 @@ function getSeatIcon(status) {
         case 'occupied': return '\u25CF';
         default: return '';
     }
-}
-
-function toggleSeatStatus(index) {
-    const seat = GameState.table.seats[index];
-    const mineCount = GameState.table.seats.filter(function(s) { return s.status === 'mine'; }).length;
-
-    if (seat.status === 'empty') {
-        seat.status = 'occupied';
-    } else if (seat.status === 'occupied') {
-        if (mineCount < 3) {
-            seat.status = 'mine';
-        } else {
-            seat.status = 'empty';
-        }
-    } else {
-        seat.status = 'empty';
-    }
-
-    renderSeats();
 }
 
 function renderCardInput() {
@@ -303,30 +434,76 @@ function renderCardInput() {
 
         grid.appendChild(btn);
     });
+
+    updateDealingIndicator();
 }
 
-// Track dealt cards history for display
-var dealtCardsHistory = [];
-
 function dealCard(rank) {
+    // Update count
     GameState.count.running += HI_LO_VALUES[rank];
     GameState.count.cardsDealt++;
     GameState.count.dealtByRank[rank] = (GameState.count.dealtByRank[rank] || 0) + 1;
 
     // Add to history for display
-    dealtCardsHistory.push(rank);
+    dealtCardsHistory.push({
+        rank: rank,
+        target: GameState.table.dealingTarget
+    });
+
+    // Deal to current target
+    if (GameState.table.dealingTarget === 'dealer') {
+        GameState.table.dealer.cards.push(rank);
+    } else {
+        const seatIndex = GameState.table.dealingTarget;
+        const seat = GameState.table.seats[seatIndex];
+        if (seat) {
+            seat.cards.push(rank);
+            // Recalculate hand total
+            const result = calculateHandTotal(seat.cards);
+            seat.total = result.total;
+            seat.isSoft = result.isSoft;
+        }
+    }
 
     renderCardInput();
+    renderSeats();
     renderDealtCards();
     updateCountDisplay();
     updateRecommendationPanel();
+}
+
+function calculateHandTotal(cards) {
+    let total = 0;
+    let aces = 0;
+
+    cards.forEach(function(rank) {
+        if (rank === 'A') {
+            aces++;
+            total += 11;
+        } else if (['K', 'Q', 'J', '10'].indexOf(rank) !== -1) {
+            total += 10;
+        } else {
+            total += parseInt(rank);
+        }
+    });
+
+    // Adjust for aces
+    let isSoft = aces > 0 && total <= 21;
+    while (total > 21 && aces > 0) {
+        total -= 10;
+        aces--;
+        if (aces === 0) {
+            isSoft = false;
+        }
+    }
+
+    return { total: total, isSoft: isSoft };
 }
 
 function renderDealtCards() {
     var container = document.getElementById('dealtCardsDisplay');
     if (!container) return;
 
-    // Clear existing
     while (container.firstChild) {
         container.removeChild(container.firstChild);
     }
@@ -334,19 +511,30 @@ function renderDealtCards() {
     // Show last 20 cards dealt
     var cardsToShow = dealtCardsHistory.slice(-20);
 
-    cardsToShow.forEach(function(rank) {
+    cardsToShow.forEach(function(card) {
         var cardEl = document.createElement('div');
         cardEl.className = 'dealt-card-mini';
 
-        var hiLoValue = HI_LO_VALUES[rank];
+        var hiLoValue = HI_LO_VALUES[card.rank];
         var hiLoClass = hiLoValue > 0 ? 'low' : hiLoValue < 0 ? 'high' : 'neutral';
         cardEl.classList.add(hiLoClass);
 
-        cardEl.textContent = rank;
+        // Add target indicator
+        if (card.target === 'dealer') {
+            cardEl.classList.add('dealer-dealt');
+        } else {
+            var seat = GameState.table.seats[card.target];
+            if (seat && seat.status === 'mine') {
+                cardEl.classList.add('mine-dealt');
+            } else {
+                cardEl.classList.add('other-dealt');
+            }
+        }
+
+        cardEl.textContent = card.rank;
         container.appendChild(cardEl);
     });
 
-    // Update card count display
     var countLabel = document.getElementById('dealtCardsCount');
     if (countLabel) {
         countLabel.textContent = dealtCardsHistory.length + ' cards dealt';
@@ -354,14 +542,81 @@ function renderDealtCards() {
 }
 
 function undoLastCard() {
-    alert('Undo functionality coming soon');
+    if (dealtCardsHistory.length === 0) {
+        return;
+    }
+
+    var lastCard = dealtCardsHistory.pop();
+    var rank = lastCard.rank;
+    var target = lastCard.target;
+
+    // Reverse count
+    GameState.count.running -= HI_LO_VALUES[rank];
+    GameState.count.cardsDealt--;
+    GameState.count.dealtByRank[rank]--;
+
+    // Remove from target
+    if (target === 'dealer') {
+        GameState.table.dealer.cards.pop();
+    } else {
+        var seat = GameState.table.seats[target];
+        if (seat) {
+            seat.cards.pop();
+            var result = calculateHandTotal(seat.cards);
+            seat.total = result.total;
+            seat.isSoft = result.isSoft;
+        }
+    }
+
+    renderCardInput();
+    renderSeats();
+    renderDealtCards();
+    updateCountDisplay();
+    updateRecommendationPanel();
+}
+
+function newRound() {
+    // Clear all hands but keep the count
+    GameState.table.dealer.cards = [];
+    GameState.table.dealer.total = 0;
+
+    GameState.table.seats.forEach(function(seat) {
+        seat.cards = [];
+        seat.total = 0;
+        seat.isSoft = false;
+        seat.result = null;
+    });
+
+    // Reset dealing target to dealer
+    GameState.table.dealingTarget = 'dealer';
+
+    renderDealingTargets();
+    renderSeats();
+    updateDealingIndicator();
 }
 
 function newShoe() {
-    if (confirm('Start a new shoe? This will reset the count.')) {
+    if (confirm('Start a new shoe? This will reset the count and all hands.')) {
         resetCount();
         dealtCardsHistory = [];
+
+        // Clear all hands
+        GameState.table.dealer.cards = [];
+        GameState.table.dealer.total = 0;
+
+        GameState.table.seats.forEach(function(seat) {
+            seat.cards = [];
+            seat.total = 0;
+            seat.isSoft = false;
+            seat.result = null;
+        });
+
+        // Reset dealing target
+        GameState.table.dealingTarget = 'dealer';
+
+        renderDealingTargets();
         renderCardInput();
+        renderSeats();
         renderDealtCards();
         updateCountDisplay();
         updateRecommendationPanel();
@@ -390,166 +645,75 @@ function updateCountDisplay() {
 
 function updateRecommendationPanel() {
     const totalCards = GameState.config.decks * 52;
-    const decksRemaining = (totalCards - GameState.count.cardsDealt) / 52;
-    const trueCount = decksRemaining > 0 ? GameState.count.running / decksRemaining : 0;
+    const decksRemaining = Math.max(0.5, (totalCards - GameState.count.cardsDealt) / 52);
+    const trueCount = GameState.count.running / decksRemaining;
+    const tcRounded = Math.round(trueCount * 10) / 10;
 
-    const edge = -BASE_HOUSE_EDGE + (trueCount * EDGE_PER_TRUE_COUNT);
-    const edgePercent = (edge * 100).toFixed(2);
+    // Calculate edge
+    const baseEdge = 0.005; // 0.5% house edge
+    const edgePerTC = 0.005; // 0.5% per true count
+    const playerEdge = -baseEdge + (tcRounded * edgePerTC);
 
+    // Update edge badge
     const edgeBadge = document.getElementById('edgeBadge');
-    if (edge > 0) {
-        edgeBadge.textContent = '+' + edgePercent + '% Player Edge';
+    if (playerEdge > 0) {
+        edgeBadge.textContent = 'Player Edge: +' + (playerEdge * 100).toFixed(2) + '%';
         edgeBadge.className = 'edge-badge positive';
     } else {
-        edgeBadge.textContent = edgePercent + '% House Edge';
+        edgeBadge.textContent = 'House Edge: ' + Math.abs(playerEdge * 100).toFixed(2) + '%';
         edgeBadge.className = 'edge-badge negative';
     }
 
-    var betUnits = 1;
-    if (trueCount >= 4) betUnits = 8;
-    else if (trueCount >= 3) betUnits = 6;
-    else if (trueCount >= 2) betUnits = 4;
-    else if (trueCount >= 1) betUnits = 2;
+    // Calculate recommended bet
+    let recommendedBet = GameState.config.minBet;
+    let betUnits = '1 unit (minimum)';
 
-    var recommendedBet = Math.min(
-        GameState.config.minBet * betUnits,
-        GameState.config.maxBet,
-        GameState.bankroll.current * 0.05
-    );
+    if (tcRounded >= 4) {
+        recommendedBet = GameState.config.minBet * 8;
+        betUnits = '8 units (max spread)';
+    } else if (tcRounded >= 3) {
+        recommendedBet = GameState.config.minBet * 6;
+        betUnits = '6 units';
+    } else if (tcRounded >= 2) {
+        recommendedBet = GameState.config.minBet * 4;
+        betUnits = '4 units';
+    } else if (tcRounded >= 1) {
+        recommendedBet = GameState.config.minBet * 2;
+        betUnits = '2 units';
+    }
 
-    document.getElementById('recommendedBet').textContent = '$' + Math.round(recommendedBet);
-    document.getElementById('betUnits').textContent = betUnits + ' unit' + (betUnits > 1 ? 's' : '') + ' (TC ' + (trueCount >= 0 ? '+' : '') + trueCount.toFixed(1) + ')';
+    // Cap at max bet
+    recommendedBet = Math.min(recommendedBet, GameState.config.maxBet);
 
-    var profit = GameState.bankroll.current - GameState.bankroll.initial;
-    var profitEl = document.getElementById('sessionProfit');
-    profitEl.textContent = (profit >= 0 ? '+$' : '-$') + Math.abs(profit).toLocaleString();
-    profitEl.className = 'stat-value ' + (profit >= 0 ? 'profit' : 'loss');
+    document.getElementById('recommendedBet').textContent = '$' + recommendedBet;
+    document.getElementById('betUnits').textContent = betUnits;
+
+    // Session stats
+    const profit = GameState.bankroll.current - GameState.bankroll.initial;
+    const profitEl = document.getElementById('sessionProfit');
+    profitEl.textContent = (profit >= 0 ? '+$' : '-$') + Math.abs(profit);
+    profitEl.className = 'stat-value ' + (profit >= 0 ? 'positive' : 'negative');
 
     document.getElementById('handsPlayed').textContent = GameState.session.hands.length;
 }
 
-function showSettings() {
-    if (confirm('Return to settings? Current session will be preserved.')) {
-        document.getElementById('gameScreen').style.display = 'none';
-        document.getElementById('setupScreen').style.display = 'flex';
-    }
-}
-
 function finishSession() {
-    if (confirm('Finish this session?')) {
-        showSessionSummary();
-    }
+    alert('Session summary coming soon');
 }
 
-function showSessionSummary() {
-    var duration = new Date() - GameState.session.startTime;
-    var durationMins = Math.round(duration / 60000);
-    var profit = GameState.bankroll.current - GameState.bankroll.initial;
-    var profitPercent = ((profit / GameState.bankroll.initial) * 100).toFixed(1);
-
-    var summaryContent = document.getElementById('sessionSummaryContent');
-    while (summaryContent.firstChild) {
-        summaryContent.removeChild(summaryContent.firstChild);
-    }
-
-    var section1 = document.createElement('div');
-    section1.className = 'summary-section';
-    var h3a = document.createElement('h3');
-    h3a.textContent = 'Session Duration';
-    section1.appendChild(h3a);
-    var p1 = document.createElement('p');
-    p1.textContent = durationMins + ' minutes';
-    section1.appendChild(p1);
-    summaryContent.appendChild(section1);
-
-    var section2 = document.createElement('div');
-    section2.className = 'summary-section';
-    var h3b = document.createElement('h3');
-    h3b.textContent = 'Financial Summary';
-    section2.appendChild(h3b);
-
-    var p2 = document.createElement('p');
-    p2.textContent = 'Starting Bankroll: $' + GameState.bankroll.initial.toLocaleString();
-    section2.appendChild(p2);
-
-    var p3 = document.createElement('p');
-    p3.textContent = 'Final Bankroll: $' + GameState.bankroll.current.toLocaleString();
-    section2.appendChild(p3);
-
-    var p4 = document.createElement('p');
-    p4.className = profit >= 0 ? 'profit' : 'loss';
-    p4.textContent = 'Profit/Loss: ' + (profit >= 0 ? '+' : '') + '$' + profit.toLocaleString() + ' (' + profitPercent + '%)';
-    section2.appendChild(p4);
-
-    summaryContent.appendChild(section2);
-
-    var section3 = document.createElement('div');
-    section3.className = 'summary-section';
-    var h3c = document.createElement('h3');
-    h3c.textContent = 'Count Statistics';
-    section3.appendChild(h3c);
-
-    var p5 = document.createElement('p');
-    p5.textContent = 'Cards Tracked: ' + GameState.count.cardsDealt;
-    section3.appendChild(p5);
-
-    var p6 = document.createElement('p');
-    p6.textContent = 'Final Running Count: ' + GameState.count.running;
-    section3.appendChild(p6);
-
-    summaryContent.appendChild(section3);
-
-    document.getElementById('sessionSummaryModal').style.display = 'flex';
-
-    document.getElementById('exportJsonBtn').onclick = exportSessionJson;
-    document.getElementById('newGameBtn').onclick = startNewGame;
-}
-
-function exportSessionJson() {
-    var data = {
-        metadata: {
-            date: new Date().toISOString(),
-            duration: new Date() - GameState.session.startTime,
-            config: GameState.config
-        },
-        financial: {
-            startingBankroll: GameState.bankroll.initial,
-            endingBankroll: GameState.bankroll.current,
-            profitLoss: GameState.bankroll.current - GameState.bankroll.initial
-        },
-        counting: {
-            cardsDealt: GameState.count.cardsDealt,
-            finalRunningCount: GameState.count.running
-        },
-        hands: GameState.session.hands
-    };
-
-    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'blackjack-session-' + new Date().toISOString().slice(0, 10) + '.json';
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
-function startNewGame() {
-    document.getElementById('sessionSummaryModal').style.display = 'none';
-    document.getElementById('gameScreen').style.display = 'none';
-    document.getElementById('setupScreen').style.display = 'flex';
-    GameState.phase = 'setup';
-    resetCount();
+function showSettings() {
+    alert('Settings panel coming soon');
 }
 
 function toggleHistory() {
-    var content = document.getElementById('historyContent');
-    var toggle = document.getElementById('historyToggle');
+    const content = document.getElementById('historyContent');
+    const toggle = document.getElementById('historyToggle');
 
-    if (content.classList.contains('open')) {
-        content.classList.remove('open');
-        toggle.textContent = '\u25BC';
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        toggle.textContent = '▲';
     } else {
-        content.classList.add('open');
-        toggle.textContent = '\u25B2';
+        content.style.display = 'none';
+        toggle.textContent = '▼';
     }
 }
