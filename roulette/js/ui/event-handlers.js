@@ -275,8 +275,13 @@ function handleClearBets() {
  * Handle undo button (remove last bet)
  */
 function handleUndo() {
-    // TODO: Implement undo stack
-    console.log('Undo not yet implemented');
+    if (getGamePhase() !== GAME_PHASES.BETTING) return;
+
+    if (undoLastBet()) {
+        renderPlacedChips();
+        updateTotalBetDisplay();
+        updateButtonStates();
+    }
 }
 
 /**
@@ -521,25 +526,26 @@ function updateButtonStates() {
     const hasBetsPlaced = hasBets();
     const hasLastBets = getLastBets() !== null;
     const canAfford = getCurrentBankroll() > 0;
-    
+    const hasUndoActions = canUndo();
+
     const spinBtn = document.getElementById('spinBtn');
     const clearBtn = document.getElementById('clearBetsBtn');
     const undoBtn = document.getElementById('undoBtn');
     const repeatBtn = document.getElementById('repeatBtn');
-    
+
     if (spinBtn) {
         spinBtn.disabled = phase !== GAME_PHASES.BETTING || !hasBetsPlaced;
         spinBtn.classList.toggle('spinning', phase === GAME_PHASES.SPINNING);
     }
-    
+
     if (clearBtn) {
         clearBtn.disabled = phase !== GAME_PHASES.BETTING || !hasBetsPlaced;
     }
-    
+
     if (undoBtn) {
-        undoBtn.disabled = true; // TODO: Enable when undo is implemented
+        undoBtn.disabled = phase !== GAME_PHASES.BETTING || !hasUndoActions;
     }
-    
+
     if (repeatBtn) {
         repeatBtn.disabled = phase !== GAME_PHASES.BETTING || !hasLastBets || !canAfford;
     }

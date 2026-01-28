@@ -135,54 +135,66 @@ function animateWheelSpin(spinData, onComplete) {
 
     // Handle animation completion
     setTimeout(() => {
-        // Remove spinning classes
+        // Calculate ball's final position BEFORE removing animation class
+        // Ball ends at TOP (12 o'clock) where the winning pocket is positioned
+        // TOP = -90 degrees from CSS right reference
+        // Using the same orbit radius from the animation
+        const wrapperWidth = wheelWrapper ? wheelWrapper.getBoundingClientRect().width : 340;
+        const ballOrbitRadius = (wrapperWidth / 2) - 50;
+
+        // Ball's final angle is at TOP (12 o'clock position)
+        // In CSS coordinates: TOP is at angle -90° from right (3 o'clock)
+        // x = cos(-90°) * radius = 0
+        // y = sin(-90°) * radius = -radius
+        const finalBallX = 0;
+        const finalBallY = -ballOrbitRadius;
+
+        // Set the ball's final position BEFORE removing spinning class
+        // This prevents the "jump" effect
+        ball.style.transform = `translate(calc(-50% + ${finalBallX}px), calc(-50% + ${finalBallY}px))`;
+
+        // Now safely remove spinning classes
         wheelOuter.classList.remove('spinning');
         ball.classList.remove('spinning');
 
         // Set final rotation state on wheel-outer
         wheelOuter.style.transform = `rotate(${wheelRotation}deg)`;
 
-        // Wait for DOM to update with new wheel position, then position ball
+        // Show result and highlights
         requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                // Position ball at winning pocket using DOM position
-                positionBallAtPocket(spinData.result, wheelRotation);
+            // Show result in center
+            if (indicator) {
+                indicator.textContent = spinData.result;
+                indicator.className = 'result-indicator ' + getNumberColor(spinData.result);
+            }
 
-                // Show result in center
-                if (indicator) {
-                    indicator.textContent = spinData.result;
-                    indicator.className = 'result-indicator ' + getNumberColor(spinData.result);
-                }
+            // Highlight winning pocket
+            highlightWinningPocket(spinData.result);
+            highlightWinningNumber(spinData.result);
 
-                // Highlight winning pocket
-                highlightWinningPocket(spinData.result);
-                highlightWinningNumber(spinData.result);
+            // Reset spin button
+            const spinBtn = document.getElementById('spinBtn');
+            if (spinBtn) {
+                spinBtn.textContent = 'SPIN';
+                spinBtn.classList.remove('spinning');
+            }
 
-                // Reset spin button
-                const spinBtn = document.getElementById('spinBtn');
-                if (spinBtn) {
-                    spinBtn.textContent = 'SPIN';
-                    spinBtn.classList.remove('spinning');
-                }
-
-                // Callback
-                onComplete();
-            });
+            // Callback
+            onComplete();
         });
 
     }, spinData.duration + 100);
 }
 
 /**
- * Position ball at winning pocket
- * Uses the actual DOM position of the ball pocket area for accurate placement
- * @param {number|string} number - Winning number
- * @param {number} wheelRotation - Final wheel rotation angle in degrees
+ * Position ball at TOP (12 o'clock) where winning pocket is located after wheel rotation
+ * The wheel physics ensures the winning pocket always ends at TOP position
+ * @param {number|string} number - Winning number (for reference, not used in positioning)
+ * @param {number} wheelRotation - Final wheel rotation angle in degrees (for reference)
  */
 function positionBallAtPocket(number, wheelRotation = 0) {
     const ball = document.getElementById('ball');
     const wheelWrapper = document.querySelector('.wheel-wrapper');
-    const winningPocket = document.querySelector(`.wheel-pocket[data-number="${number}"]`);
 
     if (!ball || !wheelWrapper) return;
 
@@ -193,54 +205,16 @@ function positionBallAtPocket(number, wheelRotation = 0) {
     // Ball orbit radius - positioned in the ball pocket area
     const ballOrbitRadius = wheelRadius - 50;
 
-    // If we found the pocket, use its ball area position
-    if (winningPocket) {
-        // Try to find the ball pocket area first, fallback to pocket inner
-        const ballArea = winningPocket.querySelector('.wheel-pocket-ball-area');
-        const targetElement = ballArea || winningPocket.querySelector('.wheel-pocket-inner');
-
-        if (targetElement) {
-            const targetRect = targetElement.getBoundingClientRect();
-            const centerX = wrapperRect.width / 2;
-            const centerY = wrapperRect.height / 2;
-
-            // Calculate the target element's center position
-            const targetCenterX = targetRect.left + targetRect.width / 2 - wrapperRect.left;
-            const targetCenterY = targetRect.top + targetRect.height / 2 - wrapperRect.top;
-
-            // Calculate vector from wheel center to target
-            let dx = targetCenterX - centerX;
-            let dy = targetCenterY - centerY;
-
-            // Get the distance (for normalization)
-            const distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance > 0) {
-                // Normalize and scale to ball orbit radius
-                dx = (dx / distance) * ballOrbitRadius;
-                dy = (dy / distance) * ballOrbitRadius;
-            }
-
-            ball.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-            ball.classList.add('visible');
-            ball.classList.remove('spinning');
-            return;
-        }
-    }
-
-    // Fallback: use mathematical calculation
-    const rouletteConfig = getRouletteConfig();
-    const sequence = rouletteConfig.wheelSequence;
-    const pocketIndex = sequence.findIndex(p => p.toString() === number.toString());
-    const pocketCount = sequence.length;
-    const degreesPerPocket = 360 / pocketCount;
-
-    const pocketStartAngle = pocketIndex * degreesPerPocket;
-    const finalAngle = pocketStartAngle + wheelRotation;
-    const angleInRadians = (finalAngle * Math.PI) / 180;
-
-    const ballX = Math.sin(angleInRadians) * ballOrbitRadius;
-    const ballY = -Math.cos(angleInRadians) * ballOrbitRadius;
+    // Ball always lands at TOP (12 o'clock) where the winning pocket is positioned
+    // The wheel physics (calculateFinalWheelAngle) ensures the winning pocket
+    // rotates to TOP, and the ball animation (calculateBallAngle) ensures the ball
+    // ends at TOP as well
+    //
+    // TOP position in screen coordinates:
+    // - X offset from center: 0 (directly above center)
+    // - Y offset from center: -ballOrbitRadius (negative Y is up)
+    const ballX = 0;
+    const ballY = -ballOrbitRadius;
 
     ball.style.transform = `translate(calc(-50% + ${ballX}px), calc(-50% + ${ballY}px))`;
     ball.classList.add('visible');
