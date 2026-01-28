@@ -113,6 +113,13 @@
     color: var(--accent-red);
 }
 
+.egalite-house-edge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
 .egalite-prob {
     font-size: 0.55rem;
     color: var(--text-dim);
@@ -214,6 +221,10 @@
         font-size: 0.7rem;
     }
     
+    .egalite-house-edge {
+        font-size: 0.55rem;
+    }
+    
     .egalite-prob,
     .egalite-fair {
         font-size: 0.5rem;
@@ -274,6 +285,10 @@
         font-size: 0.6rem;
     }
     
+    .egalite-house-edge {
+        font-size: 0.5rem;
+    }
+    
     .egalite-prob,
     .egalite-fair {
         font-size: 0.45rem;
@@ -304,6 +319,10 @@
     
     .egalite-ev {
         font-size: 0.55rem;
+    }
+    
+    .egalite-house-edge {
+        font-size: 0.5rem;
     }
     
     .egalite-prob,

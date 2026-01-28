@@ -25,17 +25,34 @@ const BASE_EV = {
 };
 
 // Egalité base probabilities (8 deck) - from Wizard of Odds
+// Source: https://wizardofodds.com/games/baccarat/side-bets/egalite
+// Total combinations: 4,998,398,275,503,360
+const EGALITE_COMBINATIONS = {
+    0: 28979901420544,   // 0-0 tie combinations
+    1: 20499217668352,   // 1-1 tie combinations
+    2: 20006606104576,   // 2-2 tie combinations
+    3: 22250510129408,   // 3-3 tie combinations
+    4: 36294133463040,   // 4-4 tie combinations
+    5: 39684046743808,   // 5-5 tie combinations
+    6: 96170001308416,   // 6-6 tie combinations
+    7: 101717538899968,  // 7-7 tie combinations (most common)
+    8: 54879416675072,   // 8-8 tie combinations
+    9: 55146054060032    // 9-9 tie combinations
+};
+const EGALITE_TOTAL_COMBINATIONS = 4998398275503360;
+
+// Exact probabilities calculated from combinations
 const EGALITE_BASE_PROB = {
-    0: 0.00575,  // 0-0 tie
-    1: 0.00376,  // 1-1 tie
-    2: 0.00355,  // 2-2 tie
-    3: 0.00432,  // 3-3 tie
-    4: 0.00712,  // 4-4 tie
-    5: 0.00816,  // 5-5 tie
-    6: 0.01836,  // 6-6 tie
-    7: 0.02082,  // 7-7 tie (most common)
-    8: 0.01018,  // 8-8 tie
-    9: 0.00986   // 9-9 tie
+    0: 0.0057978534,  // 0-0 tie (28,979,901,420,544 / total)
+    1: 0.0041012676,  // 1-1 tie (20,499,217,668,352 / total)
+    2: 0.0040027882,  // 2-2 tie (20,006,606,104,576 / total)
+    3: 0.0044516969,  // 3-3 tie (22,250,510,129,408 / total)
+    4: 0.0072613513,  // 4-4 tie (36,294,133,463,040 / total)
+    5: 0.0079393629,  // 5-5 tie (39,684,046,743,808 / total)
+    6: 0.0192398659,  // 6-6 tie (96,170,001,308,416 / total)
+    7: 0.0203501471,  // 7-7 tie (101,717,538,899,968 / total) - most common
+    8: 0.0109791551,  // 8-8 tie (54,879,416,675,072 / total)
+    9: 0.0110324873   // 9-9 tie (55,146,054,060,032 / total)
 };
 
 // Default payouts (standard UK casinos)

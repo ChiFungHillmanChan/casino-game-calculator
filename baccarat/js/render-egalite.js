@@ -15,8 +15,9 @@ function renderEgaliteGrid() {
     for (let i = 0; i <= 9; i++) {
         const ev = calculateEgaliteEV(i);
         const isPositive = ev >= 0;
-        const fairOdds = (1 / EGALITE_BASE_PROB[i] - 1).toFixed(0);
+        const fairOdds = calculateFairOdds(i);
         const currentProb = getAdjustedEgaliteProb(i);
+        const houseEdge = calculateHouseEdge(i);
 
         const bet = document.createElement('div');
         bet.className = 'egalite-bet' + (isPositive ? ' positive-ev' : '');
@@ -28,10 +29,13 @@ function renderEgaliteGrid() {
                 <span class="egalite-payout-label">:1</span>
             </div>
             <div class="egalite-ev ${isPositive ? 'positive' : 'negative'}">
-                ${isPositive ? '+' : ''}${(ev * 100).toFixed(2)}%
+                EV: ${isPositive ? '+' : ''}${(ev * 100).toFixed(2)}%
             </div>
-            <div class="egalite-prob">Prob: ${(currentProb * 100).toFixed(3)}%</div>
-            <div class="egalite-fair">Fair: ${fairOdds}:1</div>
+            <div class="egalite-house-edge">
+                Edge: ${houseEdge.toFixed(2)}%
+            </div>
+            <div class="egalite-prob">Prob: ${(currentProb * 100).toFixed(4)}%</div>
+            <div class="egalite-fair">Fair: ${fairOdds.toFixed(1)}:1</div>
         `;
         grid.appendChild(bet);
     }
