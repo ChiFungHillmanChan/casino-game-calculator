@@ -142,25 +142,45 @@ function animateWheelSpin(spinData, onComplete) {
 
 /**
  * Position ball at winning pocket
- * Ball lands at 0 degrees (right side / 3 o'clock position)
+ * The ball should land on top of the winning number after the wheel stops rotating
  * @param {number|string} number - Winning number
  * @param {number} wheelRotation - Final wheel rotation angle in degrees
  */
 function positionBallAtPocket(number, wheelRotation = 0) {
     const ball = document.getElementById('ball');
-    const wheel = document.getElementById('wheel');
-    
-    if (!ball || !wheel) return;
-    
-    // Ball is positioned at 0 degrees (right side) - this is where the pocket ends up
-    // The ball radius from center
-    const radius = 100;
-    
-    // 0 degrees = right side (3 o'clock position)
-    const x = radius;
-    const y = 0;
-    
-    ball.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+    const wheelWrapper = document.querySelector('.wheel-wrapper');
+
+    if (!ball || !wheelWrapper) return;
+
+    // Get wheel dimensions for calculating ball position
+    const wrapperRect = wheelWrapper.getBoundingClientRect();
+    const wheelRadius = wrapperRect.width / 2;
+
+    // Ball orbits slightly inside the outer edge (about 85% of the wheel radius)
+    const ballOrbitRadius = wheelRadius * 0.38;
+
+    // Get the winning pocket's position in the wheel sequence
+    const rouletteConfig = getRouletteConfig();
+    const sequence = rouletteConfig.wheelSequence;
+    const pocketIndex = sequence.findIndex(p => p.toString() === number.toString());
+    const pocketCount = sequence.length;
+    const degreesPerPocket = 360 / pocketCount;
+
+    // Calculate the pocket's angle on the wheel (before rotation)
+    // Pockets are arranged starting from top (12 o'clock = -90 degrees in CSS)
+    const pocketAngle = pocketIndex * degreesPerPocket;
+
+    // After wheel rotation, the pocket ends up at: pocketAngle + wheelRotation
+    // We need to normalize this and convert to radians
+    // Subtract 90 degrees because CSS rotation 0 is at 3 o'clock, but we want 12 o'clock reference
+    const finalAngleFromTop = (pocketAngle + wheelRotation - 90) % 360;
+    const angleInRadians = (finalAngleFromTop * Math.PI) / 180;
+
+    // Calculate ball position (relative to center of wheel)
+    const ballX = Math.cos(angleInRadians) * ballOrbitRadius;
+    const ballY = Math.sin(angleInRadians) * ballOrbitRadius;
+
+    ball.style.transform = `translate(calc(-50% + ${ballX}px), calc(-50% + ${ballY}px))`;
     ball.classList.add('visible');
     ball.classList.remove('spinning');
 }

@@ -371,25 +371,33 @@ function renderChipOnElement(element, amount) {
     // Create chip stack - positioned inside the element
     const stack = document.createElement('div');
     stack.className = 'chip-stack-container';
-    
+
     // Determine chip breakdown
     const chips = getChipBreakdown(amount);
-    
-    // Create visual chips (max 5 shown)
-    const displayChips = chips.slice(0, 5);
+
+    // Create visual chips (max 3 shown for cleaner look)
+    const displayChips = chips.slice(0, 3);
     displayChips.forEach((chip, index) => {
         const chipEl = document.createElement('div');
         chipEl.className = `chip chip-${chip} chip-sm`;
+        chipEl.style.position = 'absolute';
         chipEl.style.top = (-index * 3) + 'px';
+        chipEl.style.left = '50%';
+        chipEl.style.transform = 'translateX(-50%)';
         stack.appendChild(chipEl);
     });
-    
-    // Add tooltip with total
-    const tooltip = document.createElement('div');
-    tooltip.className = 'chip-value-tooltip';
-    tooltip.textContent = '$' + amount;
-    stack.appendChild(tooltip);
-    
+
+    // Add bet amount label directly on top of the stack
+    const amountLabel = document.createElement('div');
+    amountLabel.className = 'chip-amount-label';
+    amountLabel.textContent = amount >= 1000 ? Math.floor(amount / 1000) + 'K' : amount;
+    amountLabel.style.position = 'absolute';
+    amountLabel.style.top = (-displayChips.length * 3 - 2) + 'px';
+    amountLabel.style.left = '50%';
+    amountLabel.style.transform = 'translateX(-50%)';
+    amountLabel.style.zIndex = '10';
+    stack.appendChild(amountLabel);
+
     // Add chip stack directly to the cell
     element.appendChild(stack);
 }
