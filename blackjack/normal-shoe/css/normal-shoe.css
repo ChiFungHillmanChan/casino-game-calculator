@@ -1,0 +1,567 @@
+/**
+ * Normal Shoe - Page Specific Styles
+ * Setup screen, modals, dealt cards display, and mobile responsive
+ */
+
+/* =====================================================
+   SETUP SCREEN
+   ===================================================== */
+
+.setup-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+}
+
+.setup-container {
+    max-width: 600px;
+    width: 100%;
+}
+
+.setup-container h1 {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    text-align: center;
+    margin-bottom: var(--spacing-xs);
+    background: linear-gradient(135deg, var(--accent-gold) 0%, #f4d03f 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.setup-subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xl);
+}
+
+.setup-section {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border: 1px solid var(--border-subtle);
+}
+
+.setup-section .section-title {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    color: var(--accent-gold);
+    letter-spacing: 2px;
+    margin-bottom: var(--spacing-md);
+    text-transform: uppercase;
+}
+
+/* =====================================================
+   FORM ELEMENTS
+   ===================================================== */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.form-group select,
+.form-group input {
+    padding: var(--spacing-sm);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+}
+
+.form-group select:focus,
+.form-group input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+.form-hint {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-top: 5px;
+}
+
+/* =====================================================
+   SEAT SELECTOR
+   ===================================================== */
+
+.seats-selector {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: var(--spacing-sm);
+}
+
+.seat-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px dashed var(--seat-empty);
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.seat-toggle.active {
+    border-style: solid;
+    border-color: var(--seat-occupied);
+    color: var(--seat-occupied);
+    background: rgba(52, 152, 219, 0.1);
+}
+
+.seat-toggle.mine {
+    border-color: var(--seat-mine);
+    color: var(--seat-mine);
+    background: rgba(212, 175, 55, 0.15);
+    box-shadow: var(--glow-gold);
+}
+
+/* =====================================================
+   CHECKBOX GROUP
+   ===================================================== */
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-gold);
+}
+
+/* =====================================================
+   BUYIN RECOMMENDATIONS
+   ===================================================== */
+
+.buyin-recommendations {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.buyin-option {
+    cursor: pointer;
+}
+
+.buyin-option input {
+    display: none;
+}
+
+.buyin-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-sm);
+    text-align: center;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+.buyin-option input:checked + .buyin-card {
+    border-color: var(--accent-gold);
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.buyin-card.recommended {
+    border-color: var(--accent-gold);
+}
+
+.tier-badge {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent-gold);
+    color: #000;
+    font-size: 0.55rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 700;
+}
+
+.tier-name {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-bottom: 3px;
+}
+
+.tier-amount {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.tier-risk {
+    display: block;
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    margin-top: 3px;
+}
+
+/* =====================================================
+   BUTTONS
+   ===================================================== */
+
+.btn-start {
+    width: 100%;
+    padding: var(--spacing-md);
+    background: linear-gradient(145deg, var(--accent-gold) 0%, var(--accent-gold-dim) 100%);
+    border: none;
+    border-radius: var(--radius-md);
+    color: #000;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    margin-top: var(--spacing-md);
+}
+
+.btn-start:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--glow-gold);
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.back-link:hover {
+    color: var(--accent-gold);
+}
+
+/* =====================================================
+   MODAL
+   ===================================================== */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: var(--spacing-md);
+}
+
+.modal-content {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    border: 1px solid var(--accent-gold);
+}
+
+.modal-content h2 {
+    font-family: var(--font-display);
+    color: var(--accent-gold);
+    margin-bottom: var(--spacing-lg);
+    text-align: center;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-lg);
+    justify-content: center;
+}
+
+/* =====================================================
+   DEALT CARDS DISPLAY
+   ===================================================== */
+
+.dealt-cards-section {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    border: 1px solid var(--border-subtle);
+}
+
+.dealt-cards-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+}
+
+.dealt-cards-label {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    color: var(--accent-gold);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.dealt-cards-count {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-dim);
+}
+
+.dealt-cards-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-height: 32px;
+    align-items: center;
+}
+
+.dealt-card-mini {
+    width: 28px;
+    height: 32px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.dealt-card-mini.high {
+    background: rgba(230, 57, 70, 0.2);
+    border-color: var(--ev-negative);
+    color: var(--ev-negative);
+}
+
+.dealt-card-mini.low {
+    background: rgba(46, 204, 113, 0.2);
+    border-color: var(--ev-positive);
+    color: var(--ev-positive);
+}
+
+.dealt-card-mini.neutral {
+    background: rgba(160, 160, 160, 0.1);
+    border-color: var(--text-dim);
+    color: var(--text-dim);
+}
+
+/* =====================================================
+   MOBILE RESPONSIVE - TABLET
+   ===================================================== */
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .buyin-recommendations {
+        grid-template-columns: 1fr;
+    }
+
+    .setup-screen {
+        padding: var(--spacing-sm);
+    }
+
+    .setup-container h1 {
+        font-size: 1.4rem;
+    }
+
+    /* Game screen mobile */
+    .game-area {
+        flex-direction: column;
+    }
+
+    .settings-bar {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .setting-item {
+        font-size: 0.7rem;
+    }
+
+    .blackjack-table {
+        padding: var(--spacing-sm);
+        min-height: auto;
+    }
+
+    .dealer-area {
+        padding: var(--spacing-xs);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .dealer-label {
+        font-size: 0.6rem;
+    }
+
+    .seats-container {
+        gap: 5px;
+        padding: var(--spacing-xs) 0;
+    }
+
+    .seat-circle {
+        width: 45px;
+        height: 45px;
+    }
+
+    .seat-number {
+        font-size: 0.7rem;
+    }
+
+    .card-input-grid {
+        gap: 4px;
+    }
+
+    .card-btn {
+        width: 42px;
+        height: 48px;
+    }
+
+    .card-btn .card-rank {
+        font-size: 1rem;
+    }
+
+    .card-btn .card-count {
+        font-size: 0.55rem;
+    }
+
+    .card-btn .hilo-value {
+        font-size: 0.5rem;
+    }
+
+    .control-buttons {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .control-buttons .btn {
+        flex: 1;
+        min-width: 80px;
+        font-size: 0.75rem;
+        padding: 8px;
+    }
+
+    /* Side panel mobile */
+    .side-panel {
+        order: -1;
+    }
+
+    .count-hud {
+        padding: var(--spacing-sm);
+    }
+
+    .count-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+
+    .count-value {
+        font-size: 1.1rem;
+    }
+
+    .count-label {
+        font-size: 0.55rem;
+    }
+
+    .recommendation-panel {
+        padding: var(--spacing-sm);
+    }
+
+    .bet-recommendation {
+        padding: var(--spacing-sm);
+    }
+
+    .bet-recommendation .bet-amount {
+        font-size: 1.5rem;
+    }
+
+    .dealt-card-mini {
+        width: 24px;
+        height: 28px;
+        font-size: 0.65rem;
+    }
+}
+
+/* =====================================================
+   MOBILE RESPONSIVE - PHONE
+   ===================================================== */
+
+@media (max-width: 480px) {
+    .setup-container h1 {
+        font-size: 1.2rem;
+    }
+
+    .setup-section {
+        padding: var(--spacing-sm);
+    }
+
+    .seats-selector {
+        flex-wrap: wrap;
+    }
+
+    .seat-toggle {
+        width: 36px;
+        height: 36px;
+        font-size: 0.8rem;
+    }
+
+    .card-btn {
+        width: 38px;
+        height: 44px;
+    }
+
+    .card-btn .card-rank {
+        font-size: 0.9rem;
+    }
+
+    .count-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .session-stats {
+        grid-template-columns: 1fr;
+    }
+}
