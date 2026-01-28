@@ -656,6 +656,9 @@ function renderActionButtons() {
         container.removeChild(container.firstChild);
     }
 
+    // Update optimal move banner
+    updateOptimalMoveBanner();
+
     if (GameState.phase === 'player_turn') {
         var activeSeats = GameState.table.activeSeats;
         if (GameState.table.currentPlayerIndex >= 0 &&
@@ -731,6 +734,280 @@ function renderActionButtons() {
         resultLabel.textContent = 'Round complete!';
         container.appendChild(resultLabel);
     }
+}
+
+/**
+ * Update the optimal move banner with current best play recommendation
+ */
+function updateOptimalMoveBanner() {
+    var banner = document.getElementById('optimalMoveBanner');
+    var actionEl = document.getElementById('optimalMoveAction');
+    var textEl = document.getElementById('optimalMoveText');
+    var contextEl = document.getElementById('optimalMoveContext');
+
+    if (!banner) return;
+
+    // Only show during player_turn for "mine" seats
+    if (GameState.phase !== 'player_turn') {
+        banner.classList.remove('visible');
+        return;
+    }
+
+    var activeSeats = GameState.table.activeSeats;
+    if (GameState.table.currentPlayerIndex < 0 ||
+        GameState.table.currentPlayerIndex >= activeSeats.length) {
+        banner.classList.remove('visible');
+        return;
+    }
+
+    var seatIndex = activeSeats[GameState.table.currentPlayerIndex];
+    var seat = GameState.table.seats[seatIndex];
+
+    // Only show for player's own seats
+    if (seat.status !== 'mine' || seat.cards.length < 2) {
+        banner.classList.remove('visible');
+        return;
+    }
+
+    // Get dealer upcard
+    var dealerUpcard = GameState.table.dealer.cards[0];
+    if (!dealerUpcard) {
+        banner.classList.remove('visible');
+        return;
+    }
+
+    // Calculate optimal action using basic strategy
+    var optimalAction = getBasicStrategyAction(seat, dealerUpcard);
+
+    // Update banner content
+    textEl.textContent = optimalAction.toUpperCase();
+
+    // Update action class for color coding
+    actionEl.className = 'optimal-move-action ' + optimalAction.toLowerCase();
+
+    // Update context using safe DOM methods
+    var playerTotal = seat.total;
+    var softIndicator = seat.isSoft ? ' (soft)' : '';
+
+    // Clear existing content
+    while (contextEl.firstChild) {
+        contextEl.removeChild(contextEl.firstChild);
+    }
+
+    // Create span element safely
+    var handVsSpan = document.createElement('span');
+    handVsSpan.className = 'hand-vs';
+    handVsSpan.textContent = playerTotal + softIndicator + ' vs Dealer ' + dealerUpcard;
+    contextEl.appendChild(handVsSpan);
+
+    // Show banner
+    banner.classList.add('visible');
+}
+
+/**
+ * Get basic strategy action for current hand
+ * @param {object} seat - Player seat object
+ * @param {string} dealerUpcard - Dealer's visible card
+ * @returns {string} Recommended action: 'Hit', 'Stand', 'Double', 'Split', 'Surrender'
+ */
+function getBasicStrategyAction(seat, dealerUpcard) {
+    var playerTotal = seat.total;
+    var isSoft = seat.isSoft;
+    var cards = seat.cards;
+    var dealerValue = getDealerUpcardValue(dealerUpcard);
+
+    // Check for pair (split opportunity)
+    if (cards.length === 2) {
+        var firstValue = getCardValue(cards[0]);
+        var secondValue = getCardValue(cards[1]);
+
+        if (firstValue === secondValue) {
+            var splitAction = getPairStrategy(cards[0], dealerValue);
+            if (splitAction === 'P') return 'Split';
+        }
+    }
+
+    // Soft hands (contains Ace counted as 11)
+    if (isSoft) {
+        return getSoftHandStrategy(playerTotal, dealerValue, cards.length === 2);
+    }
+
+    // Hard hands
+    return getHardHandStrategy(playerTotal, dealerValue, cards.length === 2);
+}
+
+/**
+ * Get dealer upcard value (2-11)
+ */
+function getDealerUpcardValue(card) {
+    if (card === 'A') return 11;
+    if (['K', 'Q', 'J', '10'].indexOf(card) !== -1) return 10;
+    return parseInt(card);
+}
+
+/**
+ * Basic strategy for pairs
+ */
+function getPairStrategy(card, dealerValue) {
+    var cardValue = getCardValue(card);
+
+    // Aces and 8s - always split
+    if (card === 'A' || cardValue === 8) return 'P';
+
+    // 10s, Jacks, Queens, Kings - never split
+    if (cardValue === 10) return 'S';
+
+    // 9s - split except vs 7, 10, A
+    if (cardValue === 9) {
+        if ([7, 10, 11].indexOf(dealerValue) !== -1) return 'S';
+        return 'P';
+    }
+
+    // 7s - split vs 2-7
+    if (cardValue === 7) {
+        if (dealerValue <= 7) return 'P';
+        return 'H';
+    }
+
+    // 6s - split vs 2-6
+    if (cardValue === 6) {
+        if (dealerValue >= 2 && dealerValue <= 6) return 'P';
+        return 'H';
+    }
+
+    // 5s - never split, double vs 2-9
+    if (cardValue === 5) {
+        if (dealerValue >= 2 && dealerValue <= 9) return 'D';
+        return 'H';
+    }
+
+    // 4s - split vs 5-6 only
+    if (cardValue === 4) {
+        if (dealerValue === 5 || dealerValue === 6) return 'P';
+        return 'H';
+    }
+
+    // 3s and 2s - split vs 2-7
+    if (cardValue <= 3) {
+        if (dealerValue >= 2 && dealerValue <= 7) return 'P';
+        return 'H';
+    }
+
+    return 'H';
+}
+
+/**
+ * Basic strategy for soft hands
+ */
+function getSoftHandStrategy(total, dealerValue, canDouble) {
+    // Soft 20 (A,9) - always stand
+    if (total === 20) return 'Stand';
+
+    // Soft 19 (A,8) - stand, double vs 6 if allowed
+    if (total === 19) {
+        if (canDouble && dealerValue === 6) return 'Double';
+        return 'Stand';
+    }
+
+    // Soft 18 (A,7)
+    if (total === 18) {
+        if (dealerValue >= 9 || dealerValue === 11) return 'Hit';
+        if (canDouble && dealerValue >= 3 && dealerValue <= 6) return 'Double';
+        return 'Stand';
+    }
+
+    // Soft 17 (A,6)
+    if (total === 17) {
+        if (canDouble && dealerValue >= 3 && dealerValue <= 6) return 'Double';
+        return 'Hit';
+    }
+
+    // Soft 16 (A,5)
+    if (total === 16) {
+        if (canDouble && dealerValue >= 4 && dealerValue <= 6) return 'Double';
+        return 'Hit';
+    }
+
+    // Soft 15 (A,4)
+    if (total === 15) {
+        if (canDouble && dealerValue >= 4 && dealerValue <= 6) return 'Double';
+        return 'Hit';
+    }
+
+    // Soft 14 (A,3)
+    if (total === 14) {
+        if (canDouble && dealerValue >= 5 && dealerValue <= 6) return 'Double';
+        return 'Hit';
+    }
+
+    // Soft 13 (A,2)
+    if (total === 13) {
+        if (canDouble && dealerValue >= 5 && dealerValue <= 6) return 'Double';
+        return 'Hit';
+    }
+
+    return 'Hit';
+}
+
+/**
+ * Basic strategy for hard hands
+ */
+function getHardHandStrategy(total, dealerValue, canDouble) {
+    // 17+ always stand
+    if (total >= 17) return 'Stand';
+
+    // 16
+    if (total === 16) {
+        // Surrender vs 9, 10, A if allowed
+        if (GameState.config.surrenderAllowed && [9, 10, 11].indexOf(dealerValue) !== -1) {
+            return 'Surrender';
+        }
+        if (dealerValue >= 2 && dealerValue <= 6) return 'Stand';
+        return 'Hit';
+    }
+
+    // 15
+    if (total === 15) {
+        // Surrender vs 10 if allowed
+        if (GameState.config.surrenderAllowed && dealerValue === 10) {
+            return 'Surrender';
+        }
+        if (dealerValue >= 2 && dealerValue <= 6) return 'Stand';
+        return 'Hit';
+    }
+
+    // 13-14
+    if (total >= 13 && total <= 14) {
+        if (dealerValue >= 2 && dealerValue <= 6) return 'Stand';
+        return 'Hit';
+    }
+
+    // 12
+    if (total === 12) {
+        if (dealerValue >= 4 && dealerValue <= 6) return 'Stand';
+        return 'Hit';
+    }
+
+    // 11
+    if (total === 11) {
+        if (canDouble) return 'Double';
+        return 'Hit';
+    }
+
+    // 10
+    if (total === 10) {
+        if (canDouble && dealerValue >= 2 && dealerValue <= 9) return 'Double';
+        return 'Hit';
+    }
+
+    // 9
+    if (total === 9) {
+        if (canDouble && dealerValue >= 3 && dealerValue <= 6) return 'Double';
+        return 'Hit';
+    }
+
+    // 8 or less - always hit
+    return 'Hit';
 }
 
 function getCardValue(rank) {
