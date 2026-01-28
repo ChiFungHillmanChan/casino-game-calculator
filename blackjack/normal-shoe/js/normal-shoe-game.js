@@ -233,7 +233,7 @@ function updateBankrollDisplay() {
     }
 }
 
-// Get current deal target based on phase
+// Get current deal target based on phase (READ-ONLY - no side effects!)
 function getCurrentDealTarget() {
     var activeSeats = GameState.table.activeSeats;
     var dealIndex = GameState.table.currentDealIndex;
@@ -250,43 +250,49 @@ function getCurrentDealTarget() {
     // Phase 3: Dealer second card (American only)
 
     if (dealPhase === 0) {
-        // First card to each player
         if (dealIndex < activeSeats.length) {
             return { type: 'player', index: activeSeats[dealIndex] };
-        } else {
-            // Move to dealer first card
-            GameState.table.dealPhase = 1;
-            GameState.table.currentDealIndex = 0;
-            return { type: 'dealer', index: -1 };
         }
     } else if (dealPhase === 1) {
-        // Dealer first card dealt, move to second player cards
-        GameState.table.dealPhase = 2;
-        GameState.table.currentDealIndex = 0;
-        return { type: 'player', index: activeSeats[0] };
+        return { type: 'dealer', index: -1 };
     } else if (dealPhase === 2) {
-        // Second card to each player
         if (dealIndex < activeSeats.length) {
             return { type: 'player', index: activeSeats[dealIndex] };
-        } else {
-            // Move to dealer second card (American) or player decisions (European)
-            if (GameState.config.dealerStyle === 'american') {
-                GameState.table.dealPhase = 3;
-                GameState.table.currentDealIndex = 0;
-                return { type: 'dealer', index: -1 };
-            } else {
-                // European - start player decisions
-                startPlayerDecisions();
-                return null;
-            }
         }
     } else if (dealPhase === 3) {
-        // Dealer second card (American), then start player decisions
-        startPlayerDecisions();
-        return null;
+        return { type: 'dealer', index: -1 };
     }
 
     return null;
+}
+
+// Advance deal position AFTER a card is dealt (called only from dealCard)
+function advanceDealPosition() {
+    var activeSeats = GameState.table.activeSeats;
+    var dealPhase = GameState.table.dealPhase;
+
+    if (dealPhase === 0) {
+        GameState.table.currentDealIndex++;
+        if (GameState.table.currentDealIndex >= activeSeats.length) {
+            GameState.table.dealPhase = 1;
+            GameState.table.currentDealIndex = 0;
+        }
+    } else if (dealPhase === 1) {
+        GameState.table.dealPhase = 2;
+        GameState.table.currentDealIndex = 0;
+    } else if (dealPhase === 2) {
+        GameState.table.currentDealIndex++;
+        if (GameState.table.currentDealIndex >= activeSeats.length) {
+            if (GameState.config.dealerStyle === 'american') {
+                GameState.table.dealPhase = 3;
+                GameState.table.currentDealIndex = 0;
+            } else {
+                startPlayerDecisions();
+            }
+        }
+    } else if (dealPhase === 3) {
+        startPlayerDecisions();
+    }
 }
 
 function startPlayerDecisions() {
@@ -728,14 +734,6 @@ function dealCard(rank) {
             if (target.type === 'dealer') {
                 GameState.table.dealer.cards.push(rank);
                 targetInfo = { type: 'dealer' };
-
-                // Advance deal phase
-                if (GameState.table.dealPhase === 1) {
-                    GameState.table.dealPhase = 2;
-                    GameState.table.currentDealIndex = 0;
-                } else if (GameState.table.dealPhase === 3) {
-                    startPlayerDecisions();
-                }
             } else {
                 var seat = GameState.table.seats[target.index];
                 seat.cards.push(rank);
@@ -743,13 +741,9 @@ function dealCard(rank) {
                 seat.total = result.total;
                 seat.isSoft = result.isSoft;
                 targetInfo = { type: 'player', index: target.index, status: seat.status };
-
-                // Advance to next deal position
-                GameState.table.currentDealIndex++;
-
-                // Check if we need to advance phase
-                var nextTarget = getCurrentDealTarget();
             }
+            // Advance to next deal position after the card is dealt
+            advanceDealPosition();
         }
     } else if (GameState.phase === 'player_turn') {
         // Hit for current player
