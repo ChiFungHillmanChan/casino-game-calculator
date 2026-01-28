@@ -42,6 +42,9 @@ const GameState = {
 // Track dealt cards history for display
 var dealtCardsHistory = [];
 
+// LocalStorage key for settings
+var STORAGE_KEY = 'blackjack_normal_shoe_settings';
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initializeSetup();
@@ -59,7 +62,100 @@ function initializeSetup() {
     document.getElementById('minBet').addEventListener('change', updateBuyinRecommendations);
     document.getElementById('maxBet').addEventListener('change', updateBuyinRecommendations);
 
+    // Load saved settings from localStorage
+    loadSavedSettings();
+
     updateBuyinRecommendations();
+}
+
+// Save settings to localStorage
+function saveSettings() {
+    var seatToggles = document.querySelectorAll('.seat-toggle');
+    var seats = [];
+    seatToggles.forEach(function(btn) {
+        var status = btn.classList.contains('mine') ? 'mine' :
+                    btn.classList.contains('active') ? 'occupied' : 'empty';
+        seats.push(status);
+    });
+
+    var settings = {
+        decks: document.getElementById('decks').value,
+        dealerStyle: document.getElementById('dealerStyle').value,
+        dealerRule: document.getElementById('dealerRule').value,
+        surrender: document.getElementById('surrender').value,
+        showDeviations: document.getElementById('showDeviations').checked,
+        minBet: document.getElementById('minBet').value,
+        maxBet: document.getElementById('maxBet').value,
+        buyinTier: document.querySelector('input[name="buyinTier"]:checked')?.value || 'standard',
+        actualBuyin: document.getElementById('actualBuyin').value,
+        seats: seats
+    };
+
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    } catch (e) {
+        console.warn('Could not save settings to localStorage:', e);
+    }
+}
+
+// Load settings from localStorage
+function loadSavedSettings() {
+    try {
+        var saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
+
+        var settings = JSON.parse(saved);
+
+        // Restore form values
+        if (settings.decks) {
+            document.getElementById('decks').value = settings.decks;
+        }
+        if (settings.dealerStyle) {
+            document.getElementById('dealerStyle').value = settings.dealerStyle;
+        }
+        if (settings.dealerRule) {
+            document.getElementById('dealerRule').value = settings.dealerRule;
+        }
+        if (settings.surrender) {
+            document.getElementById('surrender').value = settings.surrender;
+        }
+        if (typeof settings.showDeviations === 'boolean') {
+            document.getElementById('showDeviations').checked = settings.showDeviations;
+        }
+        if (settings.minBet) {
+            document.getElementById('minBet').value = settings.minBet;
+        }
+        if (settings.maxBet) {
+            document.getElementById('maxBet').value = settings.maxBet;
+        }
+        if (settings.buyinTier) {
+            var tierRadio = document.querySelector('input[name="buyinTier"][value="' + settings.buyinTier + '"]');
+            if (tierRadio) {
+                tierRadio.checked = true;
+            }
+        }
+        if (settings.actualBuyin) {
+            var buyinInput = document.getElementById('actualBuyin');
+            buyinInput.value = settings.actualBuyin;
+            buyinInput.dataset.userModified = 'true';
+        }
+
+        // Restore seat selections
+        if (settings.seats && settings.seats.length === 7) {
+            var seatToggles = document.querySelectorAll('.seat-toggle');
+            seatToggles.forEach(function(btn, index) {
+                btn.classList.remove('active', 'mine');
+                if (settings.seats[index] === 'occupied') {
+                    btn.classList.add('active');
+                } else if (settings.seats[index] === 'mine') {
+                    btn.classList.add('mine');
+                }
+            });
+        }
+
+    } catch (e) {
+        console.warn('Could not load settings from localStorage:', e);
+    }
 }
 
 function handleSeatToggle(e) {
@@ -152,6 +248,9 @@ function handleSetupSubmit(e) {
     GameState.bankroll.current = GameState.bankroll.initial;
     GameState.session.startTime = new Date();
     GameState.session.hands = [];
+
+    // Save settings to localStorage for next time
+    saveSettings();
 
     resetCount();
 
