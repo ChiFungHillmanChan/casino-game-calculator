@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#0a0a0f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="Baccarat Edge Calculator with Egalité Bets, Custom Payouts, and Live EV Tracking">
+    <title>Baccarat Edge Calculator V5</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/app-layout.css">
+    <link rel="stylesheet" href="css/panels.css">
+    <link rel="stylesheet" href="css/cards.css">
+    <link rel="stylesheet" href="css/buttons.css">
+    <link rel="stylesheet" href="css/stats.css">
+    <link rel="stylesheet" href="css/roads.css">
+    <link rel="stylesheet" href="css/egalite.css">
+    <link rel="stylesheet" href="css/bets.css">
+    <link rel="stylesheet" href="css/recommendations.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>BACCARAT EDGE CALCULATOR V5</h1>
+            <p class="subtitle">Egalité Bets • Custom Payouts • Live EV Tracking</p>
+        </header>
+
+        <!-- Mobile-First Layout: Most Important at Top -->
+        <div class="app-layout">
+            <div id="top-panel"></div>
+            <div id="middle-panel"></div>
+            <div id="bottom-panel"></div>
+        </div>
+    </div>
+
+    <!-- JavaScript Files - Load in order -->
+    <script src="js/constants.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/cards.js"></script>
+    <script src="js/rules.js"></script>
+    <script src="js/roads.js"></script>
+    <script src="js/egalite.js"></script>
+    <script src="js/calculations.js"></script>
+    <script src="js/dealer.js"></script>
+    <script src="js/render-cards.js"></script>
+    <script src="js/render-roads.js"></script>
+    <script src="js/render-egalite.js"></script>
+    <script src="js/render-stats.js"></script>
+    <script src="js/init.js"></script>
+
+    <script>
+        // Collapsible section state
+        const sectionStates = {
+            roadsSection: false,
+            egaliteSection: false,
+            historySection: false
+        };
+
+        function toggleSection(sectionId) {
+            sectionStates[sectionId] = !sectionStates[sectionId];
+            const content = document.getElementById(sectionId);
+            const toggle = document.getElementById(sectionId + 'Toggle');
+            
+            if (sectionStates[sectionId]) {
+                content.classList.add('open');
+                toggle.textContent = '▲';
+            } else {
+                content.classList.remove('open');
+                toggle.textContent = '▼';
+            }
+        }
+
+        // Load HTML components
+        async function loadComponents() {
+            const topPanel = await fetch('html/top-panel.html').then(r => r.text());
+            const middlePanel = await fetch('html/middle-panel.html').then(r => r.text());
+            const bottomPanel = await fetch('html/bottom-panel.html').then(r => r.text());
+            
+            document.getElementById('top-panel').innerHTML = topPanel;
+            document.getElementById('middle-panel').innerHTML = middlePanel;
+            document.getElementById('bottom-panel').innerHTML = bottomPanel;
+        }
+
+        // Load components before initialization
+        loadComponents().then(() => init());
+    </script>
+</body>
+</html>
