@@ -52,9 +52,13 @@ function generateSpinParams() {
 
 /**
  * Calculate the final wheel rotation angle to land on a specific pocket
- * The ball lands at a fixed position (right side, 3 o'clock = 0 degrees from center-right)
- * So we need to rotate the wheel so the target pocket ends up at that position
- * 
+ *
+ * Coordinate system:
+ * - Pockets are rendered starting from TOP (12 o'clock) at rotation 0
+ * - Ball CSS animation reference is from RIGHT (3 o'clock) at rotation 0
+ * - We rotate the wheel so the target pocket ends up at TOP (12 o'clock)
+ * - Ball animation ends at TOP to match the winning pocket
+ *
  * @param {number|string} targetPocket - The pocket to land on
  * @param {array} wheelSequence - The wheel sequence
  * @param {number} baseRotations - Number of full rotations before landing
@@ -64,41 +68,59 @@ function calculateFinalWheelAngle(targetPocket, wheelSequence, baseRotations) {
     const index = getPocketIndex(targetPocket, wheelSequence);
     const pocketCount = wheelSequence.length;
     const degreesPerPocket = 360 / pocketCount;
-    
-    // The pocket's starting angle (where it is initially on the wheel)
+
+    // The pocket's starting angle from TOP (12 o'clock)
     const pocketStartAngle = index * degreesPerPocket;
-    
-    // Ball lands at 0 degrees (right side / 3 o'clock position)
-    // We need the pocket to be at 0 degrees when wheel stops
-    // So wheel rotation = baseRotations * 360 - pocketStartAngle
-    // This brings the pocket to the 0 degree position
+
+    // Rotate wheel so target pocket ends at TOP (12 o'clock / 0 degrees)
+    // Wheel rotates clockwise (positive degrees)
+    // To bring a pocket from angle A to 0: rotate by (baseRotations * 360) - A
     const finalAngle = (baseRotations * 360) - pocketStartAngle;
-    
+
     return finalAngle;
 }
 
 /**
- * Calculate ball rotation angle (opposite direction from wheel)
+ * Calculate ball rotation angle to land at the winning pocket
+ * Ball spins counter-clockwise (opposite to wheel) and ends at TOP (12 o'clock)
+ * where the winning pocket is positioned after wheel rotation
+ *
  * @param {number} baseRotations - Number of full rotations
  * @returns {number} Ball rotation angle in degrees (negative for counter-clockwise)
  */
 function calculateBallAngle(baseRotations) {
-    // Ball spins opposite direction and ends at 0 degrees (right side)
-    return -(baseRotations * 360);
+    // Ball spins opposite direction (counter-clockwise = negative)
+    // CSS rotation reference: 0 degrees = RIGHT (3 o'clock)
+    // We want ball to end at TOP (12 o'clock) = -90 degrees from right reference
+    // Total rotation: multiple full rotations + final position at -90
+    return -(baseRotations * 360) - 90;
 }
 
 /**
  * Generate complete spin animation data
+ *
+ * IMPORTANT: The result is determined FIRST using cryptographically secure RNG,
+ * then the wheel and ball rotations are calculated to land EXACTLY on that result.
+ * This ensures fair, predetermined outcomes with realistic animation.
+ *
  * @param {array} wheelSequence - The wheel sequence
  * @returns {object} Complete spin data including result and animation params
  */
 function generateSpinData(wheelSequence) {
+    // Step 1: Determine the winning number FIRST (cryptographically secure)
     const result = generateRandomResult(wheelSequence);
+
+    // Step 2: Generate random spin parameters (duration, rotations)
     const params = generateSpinParams();
-    
+
+    // Step 3: Calculate EXACT wheel rotation to land on the winning pocket
+    // The wheel will rotate so the winning pocket ends at TOP (12 o'clock)
     const wheelAngle = calculateFinalWheelAngle(result, wheelSequence, params.wheelRotations);
-    const ballAngle = calculateBallAngle(params.ballRotations);
-    
+
+    // Step 4: Calculate ball rotation to end at TOP (where winning pocket is)
+    // Ball uses same number of rotations as wheel for visual synchronization
+    const ballAngle = calculateBallAngle(params.wheelRotations);
+
     return {
         result: result,
         wheelAngle: wheelAngle,
