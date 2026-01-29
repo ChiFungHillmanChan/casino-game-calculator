@@ -2,6 +2,11 @@
    ROULETTE BETTING TABLE - Table grid and number cells
    ===================================================== */
 
+/* Touch optimization - eliminate 300ms delay on all bet areas */
+[data-bet-type] {
+    touch-action: manipulation;
+}
+
 /* Table container */
 .betting-table-container {
     width: 100%;
@@ -24,6 +29,8 @@
     min-width: 600px;
     position: relative;
     overflow: visible;
+    /* Eliminate 300ms touch delay on mobile */
+    touch-action: manipulation;
 }
 
 /* Table sections */
@@ -114,6 +121,8 @@
     overflow: visible;
     /* Ensure text stays behind chips */
     text-align: center;
+    /* Eliminate 300ms touch delay */
+    touch-action: manipulation;
 }
 
 .number-cell:hover {

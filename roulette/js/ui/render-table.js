@@ -260,6 +260,7 @@ function renderInsideBetAreas(isAmerican) {
 
 /**
  * Initialize betting table click handlers
+ * Uses pointerdown for faster touch response on mobile/tablet
  */
 function initBettingTableHandlers() {
     const table = document.getElementById('bettingTable');
@@ -269,8 +270,39 @@ function initBettingTableHandlers() {
     if (table.dataset.handlersInitialized === 'true') return;
     table.dataset.handlersInitialized = 'true';
 
-    // Handle clicks on bet areas
+    // Add touch-action to eliminate 300ms delay
+    table.style.touchAction = 'manipulation';
+
+    // Track if we handled a pointerdown to prevent duplicate click
+    let handledPointerDown = false;
+
+    // Use pointerdown for immediate response on touch devices
+    table.addEventListener('pointerdown', (e) => {
+        // Only handle touch and pen inputs with pointerdown
+        // Mouse will use click for better desktop UX
+        if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+            const betElement = e.target.closest('[data-bet-type]');
+            if (betElement) {
+                e.preventDefault(); // Prevent subsequent click
+                handledPointerDown = true;
+                const betType = betElement.dataset.betType;
+                const betValue = betElement.dataset.betValue;
+                handleBetPlacement(betType, betValue, e);
+
+                // Reset flag after a short delay
+                setTimeout(() => { handledPointerDown = false; }, 300);
+            }
+        }
+    }, { passive: false });
+
+    // Handle clicks on bet areas (for mouse/desktop)
     table.addEventListener('click', (e) => {
+        // Skip if already handled by pointerdown
+        if (handledPointerDown) {
+            handledPointerDown = false;
+            return;
+        }
+
         const betElement = e.target.closest('[data-bet-type]');
         if (betElement) {
             const betType = betElement.dataset.betType;
@@ -278,7 +310,7 @@ function initBettingTableHandlers() {
             handleBetPlacement(betType, betValue, e);
         }
     });
-    
+
     // Handle right-clicks for bet removal
     table.addEventListener('contextmenu', (e) => {
         const betElement = e.target.closest('[data-bet-type]');
@@ -288,7 +320,7 @@ function initBettingTableHandlers() {
             handleBetRemoval(betType, betValue, e);
         }
     });
-    
+
     // Setup chip preview on hover/touch
     setupChipPreviewOnTable();
 }
