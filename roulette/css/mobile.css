@@ -44,9 +44,11 @@
     /* Container - full width mobile */
     .container {
         padding: var(--spacing-sm);
-        /* Space for fixed action bar (~100px height) + safe area + buffer
-           Ensures all content above the fixed action bar is visible */
-        padding-bottom: max(140px, calc(130px + env(safe-area-inset-bottom, 34px)));
+        /* Space for fixed action bar (~100px height) + buffer
+           IMPORTANT: Use FIXED padding that doesn't rely on env() to avoid
+           Safari's dynamic toolbar causing the value to change on scroll.
+           Action bar height (~100px) + home indicator space (~34px) + buffer (~26px) = 160px */
+        padding-bottom: 160px;
     }
 
     /* Header - compact on mobile */
@@ -314,6 +316,8 @@
         padding: 2px;
         border-width: 1px;
         margin: 0 auto;
+        /* Eliminate 300ms touch delay for entire table */
+        touch-action: manipulation;
     }
 
     /* Zero section - narrower */
@@ -330,11 +334,13 @@
         min-height: 36px;
     }
 
-    /* Number cells - compact for mobile */
+    /* Number cells - compact for mobile with touch optimization */
     .number-cell {
         font-size: 0.65rem;
         min-height: 24px;
         position: relative;
+        /* Eliminate 300ms touch delay */
+        touch-action: manipulation;
     }
 
     /* Column bets - narrower */
@@ -361,7 +367,7 @@
         padding: 1px;
     }
 
-    /* Inside bet areas - hidden by default on mobile */
+    /* Inside bet areas - hidden by default on mobile, GPU accelerated */
     .split-bet,
     .corner-bet,
     .street-bet,
@@ -371,37 +377,47 @@
         background: transparent !important;
         border-color: transparent !important;
         box-shadow: none !important;
+        /* GPU acceleration */
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        /* Fast transitions */
+        transition: transform 0.08s ease-out, background-color 0.08s ease-out, box-shadow 0.08s ease-out;
     }
 
-    /* Show bet areas on touch/active with glow effect */
+    /* Show bet areas on touch/active with glow effect - GPU accelerated */
     .split-bet:active {
         background: rgba(212, 175, 55, 0.6) !important;
         border-color: var(--accent-gold) !important;
         box-shadow: 0 0 10px var(--accent-gold) !important;
+        transform: translateZ(0);
     }
 
     .corner-bet:active {
         background: rgba(212, 175, 55, 0.6) !important;
         border-color: var(--accent-gold) !important;
         box-shadow: 0 0 12px var(--accent-gold) !important;
+        transform: translateZ(0);
     }
 
     .street-bet:active {
         background: rgba(155, 89, 182, 0.6) !important;
         border-color: #9b59b6 !important;
         box-shadow: 0 0 12px #9b59b6 !important;
+        transform: translateZ(0);
     }
 
     .line-bet:active {
         background: rgba(52, 152, 219, 0.6) !important;
         border-color: var(--accent-blue) !important;
         box-shadow: 0 0 12px var(--accent-blue) !important;
+        transform: translateZ(0);
     }
 
     .first-four-bet:active,
     .top-line-bet:active {
         background: rgba(46, 204, 113, 0.5) !important;
         box-shadow: 0 0 12px var(--roulette-green) !important;
+        transform: translateZ(0);
     }
 
     .split-bet.vertical,
@@ -423,8 +439,12 @@
     .chip-selector {
         padding: var(--spacing-xs) var(--spacing-sm);
         margin-top: var(--spacing-sm);
+        /* Add bottom margin to ensure it's visible above fixed action bar */
+        margin-bottom: var(--spacing-sm);
         background: rgba(20, 20, 30, 0.9);
         border-radius: var(--radius-md);
+        /* Ensure chip selector doesn't get cut off when scrolling */
+        scroll-margin-bottom: 120px;
     }
 
     .chip-selector-label {
@@ -441,15 +461,22 @@
         overflow-x: auto;
         padding: 4px 0;
         -webkit-overflow-scrolling: touch;
+        /* Eliminate 300ms touch delay */
+        touch-action: manipulation;
     }
 
-    /* Smaller chips for mobile */
+    /* Smaller chips for mobile - touch optimized */
     .chip {
         width: 36px;
         height: 36px;
         font-size: 0.6rem;
         flex-shrink: 0;
         border-width: 2px;
+        /* Eliminate 300ms touch delay */
+        touch-action: manipulation;
+        /* GPU acceleration */
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
     }
 
     .chip::before {
@@ -499,8 +526,8 @@
         /* iOS Safe Area: Use env() with fallback for iPhone home indicator
            - iPhone X/11/12/13/14/15 home indicator is ~34px
            - Add extra padding (16px) to ensure buttons aren't too close to the bar
-           - Total minimum padding-bottom: 50px (fallback) or env() + 16px */
-        padding-bottom: max(50px, calc(env(safe-area-inset-bottom, 34px) + 16px));
+           - FIXED padding that doesn't change with Safari's dynamic toolbar */
+        padding-bottom: 50px;
         padding-left: max(var(--spacing-md), env(safe-area-inset-left));
         padding-right: max(var(--spacing-md), env(safe-area-inset-right));
         background: linear-gradient(180deg, transparent 0%, var(--bg-card) 15%, var(--bg-card) 100%);
@@ -514,6 +541,16 @@
         grid-template-rows: auto auto;
         gap: var(--spacing-sm);
         align-items: center;
+        /* Safari dynamic viewport: ensure action bar respects home indicator */
+        padding-bottom: calc(34px + 16px);
+    }
+
+    /* Safari-specific: ensure action bar clears the home indicator area */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+        .action-bar {
+            /* Use safe-area for home indicator, but with minimum fallback */
+            padding-bottom: max(50px, calc(env(safe-area-inset-bottom, 34px) + 16px));
+        }
     }
 
     .total-bet-display {
@@ -633,9 +670,16 @@
 
     /* ========== Game Screen Adjustments ========== */
     .game-screen {
-        /* Extra space for fixed action bar + iPhone safe area + buffer
-           Ensures game content doesn't get hidden behind action bar */
-        padding-bottom: max(160px, calc(150px + env(safe-area-inset-bottom, 34px)));
+        /* Extra space for fixed action bar + home indicator + buffer
+           IMPORTANT: Use FIXED padding (not env()) to prevent Safari's
+           dynamic toolbar from changing the value and covering content.
+           Action bar height (~100px) + home indicator (~34px) + extra buffer (~46px) = 180px */
+        padding-bottom: 180px;
+    }
+
+    /* Ensure game-area content has enough clearance from action bar */
+    .game-area {
+        padding-bottom: var(--spacing-md);
     }
 
     /* ========== Collapsible Sections - Compact ========== */
@@ -918,8 +962,8 @@
 /* ========== Landscape Mobile ========== */
 @media (max-width: 767px) and (orientation: landscape) {
     .container {
-        /* Landscape still needs safe area support for notch/home indicator on sides */
-        padding-bottom: max(90px, calc(80px + env(safe-area-inset-bottom, 20px)));
+        /* Landscape: Use fixed padding to avoid Safari dynamic toolbar issues */
+        padding-bottom: 100px;
     }
 
     header {
@@ -1144,8 +1188,8 @@
         align-items: center;
         justify-content: space-between;
         padding: var(--spacing-md) var(--spacing-lg);
-        /* Tablet safe area padding - slightly less than mobile since tablets have smaller home indicators */
-        padding-bottom: max(var(--spacing-lg), calc(env(safe-area-inset-bottom, 20px) + var(--spacing-md)));
+        /* Tablet: Use fixed padding to avoid Safari dynamic toolbar issues */
+        padding-bottom: 36px;
         padding-left: max(var(--spacing-lg), env(safe-area-inset-left));
         padding-right: max(var(--spacing-lg), env(safe-area-inset-right));
         background: var(--bg-card);
@@ -1176,9 +1220,19 @@
         font-size: 1rem;
     }
 
-    /* Add padding to container for fixed action bar */
+    /* Add padding to container for fixed action bar - fixed value to avoid Safari issues */
     .game-screen {
-        padding-bottom: 100px;
+        padding-bottom: 130px;
+    }
+
+    /* Ensure game-area content has clearance */
+    .game-area {
+        padding-bottom: var(--spacing-md);
+    }
+
+    /* Chip selector needs bottom margin for visibility */
+    .chip-selector {
+        margin-bottom: var(--spacing-md);
     }
 
     /* Hide mobile tab bar on tablet - show stats directly */
@@ -1214,6 +1268,57 @@
 
 /* ========== Touch Device Enhancements ========== */
 @media (hover: none) and (pointer: coarse) {
+    /* === CRITICAL: Eliminate 300ms touch delay === */
+    .betting-table,
+    .betting-table *,
+    .chip-rack,
+    .chip-rack *,
+    .number-cell,
+    .zero-cell,
+    .dozen-bet,
+    .even-money-bet,
+    .column-bet,
+    .split-bet,
+    .corner-bet,
+    .street-bet,
+    .line-bet,
+    .first-four-bet,
+    .top-line-bet,
+    .chip {
+        touch-action: manipulation;
+    }
+
+    /* === GPU Acceleration for smooth animations === */
+    .number-cell,
+    .zero-cell,
+    .dozen-bet,
+    .even-money-bet,
+    .column-bet,
+    .chip,
+    .chip-stack-container {
+        will-change: transform, opacity;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+    }
+
+    /* === Optimized transitions - only transform/opacity === */
+    .number-cell,
+    .zero-cell,
+    .dozen-bet,
+    .even-money-bet,
+    .column-bet {
+        transition: transform 0.1s ease-out, opacity 0.1s ease-out, background-color 0.1s ease-out;
+    }
+
+    .chip {
+        transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+    }
+
+    /* Layout containment for chip stacks - prevents expensive reflows */
+    .chip-stack-container {
+        contain: layout style;
+    }
+
     /* Larger touch targets */
     .number-cell,
     .zero-cell,
@@ -1223,18 +1328,18 @@
         min-height: 44px;
     }
 
-    /* Active state feedback */
+    /* Active state feedback - simplified for performance */
     .number-cell:active,
     .zero-cell:active,
     .dozen-bet:active,
     .even-money-bet:active,
     .column-bet:active {
-        transform: scale(0.95);
-        opacity: 0.8;
+        transform: scale(0.96) translateZ(0);
+        opacity: 0.85;
     }
 
     .chip:active:not(:disabled) {
-        transform: scale(0.9);
+        transform: scale(0.92) translateZ(0);
     }
 
     /* Remove hover effects that don't work well on touch */
@@ -1272,7 +1377,7 @@
         display: none;
     }
 
-    /* All inside bet areas - hidden by default */
+    /* All inside bet areas - hidden by default, GPU accelerated */
     .split-bet,
     .corner-bet,
     .street-bet,
@@ -1280,6 +1385,12 @@
         background: transparent;
         border-color: transparent;
         box-shadow: none;
+        /* GPU acceleration for smooth transforms */
+        will-change: transform, background-color, box-shadow;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        /* Fast transitions for responsive feel */
+        transition: transform 0.08s ease-out, background-color 0.08s ease-out, box-shadow 0.08s ease-out;
     }
 
     /* Larger touch targets for inside bets */
@@ -1304,40 +1415,40 @@
         height: 28px;
     }
 
-    /* Show inside bet areas on touch/active */
+    /* Show inside bet areas on touch/active - GPU accelerated */
     .split-bet:active {
         background: rgba(212, 175, 55, 0.6) !important;
         border-color: var(--accent-gold) !important;
         box-shadow: 0 0 12px var(--accent-gold) !important;
-        transform: scale(1.1);
+        transform: scale(1.1) translateZ(0);
     }
 
     .corner-bet:active {
         background: rgba(212, 175, 55, 0.6) !important;
         border-color: var(--accent-gold) !important;
         box-shadow: 0 0 15px var(--accent-gold) !important;
-        transform: scale(1.3);
+        transform: scale(1.3) translateZ(0);
     }
 
     .street-bet:active {
         background: rgba(155, 89, 182, 0.6) !important;
         border-color: #9b59b6 !important;
         box-shadow: 0 0 15px #9b59b6 !important;
-        transform: scale(1.3);
+        transform: scale(1.3) translateZ(0);
     }
 
     .line-bet:active {
         background: rgba(52, 152, 219, 0.6) !important;
         border-color: var(--accent-blue) !important;
         box-shadow: 0 0 15px var(--accent-blue) !important;
-        transform: scale(1.3);
+        transform: scale(1.3) translateZ(0);
     }
 
     .first-four-bet:active,
     .top-line-bet:active {
         background: rgba(46, 204, 113, 0.5) !important;
         box-shadow: 0 0 12px var(--roulette-green) !important;
-        transform: scale(1.2);
+        transform: scale(1.2) translateZ(0);
     }
 
     /* ===== Chip Preview on Touch ===== */
