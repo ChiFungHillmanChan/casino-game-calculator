@@ -17,6 +17,7 @@ function createInitialBetState() {
         straight: {},    // { "17": 25, "23": 50 }
         split: {},       // { "17-20": 10, "0-1": 25 }
         street: {},      // { "1-2-3": 25 }
+        trio: {},        // { "0-1-2": 25, "0-2-3": 50 } - 3 numbers including zero, pays 11:1
         corner: {},      // { "1-2-4-5": 10 }
         firstFour: 0,    // European only (0,1,2,3)
         topLine: 0,      // American only (0,00,1,2,3)
@@ -135,6 +136,43 @@ function clearAllBets() {
 }
 
 /**
+ * Double all current bets
+ * @param {number} maxBankroll - Maximum amount available to bet
+ * @returns {boolean} True if successful, false if cannot afford
+ */
+function doubleAllBets(maxBankroll) {
+    const currentTotal = calculateTotalWagered(betState);
+    
+    // Check if player can afford to double
+    if (currentTotal * 2 > maxBankroll) {
+        return false;
+    }
+    
+    // Double all even money bets
+    const evenMoneyBets = ['red', 'black', 'even', 'odd', 'low', 'high', 'firstFour', 'topLine'];
+    evenMoneyBets.forEach(betType => {
+        if (betState[betType] > 0) {
+            betState[betType] *= 2;
+        }
+    });
+    
+    // Double all object-based bets
+    const objectBets = ['straight', 'split', 'street', 'trio', 'corner', 'line', 'column', 'dozen'];
+    objectBets.forEach(betType => {
+        if (betState[betType] && typeof betState[betType] === 'object') {
+            for (const betValue in betState[betType]) {
+                betState[betType][betValue] *= 2;
+            }
+        }
+    });
+    
+    // Record as a single undo action (doubling all bets)
+    betUndoStack.push({ action: 'double', previousTotal: currentTotal });
+    
+    return true;
+}
+
+/**
  * Undo the last bet action
  * @returns {boolean} True if undo was successful, false if nothing to undo
  */
@@ -155,6 +193,26 @@ function undoLastBet() {
                 }
             }
         }
+    } else if (lastAction.action === 'double') {
+        // Reverse a double by halving all bets
+        const evenMoneyBets = ['red', 'black', 'even', 'odd', 'low', 'high', 'firstFour', 'topLine'];
+        evenMoneyBets.forEach(betType => {
+            if (betState[betType] > 0) {
+                betState[betType] = Math.floor(betState[betType] / 2);
+            }
+        });
+        
+        const objectBets = ['straight', 'split', 'street', 'trio', 'corner', 'line', 'column', 'dozen'];
+        objectBets.forEach(betType => {
+            if (betState[betType] && typeof betState[betType] === 'object') {
+                for (const betValue in betState[betType]) {
+                    betState[betType][betValue] = Math.floor(betState[betType][betValue] / 2);
+                    if (betState[betType][betValue] <= 0) {
+                        delete betState[betType][betValue];
+                    }
+                }
+            }
+        });
     }
 
     return true;
@@ -307,6 +365,7 @@ function restoreBetsFromStorage(savedBets) {
     betState.straight = savedBets.straight || {};
     betState.split = savedBets.split || {};
     betState.street = savedBets.street || {};
+    betState.trio = savedBets.trio || {};
     betState.corner = savedBets.corner || {};
     betState.firstFour = savedBets.firstFour || 0;
     betState.topLine = savedBets.topLine || 0;
@@ -319,4 +378,127 @@ function restoreBetsFromStorage(savedBets) {
     betState.odd = savedBets.odd || 0;
     betState.low = savedBets.low || 0;
     betState.high = savedBets.high || 0;
+}
+
+// =====================================================
+// CALL BETS & NEIGHBOUR BETS (Racetrack)
+// =====================================================
+
+/**
+ * Place a neighbour bet (straight bets on a number and its wheel neighbours)
+ * @param {number|string} centerNumber - The center number
+ * @param {number} range - How many neighbours on each side (2-7)
+ * @param {number} chipValue - Value of each chip to place
+ * @param {array} wheelSequence - The wheel sequence to use
+ * @returns {boolean} Success
+ */
+function placeNeighbourBet(centerNumber, range, chipValue, wheelSequence) {
+    const neighbours = getWheelNeighbours(centerNumber, range, wheelSequence);
+    if (neighbours.length === 0) return false;
+    
+    const totalCost = neighbours.length * chipValue;
+    const totalWagered = getTotalWagered();
+    const currentBankroll = getCurrentBankroll();
+    
+    // Check if player can afford all the bets
+    if (totalCost > (currentBankroll - totalWagered)) {
+        return false;
+    }
+    
+    // Place straight bets on all neighbours (including center)
+    neighbours.forEach(num => {
+        addBet('straight', num.toString(), chipValue);
+    });
+    
+    return true;
+}
+
+/**
+ * Remove a neighbour bet
+ * @param {number|string} centerNumber - The center number
+ * @param {number} range - How many neighbours on each side
+ * @param {number} chipValue - Value of each chip to remove
+ * @param {array} wheelSequence - The wheel sequence to use
+ */
+function removeNeighbourBet(centerNumber, range, chipValue, wheelSequence) {
+    const neighbours = getWheelNeighbours(centerNumber, range, wheelSequence);
+    
+    neighbours.forEach(num => {
+        removeBet('straight', num.toString(), chipValue);
+    });
+}
+
+/**
+ * Place a call bet (Voisins, Tiers, Orphelins, Jeu Zero)
+ * @param {string} betName - Name of the call bet (voisins, tiers, orphelins, jeuZero)
+ * @param {number} chipValue - Value of each chip unit
+ * @returns {boolean} Success
+ */
+function placeCallBet(betName, chipValue) {
+    const callBet = CALL_BETS[betName];
+    if (!callBet) return false;
+    
+    const totalCost = callBet.chips * chipValue;
+    const totalWagered = getTotalWagered();
+    const currentBankroll = getCurrentBankroll();
+    
+    // Check if player can afford the bet
+    if (totalCost > (currentBankroll - totalWagered)) {
+        return false;
+    }
+    
+    // Place all the component bets
+    callBet.bets.forEach(bet => {
+        const amount = bet.amount * chipValue;
+        addBet(bet.type, bet.value, amount);
+    });
+    
+    return true;
+}
+
+/**
+ * Remove a call bet
+ * @param {string} betName - Name of the call bet
+ * @param {number} chipValue - Value of each chip unit to remove
+ */
+function removeCallBet(betName, chipValue) {
+    const callBet = CALL_BETS[betName];
+    if (!callBet) return;
+    
+    callBet.bets.forEach(bet => {
+        const amount = bet.amount * chipValue;
+        removeBet(bet.type, bet.value, amount);
+    });
+}
+
+/**
+ * Check if player can afford a call bet
+ * @param {string} betName - Name of the call bet
+ * @param {number} chipValue - Value of each chip unit
+ * @returns {boolean} True if affordable
+ */
+function canAffordCallBet(betName, chipValue) {
+    const callBet = CALL_BETS[betName];
+    if (!callBet) return false;
+    
+    const totalCost = callBet.chips * chipValue;
+    const totalWagered = getTotalWagered();
+    const currentBankroll = getCurrentBankroll();
+    
+    return totalCost <= (currentBankroll - totalWagered);
+}
+
+/**
+ * Check if player can afford a neighbour bet
+ * @param {number} range - How many neighbours on each side
+ * @param {number} chipValue - Value of each chip
+ * @returns {boolean} True if affordable
+ */
+function canAffordNeighbourBet(range, chipValue) {
+    const totalChips = range * 2 + 1; // neighbours on each side + center
+    const totalCost = totalChips * chipValue;
+    const totalWagered = getTotalWagered();
+    const currentBankroll = getCurrentBankroll();
+    
+    return totalCost <= (currentBankroll - totalWagered);
 }

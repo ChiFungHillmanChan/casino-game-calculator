@@ -36,6 +36,7 @@ const PAYOUTS = {
     straight: 35,    // 1 number
     split: 17,       // 2 numbers
     street: 11,      // 3 numbers
+    trio: 11,        // 3 numbers including zero (0-1-2 or 0-2-3), same payout as street
     corner: 8,       // 4 numbers
     firstFour: 8,    // EU only: 0,1,2,3
     topLine: 6,      // US only: 0,00,1,2,3 (worst house edge)
@@ -50,6 +51,7 @@ const BET_COVERAGE = {
     straight: 1,
     split: 2,
     street: 3,
+    trio: 3,         // 3 numbers including zero (0-1-2 or 0-2-3)
     corner: 4,
     firstFour: 4,
     topLine: 5,
@@ -77,20 +79,25 @@ const DEFAULT_CONFIG = {
     rouletteType: 'european',
     initialStack: 1000,
     minBet: 1,
-    maxBet: 500
+    maxBet: 500,
+    maxBuyIn: 100000000  // 100M
 };
 
 // Available chip denominations
-const CHIP_DENOMINATIONS = [1, 5, 10, 25, 100, 500];
+const CHIP_DENOMINATIONS = [1, 5, 10, 25, 100, 500, 1000, 5000, 25000, 100000];
 
 // Chip colors for each denomination
 const CHIP_COLORS = {
-    1: '#ffffff',
-    5: '#e63946',
-    10: '#3498db',
-    25: '#2ecc71',
-    100: '#1a1a1a',
-    500: '#9b59b6'
+    1: '#ffffff',      // White
+    5: '#e63946',      // Red
+    10: '#3498db',     // Blue
+    25: '#2ecc71',     // Green
+    100: '#1a1a1a',    // Black
+    500: '#9b59b6',    // Purple
+    1000: '#f39c12',   // Orange/Gold
+    5000: '#e74c3c',   // Crimson
+    25000: '#1abc9c',  // Teal
+    100000: '#f1c40f'  // Bright Gold
 };
 
 // Game phases
@@ -108,6 +115,7 @@ const BET_TYPES = {
     STRAIGHT: 'straight',
     SPLIT: 'split',
     STREET: 'street',
+    TRIO: 'trio',        // 3 numbers including zero (0-1-2 or 0-2-3)
     CORNER: 'corner',
     FIRST_FOUR: 'firstFour',
     TOP_LINE: 'topLine',
@@ -177,6 +185,13 @@ const ZERO_SPLITS_EU = [[0, 1], [0, 2], [0, 3]];
 // Zero splits (American - includes 00)
 const ZERO_SPLITS_US = [[0, 1], [0, 2], ['00', 2], ['00', 3], [0, '00']];
 
+// Trio bets - 3 numbers including zero, pays 11:1 (same as street)
+// These are special bets unique to European roulette
+const TRIO_BETS = {
+    '0-1-2': [0, 1, 2],
+    '0-2-3': [0, 2, 3]
+};
+
 // Street definitions (rows of 3)
 const STREETS = [];
 for (let i = 0; i < 12; i++) {
@@ -204,3 +219,139 @@ const FIRST_FOUR = [0, 1, 2, 3];
 
 // Top Line (American only): 0, 00, 1, 2, 3
 const TOP_LINE = [0, '00', 1, 2, 3];
+
+// =====================================================
+// FRENCH/CALL BETS - Racetrack betting (European only)
+// =====================================================
+
+/**
+ * Voisins du Zéro (Neighbours of Zero)
+ * Covers 17 numbers: 22, 18, 29, 7, 28, 12, 35, 3, 26, 0, 32, 15, 19, 4, 21, 2, 25
+ * Uses 9 chips total
+ */
+const VOISINS_DU_ZERO = {
+    name: 'Voisins du Zéro',
+    shortName: 'Voisins',
+    chips: 9,
+    numbers: [22, 18, 29, 7, 28, 12, 35, 3, 26, 0, 32, 15, 19, 4, 21, 2, 25],
+    bets: [
+        { type: 'trio', value: '0-2-3', amount: 2 },        // 0/2/3 trio (2 chips) - pays 11:1
+        { type: 'split', value: '4-7', amount: 1 },         // 4/7 split
+        { type: 'split', value: '12-15', amount: 1 },       // 12/15 split
+        { type: 'split', value: '18-21', amount: 1 },       // 18/21 split
+        { type: 'split', value: '19-22', amount: 1 },       // 19/22 split
+        { type: 'corner', value: '25-26-28-29', amount: 2 }, // 25/26/28/29 corner (2 chips)
+        { type: 'split', value: '32-35', amount: 1 }        // 32/35 split
+    ]
+};
+
+/**
+ * Tiers du Cylindre (Thirds of the Wheel)
+ * Covers 12 numbers: 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33
+ * Uses 6 chips total (6 splits)
+ */
+const TIERS_DU_CYLINDRE = {
+    name: 'Tiers du Cylindre',
+    shortName: 'Tiers',
+    chips: 6,
+    numbers: [27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33],
+    bets: [
+        { type: 'split', value: '5-8', amount: 1 },
+        { type: 'split', value: '10-11', amount: 1 },
+        { type: 'split', value: '13-16', amount: 1 },
+        { type: 'split', value: '23-24', amount: 1 },
+        { type: 'split', value: '27-30', amount: 1 },
+        { type: 'split', value: '33-36', amount: 1 }
+    ]
+};
+
+/**
+ * Orphelins (Orphans)
+ * Covers 8 numbers: 1, 20, 14, 31, 9, 6, 34, 17
+ * Uses 5 chips total (1 straight + 4 splits)
+ * Note: 17 appears in two splits (14/17 and 17/20)
+ */
+const ORPHELINS = {
+    name: 'Orphelins',
+    shortName: 'Orphelins',
+    chips: 5,
+    numbers: [1, 20, 14, 31, 9, 6, 34, 17],
+    bets: [
+        { type: 'straight', value: '1', amount: 1 },        // 1 straight up
+        { type: 'split', value: '6-9', amount: 1 },         // 6/9 split
+        { type: 'split', value: '14-17', amount: 1 },       // 14/17 split
+        { type: 'split', value: '17-20', amount: 1 },       // 17/20 split
+        { type: 'split', value: '31-34', amount: 1 }        // 31/34 split
+    ]
+};
+
+/**
+ * Jeu Zéro (Zero Game) - Optional smaller version of Voisins
+ * Covers 7 numbers: 12, 35, 3, 26, 0, 32, 15
+ * Uses 4 chips total
+ */
+const JEU_ZERO = {
+    name: 'Jeu Zéro',
+    shortName: 'Zero',
+    chips: 4,
+    numbers: [12, 35, 3, 26, 0, 32, 15],
+    bets: [
+        { type: 'split', value: '0-3', amount: 1 },
+        { type: 'split', value: '12-15', amount: 1 },
+        { type: 'straight', value: '26', amount: 1 },
+        { type: 'split', value: '32-35', amount: 1 }
+    ]
+};
+
+// All call bets for easy iteration
+const CALL_BETS = {
+    voisins: VOISINS_DU_ZERO,
+    tiers: TIERS_DU_CYLINDRE,
+    orphelins: ORPHELINS,
+    jeuZero: JEU_ZERO
+};
+
+// Neighbour bet configuration
+const NEIGHBOUR_BET_CONFIG = {
+    minNeighbours: 2,
+    maxNeighbours: 7,
+    defaultNeighbours: 2
+};
+
+/**
+ * Get neighbours of a number on the wheel
+ * @param {number|string} number - The center number
+ * @param {number} range - How many neighbours on each side (2-7)
+ * @param {array} wheelSequence - The wheel sequence to use
+ * @returns {array} Array of numbers including center and neighbours
+ */
+function getWheelNeighbours(number, range, wheelSequence) {
+    const index = wheelSequence.indexOf(number === '00' ? '00' : parseInt(number));
+    if (index === -1) return [];
+    
+    const len = wheelSequence.length;
+    const neighbours = [];
+    
+    // Get neighbours on both sides
+    for (let i = -range; i <= range; i++) {
+        const neighbourIndex = (index + i + len) % len;
+        neighbours.push(wheelSequence[neighbourIndex]);
+    }
+    
+    return neighbours;
+}
+
+/**
+ * Get the wheel section for a number (for highlighting on racetrack)
+ * @param {number|string} number - The number to check
+ * @returns {string|null} Section name or null
+ */
+function getWheelSection(number) {
+    const num = number === '00' ? '00' : parseInt(number);
+    
+    if (VOISINS_DU_ZERO.numbers.includes(num)) return 'voisins';
+    if (TIERS_DU_CYLINDRE.numbers.includes(num)) return 'tiers';
+    if (ORPHELINS.numbers.includes(num)) return 'orphelins';
+    
+    return null;
+}

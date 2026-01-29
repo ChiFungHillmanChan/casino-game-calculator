@@ -19,7 +19,7 @@
 
         <header class="practice-header compact">
             <h1 class="practice-title">MEDIUM MODE</h1>
-            <p class="practice-subtitle">1v1 Dealer Training</p>
+            <p class="practice-subtitle">1v1 Dealer Training • Auto-Deal</p>
         </header>
 
         <!-- Stats Bar -->
@@ -36,6 +36,12 @@
                 <span class="stat-label">Cards Dealt</span>
                 <span id="cards-dealt" class="stat-value">0</span>
             </div>
+        </div>
+
+        <!-- Shoe Status -->
+        <div class="shoe-status">
+            <span class="shoe-label">Shoe:</span>
+            <span id="shoe-status" class="shoe-value">-</span>
         </div>
 
         <!-- Game Table -->
@@ -57,16 +63,10 @@
 
         <!-- Action Buttons -->
         <div id="action-buttons" class="action-buttons">
-            <button id="btn-hit" class="action-btn">Hit</button>
-            <button id="btn-stand" class="action-btn">Stand</button>
-            <button id="btn-double" class="action-btn">Double</button>
+            <button id="btn-hit" class="action-btn" disabled>Hit</button>
+            <button id="btn-stand" class="action-btn" disabled>Stand</button>
+            <button id="btn-double" class="action-btn" disabled>Double</button>
             <button id="btn-split" class="action-btn" disabled>Split</button>
-        </div>
-
-        <!-- Card Input -->
-        <div class="card-input-section">
-            <div class="card-input-label">Deal card to: <span id="deal-target">Player</span></div>
-            <div id="card-input" class="card-input-grid"></div>
         </div>
 
         <!-- Game Controls -->
@@ -133,6 +133,7 @@
 
     <!-- Scripts -->
     <script src="../../js/shared/constants.js"></script>
+    <script src="../../js/shared/shoe.js"></script>
     <script src="../../js/core/hand-evaluation.js"></script>
     <script src="../../js/core/basic-strategy.js"></script>
     <script src="../js/practice-constants.js"></script>

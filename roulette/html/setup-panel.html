@@ -33,13 +33,13 @@
                 <div class="form-group">
                     <label class="form-label">Starting Bankroll</label>
                     <div class="preset-group" id="stackPresets">
-                        <button type="button" class="preset-btn" data-value="100">$100</button>
-                        <button type="button" class="preset-btn" data-value="500">$500</button>
-                        <button type="button" class="preset-btn active" data-value="1000">$1,000</button>
-                        <button type="button" class="preset-btn" data-value="5000">$5,000</button>
+                        <button type="button" class="preset-btn" data-value="1000">$1K</button>
+                        <button type="button" class="preset-btn" data-value="10000">$10K</button>
+                        <button type="button" class="preset-btn active" data-value="100000">$100K</button>
+                        <button type="button" class="preset-btn" data-value="1000000">$1M</button>
                     </div>
                     <div class="input-row mt-sm">
-                        <input type="number" id="customStack" class="form-input" placeholder="Custom amount" min="10" max="1000000">
+                        <input type="number" id="customStack" class="form-input" placeholder="Custom amount" min="10" max="100000000">
                     </div>
                 </div>
 
@@ -54,15 +54,20 @@
                                 <option value="5">$5</option>
                                 <option value="10">$10</option>
                                 <option value="25">$25</option>
+                                <option value="100">$100</option>
+                                <option value="500">$500</option>
                             </select>
                         </div>
                         <div>
                             <label class="form-hint">Maximum Bet</label>
                             <select id="maxBet" class="form-select">
-                                <option value="100">$100</option>
-                                <option value="500" selected>$500</option>
+                                <option value="500">$500</option>
                                 <option value="1000">$1,000</option>
                                 <option value="5000">$5,000</option>
+                                <option value="25000">$25,000</option>
+                                <option value="100000" selected>$100,000</option>
+                                <option value="500000">$500,000</option>
+                                <option value="1000000">$1,000,000</option>
                             </select>
                         </div>
                     </div>

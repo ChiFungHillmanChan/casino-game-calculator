@@ -243,6 +243,16 @@ function renderInsideBetAreas(isAmerican) {
                      style="left: 0; top: 50%;" title="Split: 0, 2"></div>`;
         html += `<div class="split-bet zero-split" data-bet-type="split" data-bet-value="0-1"
                      style="left: 0; top: 83.33%;" title="Split: 0, 1"></div>`;
+        
+        // Trio bets (0-1-2 and 0-2-3) - pays 11:1, same as street
+        // Positioned at row borders (corners between 0 and adjacent numbers)
+        // 0-2-3 trio: at the border between row 1 (3) and row 2 (2)
+        html += `<div class="trio-bet" data-bet-type="trio" data-bet-value="0-2-3"
+                     style="left: -8px; top: 33.33%;" title="Trio: 0, 2, 3 (11:1)"></div>`;
+        // 0-1-2 trio: at the border between row 2 (2) and row 3 (1) - slightly above 66.66% to avoid overlap with 0-1 split
+        html += `<div class="trio-bet" data-bet-type="trio" data-bet-value="0-1-2"
+                     style="left: -8px; top: 60%;" title="Trio: 0, 1, 2 (11:1)"></div>`;
+        
         // First Four (0,1,2,3)
         html += `<div class="first-four-bet" data-bet-type="firstFour" data-bet-value="firstFour"
                      style="left: -15px; top: calc(100% - 8px);" title="First Four: 0, 1, 2, 3"></div>`;
@@ -258,6 +268,10 @@ function renderInsideBetAreas(isAmerican) {
     return html;
 }
 
+// Click debounce state for preventing rapid double-clicks
+let lastBetClickTime = 0;
+const BET_CLICK_DEBOUNCE = 80; // 80ms debounce
+
 /**
  * Initialize betting table click handlers
  * Uses touch-action: manipulation CSS for fast touch response
@@ -272,6 +286,11 @@ function initBettingTableHandlers() {
 
     // Handle clicks on bet areas (touch-action: manipulation in CSS eliminates 300ms delay)
     table.addEventListener('click', (e) => {
+        // Debounce rapid clicks
+        const now = Date.now();
+        if (now - lastBetClickTime < BET_CLICK_DEBOUNCE) return;
+        lastBetClickTime = now;
+        
         const betElement = e.target.closest('[data-bet-type]');
         if (betElement) {
             const betType = betElement.dataset.betType;
@@ -280,15 +299,27 @@ function initBettingTableHandlers() {
         }
     });
 
-    // Handle right-clicks for bet removal
+    // Completely prevent native context menu and handle right-clicks for bet removal
+    // Using capture phase to ensure we intercept before browser default
     table.addEventListener('contextmenu', (e) => {
+        // Always prevent default to stop native context menu
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Debounce rapid clicks
+        const now = Date.now();
+        if (now - lastBetClickTime < BET_CLICK_DEBOUNCE) return false;
+        lastBetClickTime = now;
+        
         const betElement = e.target.closest('[data-bet-type]');
         if (betElement) {
             const betType = betElement.dataset.betType;
             const betValue = betElement.dataset.betValue;
             handleBetRemoval(betType, betValue, e);
         }
-    });
+        
+        return false;
+    }, { capture: true });
 
     // Setup chip preview on hover/touch
     setupChipPreviewOnTable();
@@ -331,6 +362,18 @@ function renderPlacedChips() {
             const cell = table.querySelector(`[data-bet-type="street"][data-bet-value="${value}"]`);
             if (cell) {
                 renderChipOnElement(cell, amount);
+            }
+        }
+    }
+    
+    // Render trio bets (0-1-2, 0-2-3) - placed on the trio bet areas near zero
+    if (bets.trio) {
+        for (const [value, amount] of Object.entries(bets.trio)) {
+            if (amount > 0) {
+                const cell = table.querySelector(`[data-bet-type="trio"][data-bet-value="${value}"]`);
+                if (cell) {
+                    renderChipOnElement(cell, amount);
+                }
             }
         }
     }

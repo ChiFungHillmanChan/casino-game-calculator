@@ -166,11 +166,16 @@
     width: 100%;
 }
 
-/* Action buttons (clear, repeat, undo) */
+/* Action buttons (clear, repeat, undo, x2) */
 .action-buttons {
     display: flex;
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-md);
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.action-buttons .btn {
+    min-width: 60px;
 }
 
 .btn-clear {
@@ -202,6 +207,22 @@
 .btn-undo:hover:not(:disabled) {
     background: var(--bg-card-hover);
     color: var(--text-primary);
+}
+
+.btn-double {
+    background: var(--bg-secondary);
+    color: var(--accent-gold);
+    border: 1px solid var(--accent-gold);
+    font-weight: 700;
+}
+
+.btn-double:hover:not(:disabled) {
+    background: rgba(212, 175, 55, 0.15);
+}
+
+.btn-double:disabled {
+    color: var(--text-dim);
+    border-color: var(--border-subtle);
 }
 
 .btn-skip {

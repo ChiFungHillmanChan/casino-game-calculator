@@ -185,7 +185,11 @@ function getChipColor(value) {
         10: '#3498db',
         25: '#2ecc71',
         100: '#1a1a1a',
-        500: '#9b59b6'
+        500: '#9b59b6',
+        1000: '#f39c12',
+        5000: '#e74c3c',
+        25000: '#1abc9c',
+        100000: '#f1c40f'
     };
     
     return colors[value] || '#ffffff';

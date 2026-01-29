@@ -1,12 +1,19 @@
 /**
- * Medium Mode - 1v1 Dealer Training with Count Verification
+ * Medium Mode - 1v1 Dealer Training with Auto-Deal and Count Verification
+ * 
+ * Cards are automatically dealt from a shoe. User plays blackjack normally
+ * and verifies the running count at the end of each hand.
  */
 
 const MediumMode = {
     // Game state
-    phase: 'betting', // betting, player_turn, dealer_turn, resolution, count_check
+    phase: 'waiting', // waiting, dealing, player_turn, dealer_turn, resolution, count_check
     runningCount: 0,
     cardsDealtThisHand: [],
+    isDealing: false,
+
+    // Configuration
+    dealSpeed: 600, // ms between cards
 
     // Session stats
     handsPlayed: 0,
@@ -25,9 +32,9 @@ const MediumMode = {
 
     init() {
         this.cacheElements();
-        this.createCardInput();
         this.bindEvents();
-        this.startNewShoe();
+        this.updateStats();
+        this.elements.shoeStatus.textContent = 'Click "New Shoe" to start';
     },
 
     cacheElements() {
@@ -36,8 +43,7 @@ const MediumMode = {
             dealerCards: document.getElementById('dealer-cards'),
             playerTotal: document.getElementById('player-total'),
             dealerTotal: document.getElementById('dealer-total'),
-            dealTarget: document.getElementById('deal-target'),
-            cardInput: document.getElementById('card-input'),
+            shoeStatus: document.getElementById('shoe-status'),
             handsPlayed: document.getElementById('hands-played'),
             countAccuracy: document.getElementById('count-accuracy'),
             cardsDealt: document.getElementById('cards-dealt'),
@@ -62,29 +68,6 @@ const MediumMode = {
             sessionModal: document.getElementById('session-modal'),
             playAgainBtn: document.getElementById('play-again-btn')
         };
-    },
-
-    createCardInput() {
-        const container = this.elements.cardInput;
-        while (container.firstChild) {
-            container.removeChild(container.firstChild);
-        }
-
-        CARD_RANKS.forEach(rank => {
-            const btn = document.createElement('button');
-            btn.className = 'card-btn';
-            btn.dataset.rank = rank;
-            btn.textContent = rank;
-
-            // Color by count value
-            const countValue = HI_LO_VALUES[rank];
-            if (countValue > 0) btn.classList.add('plus');
-            else if (countValue < 0) btn.classList.add('minus');
-            else btn.classList.add('zero');
-
-            btn.addEventListener('click', () => this.dealCard(rank));
-            container.appendChild(btn);
-        });
     },
 
     bindEvents() {
@@ -121,6 +104,7 @@ const MediumMode = {
     },
 
     startNewShoe() {
+        Shoe.init(6, 75); // 6 decks, 75% penetration
         this.runningCount = 0;
         this.handsPlayed = 0;
         this.handsWon = 0;
@@ -128,71 +112,104 @@ const MediumMode = {
         this.countCorrect = 0;
         this.totalCardsDealt = 0;
         this.updateStats();
+        this.updateShoeStatus();
         this.startNewHand();
     },
 
-    startNewHand() {
+    async startNewHand() {
+        if (this.isDealing) return;
+
+        // Check if shoe needs reshuffle
+        if (Shoe.needsReshuffle()) {
+            this.showReshuffleMessage();
+            return;
+        }
+
         this.playerCards = [];
         this.dealerCards = [];
         this.dealerHoleCard = null;
         this.cardsDealtThisHand = [];
         this.phase = 'dealing';
+        this.isDealing = true;
 
         this.renderTable();
         this.updateActionButtons();
-        this.elements.dealTarget.textContent = 'Player';
+        this.elements.btnNewHand.disabled = true;
+
+        // Auto-deal initial cards
+        await this.autoDealInitialCards();
     },
 
-    dealCard(rank) {
-        const suit = CARD_SUITS[Math.floor(Math.random() * 4)];
-        const card = { rank, suit };
-        const countValue = HI_LO_VALUES[rank];
+    /**
+     * Automatically deal the initial 4 cards with delays
+     * Order: Player, Dealer (hole), Player, Dealer (up)
+     */
+    async autoDealInitialCards() {
+        const delay = ms => new Promise(r => setTimeout(r, ms));
 
-        // Update running count
+        // Player card 1
+        await this.dealCardToPlayer();
+        await delay(this.dealSpeed);
+
+        // Dealer hole card (face down)
+        this.dealerHoleCard = Shoe.drawCard();
+        this.trackCard(this.dealerHoleCard);
+        this.renderTable();
+        await delay(this.dealSpeed);
+
+        // Player card 2
+        await this.dealCardToPlayer();
+        await delay(this.dealSpeed);
+
+        // Dealer up card
+        await this.dealCardToDealer();
+
+        this.isDealing = false;
+        this.phase = 'player_turn';
+        this.updateActionButtons();
+        this.updateShoeStatus();
+
+        // Check for blackjack
+        this.checkForBlackjack();
+    },
+
+    /**
+     * Deal a card to the player
+     */
+    async dealCardToPlayer() {
+        const card = Shoe.drawCard();
+        if (!card) return;
+
+        this.playerCards.push(card);
+        this.trackCard(card);
+        this.renderTable();
+    },
+
+    /**
+     * Deal a card to the dealer (face up)
+     */
+    async dealCardToDealer() {
+        const card = Shoe.drawCard();
+        if (!card) return;
+
+        this.dealerCards.push(card);
+        this.trackCard(card);
+        this.renderTable();
+    },
+
+    /**
+     * Track a dealt card for counting
+     */
+    trackCard(card) {
+        const countValue = HI_LO_VALUES[card.rank];
         this.runningCount += countValue;
         this.totalCardsDealt++;
         this.cardsDealtThisHand.push({ ...card, countValue });
-
-        // Deal to appropriate position based on phase and card count
-        if (this.phase === 'dealing') {
-            const totalCards = this.playerCards.length + this.dealerCards.length + (this.dealerHoleCard ? 1 : 0);
-
-            if (totalCards === 0) {
-                // First card to player
-                this.playerCards.push(card);
-                this.elements.dealTarget.textContent = 'Dealer (hole)';
-            } else if (totalCards === 1) {
-                // Hole card to dealer
-                this.dealerHoleCard = card;
-                this.elements.dealTarget.textContent = 'Player';
-            } else if (totalCards === 2) {
-                // Second card to player
-                this.playerCards.push(card);
-                this.elements.dealTarget.textContent = 'Dealer (up)';
-            } else if (totalCards === 3) {
-                // Upcard to dealer
-                this.dealerCards.push(card);
-                this.phase = 'player_turn';
-                this.elements.dealTarget.textContent = 'Player';
-                this.checkForBlackjack();
-            }
-        } else if (this.phase === 'player_turn') {
-            this.playerCards.push(card);
-            this.checkPlayerHand();
-        } else if (this.phase === 'dealer_turn') {
-            this.dealerCards.push(card);
-            this.checkDealerHand();
-        }
-
-        this.renderTable();
-        this.updateActionButtons();
-        this.updateStats();
     },
 
     checkForBlackjack() {
         const playerEval = HandEvaluation.evaluateHand(this.playerCards);
 
-        // Reveal hole card for blackjack check
         if (playerEval.isBlackjack) {
             this.revealHoleCard();
             const dealerEval = HandEvaluation.evaluateHand([...this.dealerCards, this.dealerHoleCard]);
@@ -204,6 +221,38 @@ const MediumMode = {
         }
     },
 
+    async playerAction(action) {
+        if (this.phase !== 'player_turn' || this.isDealing) return;
+
+        if (action === 'stand') {
+            this.phase = 'dealer_turn';
+            this.revealHoleCard();
+            await this.autoDealDealer();
+        } else if (action === 'hit') {
+            this.isDealing = true;
+            await this.dealCardToPlayer();
+            this.isDealing = false;
+            this.checkPlayerHand();
+        } else if (action === 'double') {
+            this.isDealing = true;
+            await this.dealCardToPlayer();
+            this.isDealing = false;
+            
+            const eval_ = HandEvaluation.evaluateHand(this.playerCards);
+            if (eval_.isBust) {
+                this.resolveHand('bust');
+            } else {
+                // Auto-stand after double
+                this.phase = 'dealer_turn';
+                this.revealHoleCard();
+                await this.autoDealDealer();
+            }
+        }
+
+        this.updateActionButtons();
+        this.updateShoeStatus();
+    },
+
     checkPlayerHand() {
         const eval_ = HandEvaluation.evaluateHand(this.playerCards);
         if (eval_.isBust) {
@@ -213,37 +262,32 @@ const MediumMode = {
         }
     },
 
-    checkDealerHand() {
-        const allDealerCards = [...this.dealerCards];
-        if (this.dealerHoleCard) allDealerCards.push(this.dealerHoleCard);
+    /**
+     * Auto-deal dealer cards until 17+
+     */
+    async autoDealDealer() {
+        const delay = ms => new Promise(r => setTimeout(r, ms));
+        this.isDealing = true;
 
-        const eval_ = HandEvaluation.evaluateHand(allDealerCards);
+        while (true) {
+            const eval_ = HandEvaluation.evaluateHand(this.dealerCards);
 
-        if (eval_.isBust) {
-            this.resolveHand('dealer_bust');
-        } else if (eval_.total >= 17) {
-            this.compareHands();
-        } else {
-            this.elements.dealTarget.textContent = 'Dealer';
-        }
-    },
+            if (eval_.isBust) {
+                this.isDealing = false;
+                this.resolveHand('dealer_bust');
+                return;
+            }
 
-    playerAction(action) {
-        if (this.phase !== 'player_turn') return;
+            if (eval_.total >= 17) {
+                break;
+            }
 
-        if (action === 'stand') {
-            this.phase = 'dealer_turn';
-            this.revealHoleCard();
-            this.checkDealerHand();
-        } else if (action === 'hit') {
-            this.elements.dealTarget.textContent = 'Player';
-        } else if (action === 'double') {
-            this.elements.dealTarget.textContent = 'Player (double)';
-            // After next card, auto-stand
+            await delay(this.dealSpeed);
+            await this.dealCardToDealer();
         }
 
-        this.updateActionButtons();
-        this.renderTable();
+        this.isDealing = false;
+        this.compareHands();
     },
 
     revealHoleCard() {
@@ -274,6 +318,8 @@ const MediumMode = {
         if (result === 'win' || result === 'blackjack' || result === 'dealer_bust') {
             this.handsWon++;
         }
+
+        this.elements.btnNewHand.disabled = false;
 
         // Show count check modal
         setTimeout(() => {
@@ -315,9 +361,7 @@ const MediumMode = {
 
     renderCardReplay() {
         const container = this.elements.replayCards;
-        while (container.firstChild) {
-            container.removeChild(container.firstChild);
-        }
+        container.innerHTML = '';
 
         this.cardsDealtThisHand.forEach(card => {
             const div = document.createElement('div');
@@ -351,15 +395,23 @@ const MediumMode = {
 
     closeResultModal() {
         this.elements.resultModal.classList.remove('active');
-        this.startNewHand();
+        
+        // Check if shoe needs reshuffle before next hand
+        if (Shoe.needsReshuffle()) {
+            this.showReshuffleMessage();
+        }
+    },
+
+    showReshuffleMessage() {
+        this.elements.shoeStatus.textContent = 'Shoe depleted - Click "New Shoe"';
+        this.elements.btnNewHand.disabled = true;
+        this.phase = 'waiting';
     },
 
     renderTable() {
         // Render player cards
         const playerContainer = this.elements.playerCards;
-        while (playerContainer.firstChild) {
-            playerContainer.removeChild(playerContainer.firstChild);
-        }
+        playerContainer.innerHTML = '';
         this.playerCards.forEach(card => {
             playerContainer.appendChild(this.createCardElement(card));
         });
@@ -370,9 +422,7 @@ const MediumMode = {
 
         // Render dealer cards
         const dealerContainer = this.elements.dealerCards;
-        while (dealerContainer.firstChild) {
-            dealerContainer.removeChild(dealerContainer.firstChild);
-        }
+        dealerContainer.innerHTML = '';
         this.dealerCards.forEach(card => {
             dealerContainer.appendChild(this.createCardElement(card));
         });
@@ -434,7 +484,7 @@ const MediumMode = {
     },
 
     updateActionButtons() {
-        const isPlayerTurn = this.phase === 'player_turn';
+        const isPlayerTurn = this.phase === 'player_turn' && !this.isDealing;
         const canDouble = isPlayerTurn && this.playerCards.length === 2;
         const playerEval = this.playerCards.length > 0 ? HandEvaluation.evaluateHand(this.playerCards) : null;
         const canSplit = canDouble && playerEval && playerEval.isPair;
@@ -443,6 +493,12 @@ const MediumMode = {
         this.elements.btnStand.disabled = !isPlayerTurn;
         this.elements.btnDouble.disabled = !canDouble;
         this.elements.btnSplit.disabled = !canSplit;
+    },
+
+    updateShoeStatus() {
+        const remaining = Shoe.getRemaining();
+        const penetration = Shoe.getPenetration();
+        this.elements.shoeStatus.textContent = `${remaining} cards (${penetration}% dealt)`;
     },
 
     updateStats() {

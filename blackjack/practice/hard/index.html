@@ -19,13 +19,13 @@
 
         <header class="practice-header compact">
             <h1 class="practice-title">HARD MODE</h1>
-            <p class="practice-subtitle">Full Table Chaos • 5 Second Timer</p>
+            <p class="practice-subtitle">Full Table • Auto-Deal • 5 Second Timer</p>
         </header>
 
         <!-- Stats Bar -->
         <div class="stats-bar">
             <div class="stat-item">
-                <span class="stat-label">Hands</span>
+                <span class="stat-label">Rounds</span>
                 <span id="hands-played" class="stat-value">0</span>
             </div>
             <div class="stat-item">
@@ -40,6 +40,12 @@
                 <span class="stat-label">Cards</span>
                 <span id="cards-dealt" class="stat-value">0</span>
             </div>
+        </div>
+
+        <!-- Shoe Status -->
+        <div class="shoe-status">
+            <span class="shoe-label">Shoe:</span>
+            <span id="shoe-status" class="shoe-value">-</span>
         </div>
 
         <!-- Game Table -->
@@ -92,12 +98,6 @@
             <button id="btn-stand" class="action-btn" disabled>Stand</button>
             <button id="btn-double" class="action-btn" disabled>Double</button>
             <button id="btn-split" class="action-btn" disabled>Split</button>
-        </div>
-
-        <!-- Card Input -->
-        <div class="card-input-section">
-            <div class="card-input-label">Deal card to: <span id="deal-target">-</span></div>
-            <div id="card-input" class="card-input-grid"></div>
         </div>
 
         <!-- Game Controls -->
@@ -169,6 +169,7 @@
 
     <!-- Scripts -->
     <script src="../../js/shared/constants.js"></script>
+    <script src="../../js/shared/shoe.js"></script>
     <script src="../../js/core/hand-evaluation.js"></script>
     <script src="../../js/core/basic-strategy.js"></script>
     <script src="../js/practice-constants.js"></script>

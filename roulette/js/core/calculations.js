@@ -148,6 +148,12 @@ function isBetWinner(result, betType, betValue, rouletteType) {
         return numbers.includes(result);
     }
     
+    // Trio - three numbers including zero (0-1-2 or 0-2-3), pays 11:1
+    if (betType === BET_TYPES.TRIO) {
+        const numbers = betValue.split('-').map(n => parseInt(n));
+        return numbers.includes(result);
+    }
+    
     // Corner - four numbers in a square
     if (betType === BET_TYPES.CORNER) {
         const numbers = betValue.split('-').map(n => parseInt(n));
@@ -204,6 +210,8 @@ function getPayoutForBet(betType) {
             return PAYOUTS.split;
         case BET_TYPES.STREET:
             return PAYOUTS.street;
+        case BET_TYPES.TRIO:
+            return PAYOUTS.trio;  // 11:1, same as street
         case BET_TYPES.CORNER:
             return PAYOUTS.corner;
         case BET_TYPES.FIRST_FOUR:

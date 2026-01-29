@@ -49,6 +49,14 @@
     --chip-100-dark: #0a0a0a;
     --chip-500: #9b59b6;
     --chip-500-dark: #8e44ad;
+    --chip-1000: #f39c12;
+    --chip-1000-dark: #d68910;
+    --chip-5000: #e74c3c;
+    --chip-5000-dark: #c0392b;
+    --chip-25000: #1abc9c;
+    --chip-25000-dark: #16a085;
+    --chip-100000: #f1c40f;
+    --chip-100000-dark: #d4ac0d;
     
     /* Wheel colors */
     --wheel-border: var(--accent-gold);

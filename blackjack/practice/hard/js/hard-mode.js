@@ -1,5 +1,9 @@
 /**
- * Hard Mode - Full Table with 5-Second Timer
+ * Hard Mode - Full Table with Auto-Deal and 5-Second Timer
+ * 
+ * Cards are automatically dealt to all 5 seats (4 AI + 1 player).
+ * AI players auto-play using BasicStrategy. User verifies running count
+ * within 5 seconds at the end of each round.
  */
 
 const HardMode = {
@@ -8,7 +12,11 @@ const HardMode = {
     currentSeat: 0,
     runningCount: 0,
     cardsDealtThisRound: [],
-    dealingPosition: 0, // tracks dealing order during initial deal
+    isDealing: false,
+
+    // Configuration
+    dealSpeed: 400, // ms between cards (faster for full table)
+    aiPlaySpeed: 600, // ms between AI decisions
 
     // Session stats
     roundsPlayed: 0,
@@ -30,15 +38,14 @@ const HardMode = {
 
     init() {
         this.cacheElements();
-        this.createCardInput();
         this.bindEvents();
-        this.startNewShoe();
+        this.updateStats();
+        this.elements.shoeStatus.textContent = 'Click "New Shoe" to start';
     },
 
     cacheElements() {
         this.elements = {
-            dealTarget: document.getElementById('deal-target'),
-            cardInput: document.getElementById('card-input'),
+            shoeStatus: document.getElementById('shoe-status'),
             dealerCards: document.getElementById('dealer-cards'),
             dealerTotal: document.getElementById('dealer-total'),
             handsPlayed: document.getElementById('hands-played'),
@@ -77,26 +84,6 @@ const HardMode = {
         }
     },
 
-    createCardInput() {
-        const container = this.elements.cardInput;
-        container.innerHTML = '';
-
-        CARD_RANKS.forEach(rank => {
-            const btn = document.createElement('button');
-            btn.className = 'card-btn';
-            btn.dataset.rank = rank;
-            btn.textContent = rank;
-
-            const countValue = HI_LO_VALUES[rank];
-            if (countValue > 0) btn.classList.add('plus');
-            else if (countValue < 0) btn.classList.add('minus');
-            else btn.classList.add('zero');
-
-            btn.addEventListener('click', () => this.dealCard(rank));
-            container.appendChild(btn);
-        });
-    },
-
     bindEvents() {
         // Action buttons
         this.elements.btnHit.addEventListener('click', () => this.playerAction('hit'));
@@ -131,6 +118,7 @@ const HardMode = {
     },
 
     startNewShoe() {
+        Shoe.init(6, 75); // 6 decks, 75% penetration
         this.runningCount = 0;
         this.roundsPlayed = 0;
         this.countChecks = 0;
@@ -138,12 +126,22 @@ const HardMode = {
         this.timeouts = 0;
         this.totalCardsDealt = 0;
         this.updateStats();
+        this.updateShoeStatus();
         this.phase = 'waiting';
         this.clearTable();
-        this.elements.dealTarget.textContent = 'Click "Deal Round" to start';
+        this.elements.shoeStatus.textContent = 'Ready - Click "Deal Round"';
+        this.elements.btnNewRound.disabled = false;
     },
 
-    startNewRound() {
+    async startNewRound() {
+        if (this.isDealing) return;
+
+        // Check if shoe needs reshuffle
+        if (Shoe.needsReshuffle()) {
+            this.showReshuffleMessage();
+            return;
+        }
+
         // Initialize seats
         this.seats = [];
         for (let i = 0; i < 5; i++) {
@@ -156,13 +154,16 @@ const HardMode = {
         this.dealerCards = [];
         this.dealerHoleCard = null;
         this.cardsDealtThisRound = [];
-        this.dealingPosition = 0;
-        this.phase = 'dealing';
         this.currentSeat = 0;
+        this.phase = 'dealing';
+        this.isDealing = true;
 
         this.clearTable();
-        this.updateDealTarget();
+        this.elements.btnNewRound.disabled = true;
         this.updateActionButtons();
+
+        // Auto-deal initial cards to all seats
+        await this.autoDealAllSeats();
     },
 
     clearTable() {
@@ -176,137 +177,145 @@ const HardMode = {
         this.elements.dealerTotal.textContent = '';
     },
 
-    updateDealTarget() {
-        if (this.phase === 'dealing') {
-            const position = this.dealingPosition;
-            // Deal order: S1, S2, S3, S4, S5, Dealer hole, S1, S2, S3, S4, S5, Dealer up
-            if (position < 5) {
-                this.elements.dealTarget.textContent = `Seat ${position + 1}`;
-            } else if (position === 5) {
-                this.elements.dealTarget.textContent = 'Dealer (hole)';
-            } else if (position < 11) {
-                this.elements.dealTarget.textContent = `Seat ${position - 5}`;
-            } else {
-                this.elements.dealTarget.textContent = 'Dealer (up)';
-            }
-        } else if (this.phase === 'ai_turn') {
-            this.elements.dealTarget.textContent = `Seat ${this.currentSeat + 1} (AI)`;
-        } else if (this.phase === 'player_turn') {
-            this.elements.dealTarget.textContent = 'Your turn - Seat 5';
-        } else if (this.phase === 'dealer_turn') {
-            this.elements.dealTarget.textContent = 'Dealer';
-        } else {
-            this.elements.dealTarget.textContent = '-';
+    /**
+     * Auto-deal initial 2 cards to all 5 seats + dealer
+     * Order: S1, S2, S3, S4, S5, Dealer(hole), S1, S2, S3, S4, S5, Dealer(up)
+     */
+    async autoDealAllSeats() {
+        const delay = ms => new Promise(r => setTimeout(r, ms));
+
+        // First card to each seat
+        for (let i = 0; i < 5; i++) {
+            await this.dealCardToSeat(i);
+            await delay(this.dealSpeed);
         }
+
+        // Dealer hole card
+        this.dealerHoleCard = Shoe.drawCard();
+        this.trackCard(this.dealerHoleCard);
+        this.renderTable();
+        await delay(this.dealSpeed);
+
+        // Second card to each seat
+        for (let i = 0; i < 5; i++) {
+            await this.dealCardToSeat(i);
+            await delay(this.dealSpeed);
+        }
+
+        // Dealer up card
+        await this.dealCardToDealer();
+
+        this.isDealing = false;
+        this.updateShoeStatus();
+
+        // Start AI turns
+        this.phase = 'ai_turn';
+        this.currentSeat = 0;
+        await this.processAISeats();
     },
 
-    dealCard(rank) {
-        const suit = CARD_SUITS[Math.floor(Math.random() * 4)];
-        const card = { rank, suit };
-        const countValue = HI_LO_VALUES[rank];
+    /**
+     * Deal a card to a specific seat
+     */
+    async dealCardToSeat(seatIndex) {
+        const card = Shoe.drawCard();
+        if (!card) return;
 
+        this.seats[seatIndex].cards.push(card);
+        this.trackCard(card);
+        this.renderTable();
+    },
+
+    /**
+     * Deal a card to the dealer (face up)
+     */
+    async dealCardToDealer() {
+        const card = Shoe.drawCard();
+        if (!card) return;
+
+        this.dealerCards.push(card);
+        this.trackCard(card);
+        this.renderTable();
+    },
+
+    /**
+     * Track a dealt card for counting
+     */
+    trackCard(card) {
+        const countValue = HI_LO_VALUES[card.rank];
         this.runningCount += countValue;
         this.totalCardsDealt++;
         this.cardsDealtThisRound.push({ ...card, countValue });
-
-        if (this.phase === 'dealing') {
-            this.handleInitialDeal(card);
-        } else if (this.phase === 'ai_turn') {
-            this.handleAIDeal(card);
-        } else if (this.phase === 'player_turn') {
-            this.handlePlayerDeal(card);
-        } else if (this.phase === 'dealer_turn') {
-            this.handleDealerDeal(card);
-        }
-
-        this.renderTable();
-        this.updateStats();
     },
 
-    handleInitialDeal(card) {
-        const pos = this.dealingPosition;
+    /**
+     * Process all AI seats (0-3) automatically
+     */
+    async processAISeats() {
+        const delay = ms => new Promise(r => setTimeout(r, ms));
 
-        if (pos < 5) {
-            this.seats[pos].cards.push(card);
-        } else if (pos === 5) {
-            this.dealerHoleCard = card;
-        } else if (pos < 11) {
-            this.seats[pos - 6].cards.push(card);
-        } else {
-            this.dealerCards.push(card);
-            // Initial deal complete, start AI turns
-            this.phase = 'ai_turn';
-            this.currentSeat = 0;
-            this.processAISeat();
+        for (let i = 0; i < 4; i++) {
+            this.currentSeat = i;
+            this.highlightSeat(i);
+            await this.autoPlayAISeat(i);
+            await delay(this.aiPlaySpeed);
         }
 
-        this.dealingPosition++;
-        this.updateDealTarget();
+        // Move to player turn
+        this.currentSeat = 4;
+        this.phase = 'player_turn';
+        this.highlightSeat(4);
+        this.updateActionButtons();
     },
 
-    handleAIDeal(card) {
-        this.seats[this.currentSeat].cards.push(card);
-        this.processAISeat();
-    },
+    /**
+     * Auto-play a single AI seat using BasicStrategy
+     */
+    async autoPlayAISeat(seatIndex) {
+        const delay = ms => new Promise(r => setTimeout(r, ms));
+        const seat = this.seats[seatIndex];
 
-    processAISeat() {
-        const seat = this.seats[this.currentSeat];
-        const eval_ = HandEvaluation.evaluateHand(seat.cards);
+        while (!seat.isStanding && !seat.isBust) {
+            const eval_ = HandEvaluation.evaluateHand(seat.cards);
 
-        // Check for bust or 21
-        if (eval_.isBust) {
-            seat.isBust = true;
-            this.showSeatAction(this.currentSeat, 'BUST');
-            this.moveToNextSeat();
-            return;
-        }
+            // Check for bust
+            if (eval_.isBust) {
+                seat.isBust = true;
+                this.showSeatAction(seatIndex, 'BUST');
+                break;
+            }
 
-        if (eval_.total === 21) {
-            seat.isStanding = true;
-            this.showSeatAction(this.currentSeat, 'STAND');
-            this.moveToNextSeat();
-            return;
-        }
+            // Check for 21
+            if (eval_.total === 21) {
+                seat.isStanding = true;
+                this.showSeatAction(seatIndex, '21');
+                break;
+            }
 
-        // Get AI decision using BasicStrategy
-        const dealerUpcard = this.dealerCards[0]?.rank || 'A';
-        const decision = BasicStrategy.getOptimalAction(seat.cards, dealerUpcard);
+            // Get AI decision
+            const dealerUpcard = this.dealerCards[0]?.rank || 'A';
+            const decision = BasicStrategy.getOptimalAction(seat.cards, dealerUpcard);
 
-        if (decision.action === 'S') {
-            seat.isStanding = true;
-            this.showSeatAction(this.currentSeat, 'STAND');
-            this.moveToNextSeat();
-        } else if (decision.action === 'H' || decision.action === 'D') {
-            // AI needs another card
-            this.showSeatAction(this.currentSeat, decision.action === 'D' ? 'DOUBLE' : 'HIT');
-            this.highlightSeat(this.currentSeat);
-            this.updateDealTarget();
-        } else if (decision.action === 'P') {
-            // Simplified: treat split as hit for practice
-            this.showSeatAction(this.currentSeat, 'HIT');
-            this.highlightSeat(this.currentSeat);
-            this.updateDealTarget();
-        }
-    },
+            if (decision.action === 'S') {
+                seat.isStanding = true;
+                this.showSeatAction(seatIndex, 'STAND');
+            } else if (decision.action === 'H') {
+                this.showSeatAction(seatIndex, 'HIT');
+                await delay(this.aiPlaySpeed);
+                await this.dealCardToSeat(seatIndex);
+            } else if (decision.action === 'D') {
+                this.showSeatAction(seatIndex, 'DOUBLE');
+                await delay(this.aiPlaySpeed);
+                await this.dealCardToSeat(seatIndex);
+                seat.isStanding = true;
+            } else if (decision.action === 'P') {
+                // Simplified: treat split as hit for practice
+                this.showSeatAction(seatIndex, 'HIT');
+                await delay(this.aiPlaySpeed);
+                await this.dealCardToSeat(seatIndex);
+            }
 
-    moveToNextSeat() {
-        this.currentSeat++;
-
-        if (this.currentSeat === 4) {
-            // Player's turn
-            this.phase = 'player_turn';
-            this.highlightSeat(4);
-            this.updateActionButtons();
-            this.updateDealTarget();
-        } else if (this.currentSeat >= 5) {
-            // All seats done, dealer turn
-            this.phase = 'dealer_turn';
-            this.revealHoleCard();
-            this.processDealerTurn();
-        } else {
-            // Next AI seat
-            this.highlightSeat(this.currentSeat);
-            this.processAISeat();
+            this.updateShoeStatus();
         }
     },
 
@@ -321,39 +330,51 @@ const HardMode = {
         document.querySelector(`.seat[data-seat="${seatIndex}"]`).classList.add('active');
     },
 
-    handlePlayerDeal(card) {
-        this.seats[4].cards.push(card);
-        const eval_ = HandEvaluation.evaluateHand(this.seats[4].cards);
+    async playerAction(action) {
+        if (this.phase !== 'player_turn' || this.isDealing) return;
 
-        if (eval_.isBust) {
-            this.seats[4].isBust = true;
-            this.showSeatAction(4, 'BUST');
-            this.moveToNextSeat();
-        } else if (eval_.total === 21) {
-            this.playerAction('stand');
-        }
-
-        this.updateActionButtons();
-    },
-
-    playerAction(action) {
-        if (this.phase !== 'player_turn') return;
+        const seat = this.seats[4];
 
         if (action === 'stand') {
-            this.seats[4].isStanding = true;
+            seat.isStanding = true;
             this.showSeatAction(4, 'STAND');
-            this.moveToNextSeat();
+            await this.startDealerTurn();
         } else if (action === 'hit') {
             this.showSeatAction(4, 'HIT');
+            this.isDealing = true;
+            await this.dealCardToSeat(4);
+            this.isDealing = false;
+
+            const eval_ = HandEvaluation.evaluateHand(seat.cards);
+            if (eval_.isBust) {
+                seat.isBust = true;
+                this.showSeatAction(4, 'BUST');
+                await this.startDealerTurn();
+            } else if (eval_.total === 21) {
+                await this.playerAction('stand');
+            }
         } else if (action === 'double') {
             this.showSeatAction(4, 'DOUBLE');
+            this.isDealing = true;
+            await this.dealCardToSeat(4);
+            this.isDealing = false;
+
+            const eval_ = HandEvaluation.evaluateHand(seat.cards);
+            if (eval_.isBust) {
+                seat.isBust = true;
+                this.showSeatAction(4, 'BUST');
+            } else {
+                seat.isStanding = true;
+            }
+            await this.startDealerTurn();
         }
 
         this.updateActionButtons();
+        this.updateShoeStatus();
     },
 
     updateActionButtons() {
-        const isPlayerTurn = this.phase === 'player_turn';
+        const isPlayerTurn = this.phase === 'player_turn' && !this.isDealing;
         const playerCards = this.seats[4]?.cards || [];
         const canDouble = isPlayerTurn && playerCards.length === 2;
         const eval_ = playerCards.length > 0 ? HandEvaluation.evaluateHand(playerCards) : null;
@@ -365,6 +386,13 @@ const HardMode = {
         this.elements.btnSplit.disabled = !canSplit;
     },
 
+    async startDealerTurn() {
+        this.phase = 'dealer_turn';
+        this.revealHoleCard();
+        this.updateActionButtons();
+        await this.autoDealDealer();
+    },
+
     revealHoleCard() {
         if (this.dealerHoleCard) {
             this.dealerCards.unshift(this.dealerHoleCard);
@@ -373,22 +401,30 @@ const HardMode = {
         }
     },
 
-    handleDealerDeal(card) {
-        this.dealerCards.push(card);
-        this.processDealerTurn();
-    },
+    /**
+     * Auto-deal dealer cards until 17+
+     */
+    async autoDealDealer() {
+        const delay = ms => new Promise(r => setTimeout(r, ms));
+        this.isDealing = true;
 
-    processDealerTurn() {
-        const eval_ = HandEvaluation.evaluateHand(this.dealerCards);
+        while (true) {
+            const eval_ = HandEvaluation.evaluateHand(this.dealerCards);
 
-        if (eval_.isBust || eval_.total >= 17) {
-            // Dealer done, show count check
-            this.roundsPlayed++;
-            this.showCountCheck();
-        } else {
-            // Dealer needs more cards
-            this.updateDealTarget();
+            if (eval_.isBust || eval_.total >= 17) {
+                break;
+            }
+
+            await delay(this.dealSpeed);
+            await this.dealCardToDealer();
         }
+
+        this.isDealing = false;
+        this.updateShoeStatus();
+
+        // Round complete, show count check
+        this.roundsPlayed++;
+        this.showCountCheck();
     },
 
     showCountCheck() {
@@ -497,7 +533,19 @@ const HardMode = {
         this.elements.resultModal.classList.remove('active');
         this.phase = 'waiting';
         this.clearTable();
-        this.elements.dealTarget.textContent = 'Click "Deal Round" to continue';
+        this.elements.btnNewRound.disabled = false;
+
+        // Check if shoe needs reshuffle
+        if (Shoe.needsReshuffle()) {
+            this.showReshuffleMessage();
+        } else {
+            this.elements.shoeStatus.textContent = 'Ready - Click "Deal Round"';
+        }
+    },
+
+    showReshuffleMessage() {
+        this.elements.shoeStatus.textContent = 'Shoe depleted - Click "New Shoe"';
+        this.elements.btnNewRound.disabled = true;
     },
 
     renderTable() {
@@ -564,6 +612,12 @@ const HardMode = {
         div.appendChild(suitSpan);
 
         return div;
+    },
+
+    updateShoeStatus() {
+        const remaining = Shoe.getRemaining();
+        const penetration = Shoe.getPenetration();
+        this.elements.shoeStatus.textContent = `${remaining} cards (${penetration}% dealt)`;
     },
 
     updateStats() {

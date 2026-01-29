@@ -165,6 +165,14 @@ function restoreGameState() {
         return false;
     }
 
+    // Check if bankroll is zero or negative (bust state)
+    // If so, clear storage and start fresh - game is over
+    if (savedGame.bankroll && savedGame.bankroll.current <= 0) {
+        console.log('Saved game has zero bankroll (bust), clearing storage');
+        clearAllStorage();
+        return false;
+    }
+
     // Restore game state
     // Always restore to BETTING phase since SPINNING/RESULT are transient states
     // that should not persist across page refreshes
@@ -210,12 +218,20 @@ function clearAllStorage() {
 }
 
 /**
- * Check if there's saved game data
+ * Check if there's saved game data that can be restored
  * @returns {boolean}
  */
 function hasSavedGame() {
     const saved = loadGameStateFromStorage();
-    return saved && saved.phase !== GAME_PHASES.SETUP;
+    // No saved game, or was in setup phase, or bankroll is zero (bust)
+    if (!saved || saved.phase === GAME_PHASES.SETUP) {
+        return false;
+    }
+    // Check if bankroll is zero (bust state) - can't restore a bust game
+    if (saved.bankroll && saved.bankroll.current <= 0) {
+        return false;
+    }
+    return true;
 }
 
 /**

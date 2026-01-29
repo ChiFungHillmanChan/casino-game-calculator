@@ -11,6 +11,14 @@ let autoSpinState = {
     countdownInterval: null
 };
 
+// Auto-repeat state
+let autoRepeatState = {
+    enabled: false,
+    remaining: 0,      // 0 = forever, positive = count remaining
+    isForever: false,
+    betsSnapshot: null // Store bets to repeat
+};
+
 // Result auto-dismiss state
 let resultDismissTimeout = null;
 let resultProgressInterval = null;
@@ -36,9 +44,73 @@ function initEventHandlers() {
 
     // Auto-spin handlers
     initAutoSpinHandlers();
+    
+    // Auto-repeat handlers
+    initAutoRepeatHandlers();
 
     // Chip preview for touch devices
     initChipPreviewHandlers();
+    
+    // Betting tab handlers (Table/Racetrack switcher)
+    initBettingTabHandlers();
+}
+
+// =====================================================
+// BETTING TAB HANDLERS (Table/Racetrack Switcher)
+// =====================================================
+
+/**
+ * Initialize betting tab handlers for Table/Racetrack switching
+ */
+function initBettingTabHandlers() {
+    const tabBtns = document.querySelectorAll('[data-betting-tab]');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', handleBettingTabSwitch);
+    });
+}
+
+/**
+ * Handle switching between Table and Racetrack views
+ */
+function handleBettingTabSwitch(e) {
+    const btn = e.currentTarget;
+    const tab = btn.dataset.bettingTab;
+    
+    // Update button states
+    document.querySelectorAll('[data-betting-tab]').forEach(b => {
+        b.classList.remove('active');
+    });
+    btn.classList.add('active');
+    
+    // Get containers
+    const tableContainer = document.getElementById('bettingTableContainer');
+    const racetrackContainer = document.getElementById('racetrackContainer');
+    
+    if (tab === 'table') {
+        // Show table, hide racetrack
+        if (tableContainer) tableContainer.style.display = '';
+        if (racetrackContainer) racetrackContainer.classList.remove('active');
+    } else if (tab === 'racetrack') {
+        // Show racetrack, hide table
+        if (tableContainer) tableContainer.style.display = 'none';
+        if (racetrackContainer) {
+            racetrackContainer.classList.add('active');
+            // Render racetrack if not already rendered
+            if (!racetrackContainer.dataset.rendered) {
+                renderRacetrack();
+                racetrackContainer.dataset.rendered = 'true';
+            }
+        }
+    }
+}
+
+/**
+ * Get current betting tab
+ * @returns {string} 'table' or 'racetrack'
+ */
+function getCurrentBettingTab() {
+    const activeTab = document.querySelector('[data-betting-tab].active');
+    return activeTab ? activeTab.dataset.bettingTab : 'table';
 }
 
 /**
@@ -270,6 +342,12 @@ function initGameControlHandlers() {
         repeatBtn.addEventListener('click', handleRepeatBets);
     }
     
+    // Double bets button
+    const doubleBtn = document.getElementById('doubleBtn');
+    if (doubleBtn) {
+        doubleBtn.addEventListener('click', handleDoubleBets);
+    }
+    
     // Skip button (simulate 100 spins)
     const skipBtn = document.getElementById('skipBtn');
     if (skipBtn) {
@@ -360,6 +438,10 @@ function handleSpinClick() {
             // Show result briefly, then show game over
             showResult(spinData.result, resolution);
             setGamePhase(GAME_PHASES.GAME_OVER);
+            
+            // Clear localStorage immediately - game is over
+            // This ensures navigating away won't restore a bust game
+            clearAllStorage();
             
             // After a short delay, show game over overlay
             setTimeout(() => {
@@ -467,6 +549,23 @@ function handleRepeatBets() {
 }
 
 /**
+ * Handle double bets button (x2)
+ */
+function handleDoubleBets() {
+    if (getGamePhase() !== GAME_PHASES.BETTING) return;
+    if (!hasBets()) return;
+    
+    const success = doubleAllBets(getCurrentBankroll());
+    if (success) {
+        renderPlacedChips();
+        updateTotalBetDisplay();
+        updateButtonStates();
+    } else {
+        alert('Cannot afford to double bets.');
+    }
+}
+
+/**
  * Handle new bets after result
  */
 function handleNewBets() {
@@ -479,6 +578,12 @@ function handleNewBets() {
     renderPlacedChips();
     updateTotalBetDisplay();
     setGamePhase(GAME_PHASES.BETTING);
+    
+    // Stop auto-repeat when user chooses new bets
+    if (isAutoRepeatEnabled()) {
+        stopAutoRepeat();
+    }
+    
     updateButtonStates();
     
     // Restart auto-spin countdown if enabled
@@ -497,14 +602,21 @@ function handleSameBets() {
     
     hideResultOverlay();
     
-    const lastBets = getLastBets();
-    if (lastBets && restoreBets(lastBets, getCurrentBankroll())) {
+    // Process auto-repeat if enabled (this handles bet restoration)
+    if (isAutoRepeatEnabled()) {
+        processAutoRepeat();
         renderPlacedChips();
         updateTotalBetDisplay();
     } else {
-        clearAllBets();
-        renderPlacedChips();
-        updateTotalBetDisplay();
+        const lastBets = getLastBets();
+        if (lastBets && restoreBets(lastBets, getCurrentBankroll())) {
+            renderPlacedChips();
+            updateTotalBetDisplay();
+        } else {
+            clearAllBets();
+            renderPlacedChips();
+            updateTotalBetDisplay();
+        }
     }
     
     setGamePhase(GAME_PHASES.BETTING);
@@ -525,6 +637,11 @@ function handleNewGame() {
     resetGameState();
     resetBetState();
     resetStatsState();
+    
+    // Stop any auto-repeat
+    if (isAutoRepeatEnabled()) {
+        stopAutoRepeat();
+    }
 }
 
 /**
@@ -695,7 +812,10 @@ function showBetError(message) {
  * Handle bet removal (right-click)
  */
 function handleBetRemoval(betType, betValue, e) {
+    // Ensure context menu is completely blocked
     e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
     
     if (getGamePhase() !== GAME_PHASES.BETTING) return;
     
@@ -720,7 +840,9 @@ function updateButtonStates() {
     const spinBtn = document.getElementById('spinBtn');
     const clearBtn = document.getElementById('clearBetsBtn');
     const undoBtn = document.getElementById('undoBtn');
+    const doubleBtn = document.getElementById('doubleBtn');
     const repeatBtn = document.getElementById('repeatBtn');
+    const autoRepeatBtn = document.getElementById('autoRepeatBtn');
 
     if (spinBtn) {
         // Allow spinning without bets (for statistics/practice)
@@ -736,9 +858,40 @@ function updateButtonStates() {
         undoBtn.disabled = phase !== GAME_PHASES.BETTING || !hasUndoActions;
     }
 
+    if (doubleBtn) {
+        // Can double if there are bets and player can afford to double
+        const currentTotal = getTotalWagered();
+        const canAffordDouble = currentTotal * 2 <= getCurrentBankroll();
+        doubleBtn.disabled = phase !== GAME_PHASES.BETTING || !hasBetsPlaced || !canAffordDouble;
+    }
+
     if (repeatBtn) {
         repeatBtn.disabled = phase !== GAME_PHASES.BETTING || !hasLastBets || !canAfford;
     }
+    
+    if (autoRepeatBtn) {
+        // Enable auto-repeat if we have bets placed or have last bets to repeat
+        // Don't disable if auto-repeat is already active
+        if (!isAutoRepeatEnabled()) {
+            autoRepeatBtn.disabled = phase !== GAME_PHASES.BETTING || (!hasBetsPlaced && !hasLastBets);
+        }
+    }
+}
+
+/**
+ * Format large numbers compactly (e.g., $1.5M, $250K)
+ * @param {number} amount - Amount to format
+ * @returns {string} Formatted amount
+ */
+function formatCompactAmount(amount) {
+    if (amount >= 1000000) {
+        const millions = amount / 1000000;
+        return '$' + (millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)) + 'M';
+    } else if (amount >= 10000) {
+        const thousands = amount / 1000;
+        return '$' + (thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(1)) + 'K';
+    }
+    return '$' + amount.toLocaleString();
 }
 
 /**
@@ -747,7 +900,7 @@ function updateButtonStates() {
 function updateTotalBetDisplay() {
     const totalEl = document.getElementById('totalBetAmount');
     if (totalEl) {
-        totalEl.textContent = '$' + getTotalWagered().toLocaleString();
+        totalEl.textContent = formatCompactAmount(getTotalWagered());
     }
 }
 
@@ -1086,6 +1239,191 @@ function stopAutoSpinCountdown() {
     if (countdownDisplay) {
         countdownDisplay.classList.remove('active');
         countdownDisplay.classList.remove('warning');
+    }
+}
+
+// =====================================================
+// AUTO-REPEAT HANDLERS
+// =====================================================
+
+/**
+ * Initialize auto-repeat handlers
+ */
+function initAutoRepeatHandlers() {
+    const autoRepeatBtn = document.getElementById('autoRepeatBtn');
+    const autoRepeatDropdown = document.getElementById('autoRepeatDropdown');
+    const stopAutoRepeatBtn = document.getElementById('stopAutoRepeatBtn');
+    
+    if (autoRepeatBtn) {
+        autoRepeatBtn.addEventListener('click', toggleAutoRepeatDropdown);
+    }
+    
+    // Count option buttons
+    const countOptions = document.querySelectorAll('.auto-repeat-option');
+    countOptions.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const count = parseInt(btn.dataset.count);
+            selectAutoRepeatCount(count);
+        });
+    });
+    
+    // Stop button
+    if (stopAutoRepeatBtn) {
+        stopAutoRepeatBtn.addEventListener('click', stopAutoRepeat);
+    }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.auto-repeat-control')) {
+            closeAutoRepeatDropdown();
+        }
+    });
+}
+
+/**
+ * Toggle auto-repeat dropdown
+ */
+function toggleAutoRepeatDropdown() {
+    const dropdown = document.getElementById('autoRepeatDropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('open');
+    }
+}
+
+/**
+ * Close auto-repeat dropdown
+ */
+function closeAutoRepeatDropdown() {
+    const dropdown = document.getElementById('autoRepeatDropdown');
+    if (dropdown) {
+        dropdown.classList.remove('open');
+    }
+}
+
+/**
+ * Select auto-repeat count and start
+ * @param {number} count - Number of spins (0 = forever)
+ */
+function selectAutoRepeatCount(count) {
+    // Capture current bets
+    const currentBets = getAllBets();
+    if (!hasBets()) {
+        alert('Place some bets first before enabling auto-repeat.');
+        return;
+    }
+    
+    autoRepeatState.enabled = true;
+    autoRepeatState.remaining = count;
+    autoRepeatState.isForever = count === 0;
+    autoRepeatState.betsSnapshot = currentBets;
+    
+    // Store as last bets for repeat
+    storeLastBets(currentBets);
+    
+    // Update UI
+    const autoRepeatBtn = document.getElementById('autoRepeatBtn');
+    const autoRepeatLabel = document.getElementById('autoRepeatLabel');
+    const stopAutoRepeatBtn = document.getElementById('stopAutoRepeatBtn');
+    const statusDiv = document.getElementById('autoRepeatStatus');
+    const remainingSpan = document.getElementById('autoRepeatRemaining');
+    
+    if (autoRepeatBtn) autoRepeatBtn.classList.add('active');
+    if (autoRepeatLabel) autoRepeatLabel.textContent = count === 0 ? '∞' : count;
+    if (stopAutoRepeatBtn) stopAutoRepeatBtn.style.display = 'block';
+    if (statusDiv) statusDiv.style.display = 'block';
+    if (remainingSpan) remainingSpan.textContent = count === 0 ? '∞' : count;
+    
+    // Update selected state
+    document.querySelectorAll('.auto-repeat-option').forEach(btn => {
+        btn.classList.toggle('selected', parseInt(btn.dataset.count) === count);
+    });
+    
+    closeAutoRepeatDropdown();
+}
+
+/**
+ * Stop auto-repeat
+ */
+function stopAutoRepeat() {
+    autoRepeatState.enabled = false;
+    autoRepeatState.remaining = 0;
+    autoRepeatState.isForever = false;
+    autoRepeatState.betsSnapshot = null;
+    
+    // Update UI
+    const autoRepeatBtn = document.getElementById('autoRepeatBtn');
+    const autoRepeatLabel = document.getElementById('autoRepeatLabel');
+    const stopAutoRepeatBtn = document.getElementById('stopAutoRepeatBtn');
+    const statusDiv = document.getElementById('autoRepeatStatus');
+    
+    if (autoRepeatBtn) autoRepeatBtn.classList.remove('active');
+    if (autoRepeatLabel) autoRepeatLabel.textContent = 'Auto';
+    if (stopAutoRepeatBtn) stopAutoRepeatBtn.style.display = 'none';
+    if (statusDiv) statusDiv.style.display = 'none';
+    
+    // Clear selected state
+    document.querySelectorAll('.auto-repeat-option').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    
+    updateButtonStates();
+}
+
+/**
+ * Process auto-repeat after a spin (called from handleSameBets/handleNewBets equivalent)
+ * Should be called after each spin result is processed
+ */
+function processAutoRepeat() {
+    if (!autoRepeatState.enabled) return;
+    
+    // Decrement counter if not forever
+    if (!autoRepeatState.isForever && autoRepeatState.remaining > 0) {
+        autoRepeatState.remaining--;
+        
+        // Update display
+        const remainingSpan = document.getElementById('autoRepeatRemaining');
+        const autoRepeatLabel = document.getElementById('autoRepeatLabel');
+        if (remainingSpan) remainingSpan.textContent = autoRepeatState.remaining;
+        if (autoRepeatLabel) autoRepeatLabel.textContent = autoRepeatState.remaining;
+        
+        // Stop if we've reached 0
+        if (autoRepeatState.remaining <= 0) {
+            stopAutoRepeat();
+            return;
+        }
+    }
+    
+    // Restore the saved bets
+    if (autoRepeatState.betsSnapshot) {
+        const canRestore = restoreBets(autoRepeatState.betsSnapshot, getCurrentBankroll());
+        if (!canRestore) {
+            // Can't afford to continue, stop auto-repeat
+            alert('Cannot afford to continue auto-repeat. Stopping.');
+            stopAutoRepeat();
+        }
+    }
+}
+
+/**
+ * Check if auto-repeat is enabled
+ * @returns {boolean}
+ */
+function isAutoRepeatEnabled() {
+    return autoRepeatState.enabled;
+}
+
+/**
+ * Update auto-repeat button state based on whether bets are placed
+ */
+function updateAutoRepeatButtonState() {
+    const autoRepeatBtn = document.getElementById('autoRepeatBtn');
+    if (autoRepeatBtn) {
+        const phase = getGamePhase();
+        const hasLastBets = getLastBets() !== null;
+        const hasBetsPlaced = hasBets();
+        
+        // Enable if we have bets placed or last bets to repeat from
+        autoRepeatBtn.disabled = phase !== GAME_PHASES.BETTING || (!hasBetsPlaced && !hasLastBets);
     }
 }
 
