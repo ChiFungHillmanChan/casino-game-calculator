@@ -107,6 +107,7 @@
 
 .card .suit {
     font-size: 1.2rem;
+    color: #1a1a1a;
 }
 
 .card.red .rank,

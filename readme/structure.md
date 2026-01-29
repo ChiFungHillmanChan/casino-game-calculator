@@ -197,9 +197,10 @@ This document tracks all functions, components, and modules in the codebase to p
 | `getChipColor(value)` | Get chip color | render-chips.js |
 | `clearAllPlacedChips()` | Remove all placed chips | render-chips.js |
 
-#### render-racetrack.js
+#### render-racetrack.js (SVG-based)
 | Function/Constant | Purpose | Location |
 |------------------|---------|----------|
+| `SVG_WIDTH`, `SVG_HEIGHT` | SVG viewBox dimensions (1020x280) | render-racetrack.js |
 | `LEFT_CURVE_NUMBERS` | Numbers on left semi-circle (10,23,8,30) | render-racetrack.js |
 | `TOP_ROW_NUMBERS` | Numbers in top row (5,24,16,33...35) | render-racetrack.js |
 | `RIGHT_CURVE_NUMBERS` | Numbers on right semi-circle including 0 (3,26,0,32) | render-racetrack.js |
@@ -207,8 +208,15 @@ This document tracks all functions, components, and modules in the codebase to p
 | `VOISINS_NUMBERS` | Voisins du Zero section numbers | render-racetrack.js |
 | `TIERS_NUMBERS` | Tiers section numbers | render-racetrack.js |
 | `ORPHELINS_NUMBERS` | Orphelins section numbers | render-racetrack.js |
-| `renderRacetrack()` | Render the racetrack betting interface (oval shape) | render-racetrack.js |
-| `renderTrackCell(num)` | Render a single number cell with proper color | render-racetrack.js |
+| `COLORS` | Color constants for track elements | render-racetrack.js |
+| `degToRad(deg)` | Convert degrees to radians | render-racetrack.js |
+| `getCirclePoint(cx, cy, radius, angleDeg)` | Get point on circle at angle | render-racetrack.js |
+| `arcPath(cx, cy, radius, startAngle, endAngle)` | Create SVG arc path command | render-racetrack.js |
+| `createWedgePath(cx, cy, innerR, outerR, start, end)` | Create SVG wedge/pie-slice path | render-racetrack.js |
+| `getWedgeTextPosition(cx, cy, r, start, end)` | Get center position for wedge text | render-racetrack.js |
+| `getNumberFill(num)` | Get fill color for a number | render-racetrack.js |
+| `renderRacetrack()` | Render SVG racetrack with curved wedges | render-racetrack.js |
+| `renderCenterSection(startX, endX, topY, bottomY)` | Render stadium-shaped center section | render-racetrack.js |
 | `renderNeighbourButtons()` | Render neighbour range buttons (2-7) | render-racetrack.js |
 | `initRacetrackHandlers()` | Initialize racetrack event handlers | render-racetrack.js |
 | `handleCallBetClick(betName)` | Handle call bet section click | render-racetrack.js |
