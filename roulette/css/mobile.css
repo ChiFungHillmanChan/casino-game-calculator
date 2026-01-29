@@ -44,10 +44,11 @@
     /* Container - full width mobile */
     .container {
         padding: var(--spacing-sm);
-        /* Space for fixed action bar (~100px height) + safe area + buffer
-           Ensures all content above the fixed action bar is visible
-           Increased from 140px to 160px for better clearance */
-        padding-bottom: max(160px, calc(150px + env(safe-area-inset-bottom, 34px)));
+        /* Space for fixed action bar (~100px height) + buffer
+           IMPORTANT: Use FIXED padding that doesn't rely on env() to avoid
+           Safari's dynamic toolbar causing the value to change on scroll.
+           Action bar height (~100px) + home indicator space (~34px) + buffer (~26px) = 160px */
+        padding-bottom: 160px;
     }
 
     /* Header - compact on mobile */
@@ -525,8 +526,8 @@
         /* iOS Safe Area: Use env() with fallback for iPhone home indicator
            - iPhone X/11/12/13/14/15 home indicator is ~34px
            - Add extra padding (16px) to ensure buttons aren't too close to the bar
-           - Total minimum padding-bottom: 50px (fallback) or env() + 16px */
-        padding-bottom: max(50px, calc(env(safe-area-inset-bottom, 34px) + 16px));
+           - FIXED padding that doesn't change with Safari's dynamic toolbar */
+        padding-bottom: 50px;
         padding-left: max(var(--spacing-md), env(safe-area-inset-left));
         padding-right: max(var(--spacing-md), env(safe-area-inset-right));
         background: linear-gradient(180deg, transparent 0%, var(--bg-card) 15%, var(--bg-card) 100%);
@@ -540,6 +541,16 @@
         grid-template-rows: auto auto;
         gap: var(--spacing-sm);
         align-items: center;
+        /* Safari dynamic viewport: ensure action bar respects home indicator */
+        padding-bottom: calc(34px + 16px);
+    }
+
+    /* Safari-specific: ensure action bar clears the home indicator area */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+        .action-bar {
+            /* Use safe-area for home indicator, but with minimum fallback */
+            padding-bottom: max(50px, calc(env(safe-area-inset-bottom, 34px) + 16px));
+        }
     }
 
     .total-bet-display {
@@ -659,10 +670,11 @@
 
     /* ========== Game Screen Adjustments ========== */
     .game-screen {
-        /* Extra space for fixed action bar + iPhone safe area + buffer
-           Ensures game content doesn't get hidden behind action bar
-           Increased padding to prevent content cutoff on all devices */
-        padding-bottom: max(180px, calc(170px + env(safe-area-inset-bottom, 34px)));
+        /* Extra space for fixed action bar + home indicator + buffer
+           IMPORTANT: Use FIXED padding (not env()) to prevent Safari's
+           dynamic toolbar from changing the value and covering content.
+           Action bar height (~100px) + home indicator (~34px) + extra buffer (~46px) = 180px */
+        padding-bottom: 180px;
     }
 
     /* Ensure game-area content has enough clearance from action bar */
@@ -950,8 +962,8 @@
 /* ========== Landscape Mobile ========== */
 @media (max-width: 767px) and (orientation: landscape) {
     .container {
-        /* Landscape still needs safe area support for notch/home indicator on sides */
-        padding-bottom: max(90px, calc(80px + env(safe-area-inset-bottom, 20px)));
+        /* Landscape: Use fixed padding to avoid Safari dynamic toolbar issues */
+        padding-bottom: 100px;
     }
 
     header {
@@ -1176,8 +1188,8 @@
         align-items: center;
         justify-content: space-between;
         padding: var(--spacing-md) var(--spacing-lg);
-        /* Tablet safe area padding - slightly less than mobile since tablets have smaller home indicators */
-        padding-bottom: max(var(--spacing-lg), calc(env(safe-area-inset-bottom, 20px) + var(--spacing-md)));
+        /* Tablet: Use fixed padding to avoid Safari dynamic toolbar issues */
+        padding-bottom: 36px;
         padding-left: max(var(--spacing-lg), env(safe-area-inset-left));
         padding-right: max(var(--spacing-lg), env(safe-area-inset-right));
         background: var(--bg-card);
@@ -1208,9 +1220,9 @@
         font-size: 1rem;
     }
 
-    /* Add padding to container for fixed action bar - increased for better clearance */
+    /* Add padding to container for fixed action bar - fixed value to avoid Safari issues */
     .game-screen {
-        padding-bottom: max(120px, calc(110px + env(safe-area-inset-bottom, 20px)));
+        padding-bottom: 130px;
     }
 
     /* Ensure game-area content has clearance */
