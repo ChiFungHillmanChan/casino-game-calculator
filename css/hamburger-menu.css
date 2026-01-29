@@ -140,6 +140,45 @@
     color: #ffdd00;
 }
 
+/* Back Button - Fixed at top-left, next to hamburger */
+.back-btn {
+    position: fixed;
+    left: 64px;
+    top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 44px;
+    padding: 0 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    z-index: 999;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.back-btn:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+}
+
+.back-btn .back-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.back-btn .back-text {
+    display: inline;
+}
+
 /* Mobile Adjustments */
 @media (max-width: 767px) {
     .hamburger-btn {
@@ -147,6 +186,18 @@
         top: 8px;
         width: 40px;
         height: 40px;
+    }
+
+    .back-btn {
+        left: 56px;
+        top: 8px;
+        height: 40px;
+        padding: 0 12px;
+        font-size: 0.85rem;
+    }
+
+    .back-btn .back-text {
+        display: none;
     }
 
     .dropdown-menu {
