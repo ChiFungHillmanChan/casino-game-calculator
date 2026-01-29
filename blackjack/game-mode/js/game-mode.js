@@ -750,7 +750,7 @@ function renderActionButtons() {
     
     if (hand.cards.length === 2 && 
         getCardValue(hand.cards[0].rank) === getCardValue(hand.cards[1].rank) &&
-        seat.hands.length < 4) {
+        seat.hands.length < 7) {
         var splitBtn = document.createElement('button');
         splitBtn.className = 'action-btn split';
         splitBtn.textContent = 'SPLIT';

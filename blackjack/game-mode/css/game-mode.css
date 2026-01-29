@@ -199,10 +199,22 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.top-bar-left {
+    width: 50px; /* Space for hamburger menu */
+}
+
+.top-bar-center {
+    display: flex;
+    gap: 30px;
+    flex: 1;
+    justify-content: center;
+}
+
 .bankroll-section,
 .total-bet-section {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 2px;
 }
 

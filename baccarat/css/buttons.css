@@ -65,6 +65,56 @@
     color: white;
 }
 
+/* Navigation Buttons */
+.nav-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.nav-btn {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+}
+
+.nav-btn:active {
+    transform: scale(0.95);
+}
+
+.nav-btn-back {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+}
+
+.nav-btn-back:hover {
+    background: var(--bg-card-hover);
+    color: var(--text-primary);
+}
+
+.nav-btn-restart {
+    background: linear-gradient(135deg, var(--accent-red) 0%, #c0392b 100%);
+    color: white;
+}
+
+.nav-btn-restart:hover {
+    filter: brightness(1.1);
+}
+
 /* Tablet */
 @media (max-width: 1024px) {
     .dealing-indicator {

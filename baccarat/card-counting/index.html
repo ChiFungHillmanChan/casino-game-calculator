@@ -67,6 +67,11 @@
     <div class="container">
         <header>
             <h1>BACCARAT</h1>
+            <p class="subtitle">Card Counting Mode</p>
+            <div class="nav-buttons">
+                <a href="../index.html" class="nav-btn nav-btn-back">← Back</a>
+                <button class="nav-btn nav-btn-restart" onclick="handleRestart()">Restart</button>
+            </div>
         </header>
 
         <!-- Mobile-First Layout: Most Important at Top -->
@@ -127,6 +132,14 @@
 
         // Load components before initialization
         loadComponents().then(() => init());
+
+        // Handle restart - clear all stats and reinitialize
+        function handleRestart() {
+            if (confirm('Are you sure you want to restart? All current stats will be lost.')) {
+                resetGameState();
+                init();
+            }
+        }
     </script>
     <script src="../../js/hamburger-menu.js"></script>
 </body>

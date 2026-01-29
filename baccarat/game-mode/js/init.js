@@ -116,6 +116,13 @@ function initEventHandlers() {
             handlePlayAgain();
         }
     });
+
+    // Navigation buttons
+    document.addEventListener('click', (e) => {
+        if (e.target.id === 'restartBtn') {
+            handleRestart();
+        }
+    });
 }
 
 /**
@@ -289,6 +296,20 @@ function handlePlayAgain() {
     resetGameState();
     resetBetState();
     showSetupScreen();
+}
+
+/**
+ * Handle restart - clear all data and start fresh
+ */
+function handleRestart() {
+    if (confirm('Are you sure you want to restart? All progress will be lost.')) {
+        clearStorage();
+        resetGameState();
+        resetBetState();
+        hideResultOverlay();
+        hideGameOverOverlay();
+        showSetupScreen();
+    }
 }
 
 // Initialize when DOM is ready
