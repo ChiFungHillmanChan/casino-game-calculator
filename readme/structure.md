@@ -119,7 +119,8 @@ This document tracks all functions, components, and modules in the codebase to p
 | `removeCallBet(betName, chipValue)` | Remove call bet | bet-state.js |
 | `canAffordCallBet(betName, chipValue)` | Check if can afford call bet | bet-state.js |
 | `canAffordNeighbourBet(range, chipValue)` | Check if can afford neighbour bet | bet-state.js |
-| `undoLastBet()` | Undo the last bet action | bet-state.js |
+| `undoLastBet()` | Undo the last bet action (supports grouped racetrack bets) | bet-state.js |
+| `undoSingleAdd(betType, betValue, amount)` | Helper to undo a single add action | bet-state.js |
 | `canUndo()` | Check if undo stack has items | bet-state.js |
 
 #### stats-state.js
@@ -270,9 +271,10 @@ This document tracks all functions, components, and modules in the codebase to p
 | `stopAutoRepeat()` | Stop auto-repeat mode | event-handlers.js |
 | `processAutoRepeat()` | Process auto-repeat after spin | event-handlers.js |
 | `isAutoRepeatEnabled()` | Check if auto-repeat is active | event-handlers.js |
-| `initBettingTabHandlers()` | Initialize Table/Racetrack tab handlers | event-handlers.js |
-| `handleBettingTabSwitch(e)` | Handle switching between Table and Racetrack | event-handlers.js |
-| `getCurrentBettingTab()` | Get current betting tab (table/racetrack) | event-handlers.js |
+| `initBettingTabHandlers()` | Initialize view toggle button handler | event-handlers.js |
+| `handleViewToggle()` | Toggle between Table-only and Table+Racetrack views | event-handlers.js |
+| `isRacetrackModeActive()` | Check if racetrack mode is active | event-handlers.js |
+| `getCurrentBettingTab()` | Get current betting view mode (table/racetrack) | event-handlers.js |
 
 #### init.js
 | Function | Purpose | Location |

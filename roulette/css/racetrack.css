@@ -11,6 +11,7 @@
     background: #000000;
 }
 
+/* Active state is now controlled by parent .racetrack-mode class */
 #racetrackContainer.active {
     display: block;
 }

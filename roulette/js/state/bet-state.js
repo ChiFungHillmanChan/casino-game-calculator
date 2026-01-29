@@ -50,16 +50,19 @@ function resetBetState() {
  * @param {string} betType - Type of bet (from BET_TYPES)
  * @param {string|null} betValue - Specific value for the bet (number, combination, etc.)
  * @param {number} amount - Amount to add
+ * @param {boolean} recordUndo - Whether to record to undo stack (default: true)
  * @returns {boolean} Success
  */
-function addBet(betType, betValue, amount) {
+function addBet(betType, betValue, amount, recordUndo = true) {
     if (amount <= 0) return false;
 
     // Even money bets (no betValue needed)
     if (['red', 'black', 'even', 'odd', 'low', 'high', 'firstFour', 'topLine'].includes(betType)) {
         betState[betType] += amount;
-        // Record action for undo
-        betUndoStack.push({ action: 'add', betType, betValue: null, amount });
+        // Record action for undo (unless explicitly disabled for grouped bets)
+        if (recordUndo) {
+            betUndoStack.push({ action: 'add', betType, betValue: null, amount });
+        }
         return true;
     }
 
@@ -69,8 +72,10 @@ function addBet(betType, betValue, amount) {
             betState[betType][betValue] = 0;
         }
         betState[betType][betValue] += amount;
-        // Record action for undo
-        betUndoStack.push({ action: 'add', betType, betValue, amount });
+        // Record action for undo (unless explicitly disabled for grouped bets)
+        if (recordUndo) {
+            betUndoStack.push({ action: 'add', betType, betValue, amount });
+        }
         return true;
     }
 
@@ -183,16 +188,7 @@ function undoLastBet() {
 
     if (lastAction.action === 'add') {
         // Reverse an add by removing the amount
-        if (['red', 'black', 'even', 'odd', 'low', 'high', 'firstFour', 'topLine'].includes(lastAction.betType)) {
-            betState[lastAction.betType] = Math.max(0, betState[lastAction.betType] - lastAction.amount);
-        } else if (betState[lastAction.betType] && typeof betState[lastAction.betType] === 'object') {
-            if (betState[lastAction.betType][lastAction.betValue]) {
-                betState[lastAction.betType][lastAction.betValue] -= lastAction.amount;
-                if (betState[lastAction.betType][lastAction.betValue] <= 0) {
-                    delete betState[lastAction.betType][lastAction.betValue];
-                }
-            }
-        }
+        undoSingleAdd(lastAction.betType, lastAction.betValue, lastAction.amount);
     } else if (lastAction.action === 'double') {
         // Reverse a double by halving all bets
         const evenMoneyBets = ['red', 'black', 'even', 'odd', 'low', 'high', 'firstFour', 'topLine'];
@@ -213,9 +209,33 @@ function undoLastBet() {
                 }
             }
         });
+    } else if (lastAction.action === 'group') {
+        // Reverse a group of bets (neighbour bet or call bet)
+        lastAction.bets.forEach(bet => {
+            undoSingleAdd(bet.betType, bet.betValue, bet.amount);
+        });
     }
 
     return true;
+}
+
+/**
+ * Helper to undo a single add action
+ * @param {string} betType - Type of bet
+ * @param {string|null} betValue - Bet value
+ * @param {number} amount - Amount to remove
+ */
+function undoSingleAdd(betType, betValue, amount) {
+    if (['red', 'black', 'even', 'odd', 'low', 'high', 'firstFour', 'topLine'].includes(betType)) {
+        betState[betType] = Math.max(0, betState[betType] - amount);
+    } else if (betState[betType] && typeof betState[betType] === 'object') {
+        if (betState[betType][betValue]) {
+            betState[betType][betValue] -= amount;
+            if (betState[betType][betValue] <= 0) {
+                delete betState[betType][betValue];
+            }
+        }
+    }
 }
 
 /**
@@ -405,9 +425,23 @@ function placeNeighbourBet(centerNumber, range, chipValue, wheelSequence) {
         return false;
     }
     
-    // Place straight bets on all neighbours (including center)
+    // Collect all bets for grouped undo
+    const groupedBets = [];
+    
+    // Place straight bets on all neighbours (including center) - don't record individual undos
     neighbours.forEach(num => {
-        addBet('straight', num.toString(), chipValue);
+        const betValue = num.toString();
+        addBet('straight', betValue, chipValue, false); // false = don't record to undo stack
+        groupedBets.push({ betType: 'straight', betValue, amount: chipValue });
+    });
+    
+    // Record as a single grouped undo action
+    betUndoStack.push({ 
+        action: 'group', 
+        groupType: 'neighbour',
+        centerNumber,
+        range,
+        bets: groupedBets 
     });
     
     return true;
@@ -447,10 +481,22 @@ function placeCallBet(betName, chipValue) {
         return false;
     }
     
-    // Place all the component bets
+    // Collect all bets for grouped undo
+    const groupedBets = [];
+    
+    // Place all the component bets - don't record individual undos
     callBet.bets.forEach(bet => {
         const amount = bet.amount * chipValue;
-        addBet(bet.type, bet.value, amount);
+        addBet(bet.type, bet.value, amount, false); // false = don't record to undo stack
+        groupedBets.push({ betType: bet.type, betValue: bet.value, amount });
+    });
+    
+    // Record as a single grouped undo action
+    betUndoStack.push({ 
+        action: 'group', 
+        groupType: 'callBet',
+        betName,
+        bets: groupedBets 
     });
     
     return true;

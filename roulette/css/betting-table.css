@@ -12,6 +12,108 @@
 /* Betting interface container */
 .betting-interface {
     width: 100%;
+    position: relative;
+}
+
+/* ====== View Toggle Button ====== */
+.view-toggle-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 50;
+    width: 48px;
+    height: 32px;
+    padding: 4px 8px;
+    background: rgba(11, 42, 26, 0.95);
+    border: 2px solid var(--accent-gold);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.view-toggle-btn:hover {
+    background: rgba(212, 176, 122, 0.2);
+    box-shadow: 0 0 12px rgba(212, 176, 122, 0.4);
+    transform: scale(1.05);
+}
+
+.view-toggle-btn:active {
+    transform: scale(0.95);
+}
+
+.view-toggle-btn .toggle-icon {
+    width: 28px;
+    height: 18px;
+    color: var(--accent-gold);
+    transition: opacity 0.2s ease;
+}
+
+/* Show racetrack icon by default (table-only mode) */
+.view-toggle-btn .racetrack-icon {
+    display: block;
+}
+
+.view-toggle-btn .table-icon {
+    display: none;
+}
+
+/* When in racetrack mode, show table icon to switch back */
+.betting-interface.racetrack-mode .view-toggle-btn .racetrack-icon {
+    display: none;
+}
+
+.betting-interface.racetrack-mode .view-toggle-btn .table-icon {
+    display: block;
+}
+
+.betting-interface.racetrack-mode .view-toggle-btn {
+    background: var(--accent-gold);
+}
+
+.betting-interface.racetrack-mode .view-toggle-btn .toggle-icon {
+    color: #0b2a1a;
+}
+
+/* ====== Racetrack Mode - Combined View ====== */
+/* When racetrack mode is active, show smaller table + racetrack below */
+.betting-interface.racetrack-mode .betting-table-container {
+    padding: var(--spacing-sm);
+}
+
+.betting-interface.racetrack-mode .betting-table {
+    transform: scale(0.85);
+    transform-origin: top center;
+    margin-bottom: -40px; /* Compensate for scaled height */
+}
+
+.betting-interface.racetrack-mode #racetrackContainer {
+    display: block !important;
+    margin-top: var(--spacing-sm);
+    border-top: 1px solid rgba(212, 176, 122, 0.3);
+    padding-top: var(--spacing-md);
+}
+
+/* Mobile adjustments for toggle */
+@media (max-width: 767px) {
+    .view-toggle-btn {
+        width: 42px;
+        height: 28px;
+        top: 4px;
+        right: 4px;
+    }
+    
+    .view-toggle-btn .toggle-icon {
+        width: 24px;
+        height: 16px;
+    }
+    
+    .betting-interface.racetrack-mode .betting-table {
+        transform: scale(0.75);
+        margin-bottom: -60px;
+    }
 }
 
 /* Table container */

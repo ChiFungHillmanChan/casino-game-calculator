@@ -56,61 +56,60 @@ function initEventHandlers() {
 }
 
 // =====================================================
-// BETTING TAB HANDLERS (Table/Racetrack Switcher)
+// VIEW TOGGLE HANDLERS (Table / Table+Racetrack Switcher)
 // =====================================================
 
 /**
- * Initialize betting tab handlers for Table/Racetrack switching
+ * Initialize view toggle button handler
  */
 function initBettingTabHandlers() {
-    const tabBtns = document.querySelectorAll('[data-betting-tab]');
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', handleBettingTabSwitch);
-    });
+    const toggleBtn = document.getElementById('viewToggleBtn');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', handleViewToggle);
+    }
 }
 
 /**
- * Handle switching between Table and Racetrack views
+ * Handle toggling between Table-only and Table+Racetrack views
  */
-function handleBettingTabSwitch(e) {
-    const btn = e.currentTarget;
-    const tab = btn.dataset.bettingTab;
-    
-    // Update button states
-    document.querySelectorAll('[data-betting-tab]').forEach(b => {
-        b.classList.remove('active');
-    });
-    btn.classList.add('active');
-    
-    // Get containers
-    const tableContainer = document.getElementById('bettingTableContainer');
+function handleViewToggle() {
+    const bettingInterface = document.getElementById('bettingInterface');
     const racetrackContainer = document.getElementById('racetrackContainer');
     
-    if (tab === 'table') {
-        // Show table, hide racetrack
-        if (tableContainer) tableContainer.style.display = '';
-        if (racetrackContainer) racetrackContainer.classList.remove('active');
-    } else if (tab === 'racetrack') {
-        // Show racetrack, hide table
-        if (tableContainer) tableContainer.style.display = 'none';
-        if (racetrackContainer) {
-            racetrackContainer.classList.add('active');
-            // Render racetrack if not already rendered
-            if (!racetrackContainer.dataset.rendered) {
-                renderRacetrack();
-                racetrackContainer.dataset.rendered = 'true';
-            }
+    if (!bettingInterface) return;
+    
+    const isRacetrackMode = bettingInterface.classList.contains('racetrack-mode');
+    
+    if (isRacetrackMode) {
+        // Switch to table-only mode
+        bettingInterface.classList.remove('racetrack-mode');
+    } else {
+        // Switch to racetrack mode (table + racetrack)
+        bettingInterface.classList.add('racetrack-mode');
+        
+        // Render racetrack if not already rendered
+        if (racetrackContainer && !racetrackContainer.dataset.rendered) {
+            renderRacetrack();
+            racetrackContainer.dataset.rendered = 'true';
         }
     }
 }
 
 /**
- * Get current betting tab
+ * Check if racetrack view is active
+ * @returns {boolean} True if racetrack mode is active
+ */
+function isRacetrackModeActive() {
+    const bettingInterface = document.getElementById('bettingInterface');
+    return bettingInterface && bettingInterface.classList.contains('racetrack-mode');
+}
+
+/**
+ * Get current betting view mode
  * @returns {string} 'table' or 'racetrack'
  */
 function getCurrentBettingTab() {
-    const activeTab = document.querySelector('[data-betting-tab].active');
-    return activeTab ? activeTab.dataset.bettingTab : 'table';
+    return isRacetrackModeActive() ? 'racetrack' : 'table';
 }
 
 /**
