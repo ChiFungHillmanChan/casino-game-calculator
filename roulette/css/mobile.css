@@ -530,12 +530,12 @@
         padding-bottom: 50px;
         padding-left: max(var(--spacing-md), env(safe-area-inset-left));
         padding-right: max(var(--spacing-md), env(safe-area-inset-right));
-        background: linear-gradient(180deg, transparent 0%, var(--bg-card) 15%, var(--bg-card) 100%);
+        background: var(--bg-card);
         border-radius: var(--radius-lg) var(--radius-lg) 0 0;
         border: 1px solid var(--border-subtle);
         border-bottom: none;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
-        z-index: 45;
+        box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.7);
+        z-index: 100;
         display: grid;
         grid-template-columns: 1fr auto;
         grid-template-rows: auto auto;
@@ -553,19 +553,39 @@
         }
     }
 
-    .total-bet-display {
+    /* Bet and Bankroll display container */
+    .bet-bankroll-display {
         grid-column: 1;
         grid-row: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    .total-bet-display {
         text-align: left;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        min-width: 0;
     }
     
     .total-bet-display #totalBetAmount {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+    }
+
+    .action-bar-bankroll {
+        text-align: left;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .action-bar-bankroll #actionBarBankroll {
+        font-size: 0.8rem;
+        font-weight: 600;
     }
 
     .action-buttons {
@@ -574,15 +594,17 @@
         display: flex;
         gap: var(--spacing-xs);
         margin-top: 0;
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
+        justify-content: center;
     }
 
     .action-buttons .btn {
-        flex: 1;
-        padding: var(--spacing-sm) var(--spacing-xs);
-        font-size: 0.65rem;
-        min-height: 36px;
+        flex: 0 1 auto;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: 0.6rem;
+        min-height: 32px;
         white-space: nowrap;
+        min-width: 50px;
     }
 
     .spin-controls {
@@ -596,9 +618,9 @@
 
     .btn-spin {
         width: auto;
-        min-width: 80px;
+        min-width: 70px;
         padding: var(--spacing-sm) var(--spacing-md);
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
 
     .btn-auto-spin {
@@ -965,8 +987,35 @@
     }
 
     .action-buttons .btn {
-        font-size: 0.6rem;
+        font-size: 0.55rem;
         padding: var(--spacing-xs);
+        min-width: 42px;
+    }
+
+    /* Smaller bankroll display for tiny screens */
+    .bet-bankroll-display {
+        gap: 1px;
+    }
+
+    .total-bet-display {
+        font-size: 0.7rem;
+    }
+
+    .total-bet-display #totalBetAmount {
+        font-size: 0.75rem;
+    }
+
+    .action-bar-bankroll {
+        font-size: 0.65rem;
+    }
+
+    .action-bar-bankroll #actionBarBankroll {
+        font-size: 0.7rem;
+    }
+
+    .btn-spin {
+        min-width: 60px;
+        font-size: 0.75rem;
     }
 }
 
@@ -1037,9 +1086,20 @@
         gap: var(--spacing-xs);
     }
 
+    .bet-bankroll-display {
+        display: flex;
+        gap: var(--spacing-sm);
+        align-items: center;
+    }
+
     .total-bet-display {
         white-space: nowrap;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
+    }
+
+    .action-bar-bankroll {
+        white-space: nowrap;
+        font-size: 0.75rem;
     }
 
     .action-buttons {
@@ -1219,13 +1279,31 @@
         background: var(--bg-card);
         border-top: 1px solid var(--border-subtle);
         box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-        z-index: 45;
+        z-index: 100;
+    }
+
+    /* Tablet bet/bankroll display */
+    .bet-bankroll-display {
+        display: flex;
+        gap: var(--spacing-lg);
+        align-items: center;
+        flex-shrink: 0;
     }
 
     .total-bet-display {
         font-size: 1rem;
         white-space: nowrap;
         flex-shrink: 0;
+    }
+
+    .action-bar-bankroll {
+        font-size: 1rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    #actionBarBankroll {
+        font-weight: 600;
     }
 
     .action-buttons {

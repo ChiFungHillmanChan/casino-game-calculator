@@ -267,9 +267,17 @@ function hideGameOverOverlay() {
 function renderBankroll() {
     const amountEl = document.getElementById('bankrollAmount');
     const profitEl = document.getElementById('profitAmount');
+    const actionBarBankrollEl = document.getElementById('actionBarBankroll');
+    
+    const currentBankroll = getCurrentBankroll();
     
     if (amountEl) {
-        amountEl.textContent = '$' + getCurrentBankroll().toLocaleString();
+        amountEl.textContent = '$' + currentBankroll.toLocaleString();
+    }
+    
+    // Update action bar bankroll (always visible on mobile)
+    if (actionBarBankrollEl) {
+        actionBarBankrollEl.textContent = '$' + currentBankroll.toLocaleString();
     }
     
     if (profitEl) {

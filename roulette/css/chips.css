@@ -242,6 +242,14 @@
     border: 1px solid var(--accent-gold);
 }
 
+/* Bet and Bankroll display container in action bar */
+.bet-bankroll-display {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+    flex-shrink: 0;
+}
+
 /* Total bet display in action bar */
 .total-bet-display {
     text-align: center;
@@ -252,6 +260,19 @@
 
 #totalBetAmount {
     font-variant-numeric: tabular-nums;
+}
+
+/* Action bar bankroll display */
+.action-bar-bankroll {
+    text-align: center;
+    font-size: 1rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+#actionBarBankroll {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
 }
 
 /* Responsive chip sizes */
