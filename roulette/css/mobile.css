@@ -1294,8 +1294,7 @@
     .dozen-bet,
     .even-money-bet,
     .column-bet,
-    .chip,
-    .chip-stack-container {
+    .chip {
         will-change: transform, opacity;
         -webkit-transform: translateZ(0);
         transform: translateZ(0);
@@ -1312,11 +1311,6 @@
 
     .chip {
         transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
-    }
-
-    /* Layout containment for chip stacks - prevents expensive reflows */
-    .chip-stack-container {
-        contain: layout style;
     }
 
     /* Larger touch targets */
