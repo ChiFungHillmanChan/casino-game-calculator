@@ -2,30 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0a0a0f">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="description" content="Baccarat Edge Calculator with Egalité Bets, Custom Payouts, and Live EV Tracking">
+    <meta name="description" content="Baccarat Calculator - Card Counting, Edge Calculation, and Game Play">
     <title>Baccarat</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- CSS Files -->
-    <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/app-layout.css">
-    <link rel="stylesheet" href="css/panels.css">
-    <link rel="stylesheet" href="css/cards.css">
-    <link rel="stylesheet" href="css/buttons.css">
-    <link rel="stylesheet" href="css/stats.css">
-    <link rel="stylesheet" href="css/roads.css">
-    <link rel="stylesheet" href="css/egalite.css">
-    <link rel="stylesheet" href="css/bets.css">
-    <link rel="stylesheet" href="css/recommendations.css">
+
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/main.css">
     <link rel="stylesheet" href="../css/hamburger-menu.css">
+    <link rel="stylesheet" href="css/index.css">
 </head>
 <body>
     <!-- Fixed Hamburger Menu -->
@@ -66,32 +55,77 @@
 
     <div class="container">
         <header>
+            <div class="logo-icon">🎴</div>
             <h1>BACCARAT</h1>
+            <p class="subtitle">Edge Calculator • Side Bets • Strategy Tools</p>
         </header>
 
-        <!-- Mobile-First Layout: Most Important at Top -->
-        <div class="app-layout">
-            <div id="top-panel"></div>
-            <div id="middle-panel"></div>
-            <div id="bottom-panel"></div>
+        <p class="intro-text">
+            Master baccarat with <strong>card counting tools</strong>, <strong>Egalité side bet analysis</strong>,
+            and real-time <strong>EV calculations</strong>. Choose your mode below to start
+            analyzing or playing.
+        </p>
+
+        <section class="game-modes">
+            <!-- Card Counting Mode -->
+            <a href="card-counting/index.html" class="mode-card card-counting available">
+                <div class="mode-icon">📊</div>
+                <h2 class="mode-title">Card Counting</h2>
+                <p class="mode-description">
+                    Track dealt cards, calculate edge probabilities, and get real-time 
+                    recommendations for Egalité side bets with custom payout analysis.
+                </p>
+                <div class="mode-features">
+                    <span class="feature-tag">Live EV</span>
+                    <span class="feature-tag">Egalité Bets</span>
+                    <span class="feature-tag">Road Maps</span>
+                    <span class="feature-tag">8 Decks</span>
+                </div>
+                <div class="mode-status">
+                    <span class="status-dot"></span>
+                    Available Now
+                </div>
+            </a>
+
+            <!-- Game Mode -->
+            <a href="game-mode/index.html" class="mode-card game-mode available">
+                <div class="mode-icon">🎰</div>
+                <h2 class="mode-title">Game Mode</h2>
+                <p class="mode-description">
+                    Play baccarat with virtual chips. Place main bets on Player, Banker, 
+                    or Tie, plus side bets like Dragon Bonus, Pairs, and Egalité (Tie 0-9).
+                </p>
+                <div class="mode-features">
+                    <span class="feature-tag">Main Bets</span>
+                    <span class="feature-tag">Side Bets</span>
+                    <span class="feature-tag">Bankroll</span>
+                    <span class="feature-tag">Egalité 0-9</span>
+                </div>
+                <div class="mode-status">
+                    <span class="status-dot"></span>
+                    Available Now
+                </div>
+            </a>
+        </section>
+
+        <div class="info-section">
+            <h3>About Baccarat</h3>
+            <p>
+                Baccarat is a card game with three possible outcomes: <strong>Player wins</strong>,
+                <strong>Banker wins</strong>, or <strong>Tie</strong>. The Banker bet has the lowest
+                house edge at ~1.06% (with 5% commission). While card counting has minimal effect on
+                main bets, it can reveal profitable opportunities in <strong>Egalité (tie) side bets</strong>
+                when specific card distributions occur.
+                <br><br>
+                Use the Card Counting mode to track cards and identify advantageous betting situations.
+            </p>
         </div>
+
+        <footer>
+            <p class="footer-text">For educational purposes only. Gamble responsibly.</p>
+        </footer>
     </div>
 
-    <!-- JavaScript Files - Load in order -->
-    <script src="js/constants.js"></script>
-    <script src="js/state.js"></script>
-    <script src="js/cards.js"></script>
-    <script src="js/rules.js"></script>
-    <script src="js/roads.js"></script>
-    <script src="js/egalite.js"></script>
-    <script src="js/calculations.js"></script>
-    <script src="js/dealer.js"></script>
-    <script src="js/render-cards.js"></script>
-    <script src="js/render-roads.js"></script>
-    <script src="js/render-egalite.js"></script>
-    <script src="js/render-stats.js"></script>
-    <script src="js/init.js"></script>
-    <script src="js/ui-helpers.js"></script>
     <script src="../js/hamburger-menu.js"></script>
 </body>
 </html>

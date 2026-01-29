@@ -379,6 +379,166 @@ This document tracks all functions, components, and modules in the codebase to p
 | `HardMode.showCountCheck()` | Show 5-second count verification modal | hard-mode.js |
 | `HardMode.submitCount()` | Verify user's running count answer | hard-mode.js |
 
+### Game Mode (`/blackjack/game-mode/`)
+
+Play realistic blackjack with side bets (Perfect Pair, 21+3, Top 3).
+
+#### side-bets.js
+| Function/Constant | Purpose | Location |
+|-------------------|---------|----------|
+| `PERFECT_PAIR_PAYOUTS` | Payout table for Perfect Pair (25:1, 12:1, 6:1) | side-bets.js |
+| `TWENTY_ONE_PLUS_3_PAYOUTS` | Payout table for 21+3 (100:1 to 5:1) | side-bets.js |
+| `TOP_3_PAYOUTS` | Payout table for Top 3 (270:1 to 5:1) | side-bets.js |
+| `SideBets.evaluatePerfectPair(playerCards)` | Check for pair combinations in player's first 2 cards | side-bets.js |
+| `SideBets.evaluate21Plus3(playerCards, dealerUpcard)` | Check for poker hands with player's 2 cards + dealer upcard | side-bets.js |
+| `SideBets.evaluateTop3(dealerCards)` | Check for poker hands in dealer's first 3 cards | side-bets.js |
+| `SideBets.calculateWinnings(betAmount, payout)` | Calculate total return for winning side bet | side-bets.js |
+| `SideBets.getPayoutTable(betType)` | Get payout table for display | side-bets.js |
+
+#### game-mode.js
+| Function | Purpose | Location |
+|----------|---------|----------|
+| `initializeSetup()` | Initialize setup screen with event listeners | game-mode.js |
+| `handleSetupSubmit(e)` | Process setup form and start game | game-mode.js |
+| `initializeShoe()` | Create and shuffle 6-deck shoe | game-mode.js |
+| `shuffleShoe()` | Fisher-Yates shuffle the shoe | game-mode.js |
+| `drawCard()` | Draw single card from shoe | game-mode.js |
+| `setupChipRack()` | Initialize chip rack click handlers | game-mode.js |
+| `selectChip(value)` | Select chip denomination (1/5/25/100/500) | game-mode.js |
+| `placeBetOnSpot(spotType, seatIndex)` | Place selected chip on betting spot (click) | game-mode.js |
+| `removeBetFromSpot(spotType, seatIndex)` | Remove chip from betting spot (right-click) | game-mode.js |
+| `renderChipStack(amount, small)` | Render visual chip stack for amount | game-mode.js |
+| `getChipBreakdown(amount)` | Get array of chips that make up amount | game-mode.js |
+| `createBettingSpot(spotType, seatIndex, labelText, betAmount)` | Create betting spot element with chips | game-mode.js |
+| `startDeal()` | Begin dealing phase after bets are placed | game-mode.js |
+| `dealInitialCards()` | Deal 2 cards to each player and dealer | game-mode.js |
+| `evaluateImmediateSideBets()` | Evaluate Perfect Pair and 21+3 after initial deal | game-mode.js |
+| `startPlayerTurn()` | Begin player action phase | game-mode.js |
+| `advanceToNextHand()` | Move to next player hand needing action | game-mode.js |
+| `playerHit()` | Handle player hit action | game-mode.js |
+| `playerStand()` | Handle player stand action | game-mode.js |
+| `playerDouble()` | Handle player double down action | game-mode.js |
+| `playerSplit()` | Handle player split action | game-mode.js |
+| `startDealerTurn()` | Begin dealer action phase | game-mode.js |
+| `dealerDraw()` | Dealer draws cards until 17+ | game-mode.js |
+| `evaluateTop3SideBet()` | Evaluate Top 3 bet after dealer has 3 cards | game-mode.js |
+| `resolveRound()` | Calculate all wins/losses and update bankroll | game-mode.js |
+| `startNewRound()` | Reset for next round, preserve bets | game-mode.js |
+| `showResultOverlay(netResult)` | Show round result with countdown | game-mode.js |
+| `renderGame()` | Render all game UI elements | game-mode.js |
+| `renderBettingArea()` | Render visual betting spots on table | game-mode.js |
+| `renderDealer()` | Render dealer cards and total | game-mode.js |
+| `renderPlayerCards()` | Render player cards during play | game-mode.js |
+| `renderActionButtons()` | Render Hit/Stand/Double/Split buttons | game-mode.js |
+| `showSideBetResult(betType, result)` | Display side bet outcome | game-mode.js |
+
+---
+
+## Baccarat Module (`/baccarat`)
+
+### Structure
+
+The baccarat module follows the same pattern as blackjack with an options page and sub-modes:
+
+- `/baccarat/index.html` - Options page (mode selection)
+- `/baccarat/card-counting/` - Card counting and EV calculator mode
+- `/baccarat/game-mode/` - Game play mode with betting
+
+### Card Counting Mode (`/baccarat/card-counting/`)
+
+Uses the core baccarat JS files from `/baccarat/js/`:
+
+| File | Purpose |
+|------|---------|
+| `constants.js` | Game constants, deck configuration |
+| `state.js` | Game state management |
+| `cards.js` | Card tracking and shoe management |
+| `rules.js` | Baccarat drawing rules |
+| `roads.js` | Road map (Big Road, Bead Road, etc.) calculations |
+| `egalite.js` | Egalité side bet calculations |
+| `calculations.js` | EV and probability calculations |
+| `dealer.js` | Dealer logic and hand resolution |
+| `render-cards.js` | Card UI rendering |
+| `render-roads.js` | Road map UI rendering |
+| `render-egalite.js` | Egalité panel rendering |
+| `render-stats.js` | Statistics panel rendering |
+| `init.js` | Application initialization |
+| `ui-helpers.js` | UI utility functions |
+
+### Game Mode (`/baccarat/game-mode/`)
+
+Play baccarat with virtual chips, main bets, and side bets.
+
+#### constants.js
+| Function/Constant | Purpose | Location |
+|-------------------|---------|----------|
+| `GAME_PHASES` | Game state phases (SETUP, BETTING, DEALING, RESULT, GAME_OVER) | constants.js |
+| `CHIP_DENOMINATIONS` | Available chip values [1, 5, 10, 25, 100, 500, 1000, 5000] | constants.js |
+| `MAIN_BET_PAYOUTS` | Payouts for Player (1:1), Banker (0.95:1), Tie (8:1) | constants.js |
+| `PAIR_BET_PAYOUTS` | Payouts for Player/Banker Pair (11:1) | constants.js |
+| `DRAGON_BONUS_PAYOUTS` | Dragon Bonus payouts (1:1 to 30:1) | constants.js |
+| `EGALITE_PAYOUTS` | Tie 0-9 payouts (45:1 to 225:1) | constants.js |
+| `BET_TYPES` | All available bet type constants | constants.js |
+
+#### side-bets.js
+| Function | Purpose | Location |
+|----------|---------|----------|
+| `evaluateAllSideBets(handResult)` | Evaluate all side bets for completed hand | side-bets.js |
+| `evaluatePairBet(cards)` | Check for pair in first 2 cards | side-bets.js |
+| `evaluateDragonBonus(handResult, side)` | Evaluate Dragon Bonus for player/banker | side-bets.js |
+| `evaluateEgalite(handResult)` | Evaluate all Tie 0-9 bets | side-bets.js |
+| `evaluateMainBets(handResult)` | Evaluate Player/Banker/Tie main bets | side-bets.js |
+| `calculateWinnings(placedBets, handResult)` | Calculate total winnings for all bets | side-bets.js |
+
+#### state.js
+| Function | Purpose | Location |
+|----------|---------|----------|
+| `createInitialGameState()` | Create fresh game state | state.js |
+| `setGamePhase(phase)` | Set current game phase | state.js |
+| `initializeBankroll(amount)` | Set starting bankroll | state.js |
+| `updateBankroll(change)` | Update after hand | state.js |
+| `getCurrentBankroll()` | Get current bankroll | state.js |
+| `initializeShoe()` | Create and shuffle 8-deck shoe | state.js |
+| `drawCard()` | Draw card from shoe | state.js |
+| `addBet(betType, amount)` | Place a bet | state.js |
+| `removeBet(betType, amount)` | Remove a bet | state.js |
+| `clearAllBets()` | Clear all bets | state.js |
+| `getTotalWagered()` | Get total wagered amount | state.js |
+| `saveToStorage()` | Save state to localStorage | state.js |
+| `loadFromStorage()` | Load state from localStorage | state.js |
+
+#### game-logic.js
+| Function | Purpose | Location |
+|----------|---------|----------|
+| `getCardValue(card)` | Get baccarat value of card | game-logic.js |
+| `calculateHandTotal(cards)` | Calculate hand total (mod 10) | game-logic.js |
+| `determineThirdCardNeeded()` | Determine if third card needed | game-logic.js |
+| `shouldBankerDraw(total, player3rd)` | Check banker drawing rules | game-logic.js |
+| `startNewGame(initialStack)` | Start new game with bankroll | game-logic.js |
+| `startNewRound()` | Start dealing after bets placed | game-logic.js |
+| `dealNextCard()` | Deal next card in sequence | game-logic.js |
+| `completeHand()` | Complete hand and determine winner | game-logic.js |
+| `resolveRound(handResult)` | Resolve bets and update bankroll | game-logic.js |
+
+#### render.js
+| Function | Purpose | Location |
+|----------|---------|----------|
+| `renderChipRack()` | Render chip selector | render.js |
+| `renderHUD()` | Render bankroll/profit/round display | render.js |
+| `renderCards()` | Render player and banker cards | render.js |
+| `renderAllBetChips()` | Render chips on betting table | render.js |
+| `showResultOverlay(handResult, resolution)` | Show result modal | render.js |
+| `showGameOverOverlay()` | Show game over modal | render.js |
+
+#### init.js
+| Function | Purpose | Location |
+|----------|---------|----------|
+| `init()` | Initialize application | init.js |
+| `loadComponents()` | Load HTML panels | init.js |
+| `initEventHandlers()` | Initialize all event handlers | init.js |
+| `handleStartGame()` | Handle game start | init.js |
+| `handleDeal()` | Handle deal button | init.js |
+
 ---
 
 ## Notes
