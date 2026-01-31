@@ -11,8 +11,8 @@ const GameState = {
     config: {
         decks: 6,
         minBet: 5,
-        maxBet: 500,
-        maxSideBet: 100,
+        maxBet: 100000000,      // 100M max bet
+        maxSideBet: 1000000,    // 1M max side bet
         dealerRule: 'S17',
         blackjackPays: 1.5,
         autoNextDelay: 3000
@@ -51,7 +51,7 @@ const GameState = {
     lastRoundResults: null
 };
 
-const CHIP_VALUES = [1, 5, 25, 100, 500];
+const CHIP_VALUES = [1, 5, 10, 25, 100, 500, 1000, 5000, 25000, 100000];
 const STORAGE_KEY = 'blackjack_game_mode_settings';
 const GAME_STATE_KEY = 'blackjack_game_mode_state';
 
@@ -254,7 +254,7 @@ function placeBetOnSpot(spotType, seatIndex) {
         var seat = GameState.table.seats[seatIndex];
         var newBet = seat.bet + chipValue;
         if (newBet > GameState.config.maxBet) {
-            showToast('Max bet is $' + GameState.config.maxBet);
+            showToast('Max bet is $' + GameState.config.maxBet.toLocaleString());
             return;
         }
         seat.bet = newBet;
@@ -264,7 +264,7 @@ function placeBetOnSpot(spotType, seatIndex) {
         var currentBet = GameState.sideBets[spotType] || 0;
         var newBet = currentBet + chipValue;
         if (newBet > GameState.config.maxSideBet) {
-            showToast('Max side bet is $' + GameState.config.maxSideBet);
+            showToast('Max side bet is $' + GameState.config.maxSideBet.toLocaleString());
             return;
         }
         GameState.sideBets[spotType] = newBet;
@@ -349,7 +349,11 @@ function renderChipStack(amount, small) {
     var html = '<div class="chip-stack">';
     
     chips.forEach(function(chip) {
-        html += '<div class="chip-placed chip-' + chip.value + '">' + chip.value + '</div>';
+        var displayValue = chip.value;
+        if (chip.value >= 1000) {
+            displayValue = (chip.value / 1000) + 'K';
+        }
+        html += '<div class="chip-placed chip-' + chip.value + '">' + displayValue + '</div>';
     });
     
     html += '</div>';
@@ -359,7 +363,7 @@ function renderChipStack(amount, small) {
 function getChipBreakdown(amount) {
     var chips = [];
     var remaining = amount;
-    var values = [500, 100, 25, 5, 1];
+    var values = [100000, 25000, 5000, 1000, 500, 100, 25, 10, 5, 1];
     
     values.forEach(function(value) {
         while (remaining >= value && chips.length < 8) {
